@@ -1,5 +1,6 @@
 import json
 from pprint import pprint
+from typing import Optional
 
 import deirokay.statements as core_stmts
 
@@ -18,10 +19,18 @@ def _process_stmt(statement):
         raise NotImplementedError(f'Statement {stmt_type} not implemented.')
 
 
-def validate(df, against: dict, *, save_to=None, raise_exception=True):
-    validation_document = against
+def validate(df, *,
+             against: Optional[dict] = None,
+             against_json: Optional[str] = None,
+             save_to=None,
+             raise_exception=True) -> dict:
+    if against:
+        validation_document = against
+    else:
+        with open(against_json) as fp:
+            validation_document = json.load(fp)
 
-    for item in against.get('items'):
+    for item in validation_document.get('items'):
         scope = item.get('scope')
         df_scope = df[scope] if isinstance(scope, list) else df[[scope]]
 
