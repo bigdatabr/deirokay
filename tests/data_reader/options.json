@@ -1,0 +1,67 @@
+{
+    "WERKS01": {
+        "dtype": "Int64",
+        "nullable": false,
+        "thousands_sep": ".",
+        "unique": false
+    },
+    "DT_OPERACAO01": {
+        "dtype": "datetime64[ns]",
+        "format": "%Y%m%d"
+    },
+    "NUM_TRANSACAO01": {
+        "dtype": "Int64",
+        "nullable": false,
+        "thousands_sep": ".",
+        "unique": false
+    },
+    "HR_TRANSACAO01": {
+        "dtype": "time",
+        "format": "%H:%M:%S"
+    },
+    "TIPO_PDV": {
+        "dtype": "string"
+    },
+    "PROD_VENDA": {
+        "dtype": "Int64"
+    },
+    "COD_MERC_SERV02": {
+        "dtype": "Int64"
+    },
+    "COD_SETVENDAS": {
+        "dtype": "Int64"
+    },
+    "NUMERO_PDV_ORIGIN": {
+        "dtype": "Int64"
+    },
+    "TIPO_PDV_ORIGIN": {
+        "dtype": "string"
+    },
+    "TIPO_PDV_ORIGIN_GRP": {
+        "dtype": "string"
+    },
+    "QTD_VENDIDA02": {
+        "dtype": "Float64",
+        "nullable": false,
+        "thousands_sep": ".",
+        "decimal_sep": ","
+    },
+    "VLR_TOT_VD_ITM02": {
+        "dtype": "Float64",
+        "nullable": false,
+        "thousands_sep": ".",
+        "decimal_sep": ","
+    },
+    "VLR_DESCONTO02": {
+        "dtype": "Float64",
+        "nullable": false,
+        "thousands_sep": ".",
+        "decimal_sep": ","
+    },
+    "VLR_LIQUIDO02": {
+        "dtype": "Float64",
+        "nullable": false,
+        "thousands_sep": ".",
+        "decimal_sep": ","
+    }
+}
