@@ -1,6 +1,6 @@
 
 
-class Statement:
+class BaseStatement:
     def __init__(self, stmt_options: dict):
         self.options = stmt_options
 
@@ -18,7 +18,10 @@ class Statement:
         pass
 
     def result(self, report):
-        pass
+        return True
+
+
+Statement = BaseStatement
 
 
 class Unique(Statement):
