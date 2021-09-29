@@ -1,0 +1,17 @@
+{
+    "name": "VENDAS",
+    "items": [
+        {
+            "scope": [
+                "WERKS01",
+                "DT_OPERACAO01"
+            ],
+            "statements": [
+                {
+                    "type": "unique",
+                    "at_least_%": 1.0
+                }
+            ]
+        }
+    ]
+}
