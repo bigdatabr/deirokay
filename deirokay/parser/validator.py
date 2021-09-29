@@ -14,7 +14,7 @@ class Validator:
                              f"{null_indices_limit}...")
 
         if self.unique and not series.is_unique:
-            duplicated = list(set(series[series.duplicated()]))
+            duplicated = list(series[series.duplicated(keep='first')])
             duplicated_limit = duplicated[:min(len(duplicated), 10)]
 
             raise ValueError(f"The '{series.name}' column values"
