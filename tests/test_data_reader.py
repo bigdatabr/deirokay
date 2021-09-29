@@ -5,9 +5,9 @@ from deirokay.enums import DTypes
 def test_data_reader_from_json():
 
     df = data_reader(
-        'tests/data_reader/transactions_sample.csv',
+        'tests/transactions_sample.csv',
         encoding='iso-8859-1', sep=';',
-        options_json='tests/data_reader/options.json'
+        options_json='tests/options.json'
     )
 
     print(df)
@@ -41,7 +41,7 @@ def test_data_reader_from_dict():
     }
 
     df = data_reader(
-        'tests/data_reader/transactions_sample.csv',
+        'tests/transactions_sample.csv',
         encoding='iso-8859-1', sep=';',
         options=options
     )
