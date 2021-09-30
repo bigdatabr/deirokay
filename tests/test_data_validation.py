@@ -28,7 +28,7 @@ def test_data_validation():
     }
 
     with pytest.raises(ValidationError):
-        validate(df, against=assertions, save_to='report.json')
+        validate(df, against=assertions)
 
 
 @pytest.mark.skip(reason='Consumer for Custom Stmt Not implemented')
