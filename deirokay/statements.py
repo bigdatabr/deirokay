@@ -52,3 +52,35 @@ class Unique(Statement):
 
     def result(self, report):
         return report.get('unique_rows_%') > self.at_least_perc
+
+
+class NotNull(Statement):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.at_least_perc = self.options.get('at_least_%', 100.0)
+        self.at_most_perc = self.options.get('at_most_%', 100.0)
+        self.multicolumn_logic = self.options.get('multicolumn_logic', 'any')
+
+        assert self.multicolumn_logic in ('any', 'all')
+
+    def report(self, df):
+        if self.multicolumn_logic == 'all':
+            not_nulls = ~df.isnull().all(axis=1)
+        else:
+            not_nulls = ~df.isnull().any(axis=1)
+
+        report = {
+            'null_rows': int((~not_nulls).sum()),
+            'null_rows_%': float(100.0*(~not_nulls).sum()/len(not_nulls)),
+            'not_null_rows': int(not_nulls.sum()),
+            'not_null_rows_%': float(100.0*not_nulls.sum()/len(not_nulls)),
+        }
+        return report
+
+    def result(self, report):
+        if not report.get('not_null_rows_%') >= self.at_least_perc:
+            return False
+        if not report.get('not_null_rows_%') <= self.at_most_perc:
+            return False
+        return True
