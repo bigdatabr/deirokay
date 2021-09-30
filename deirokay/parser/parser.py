@@ -11,8 +11,9 @@ def data_reader(file_path, options={}, options_json=None):
     if options_json and not options:
         with open(options_json) as fp:
             options = json.load(fp)
-        for column in options.get('columns').values():
-            column['dtype'] = DTypes(column['dtype'])
+
+    for column in options.get('columns').values():
+        column['dtype'] = DTypes(column['dtype'])
 
     columns = options.pop('columns')
 
