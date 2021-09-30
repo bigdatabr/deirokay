@@ -1,5 +1,5 @@
 class Validator:
-    def __init__(self, *, unique=False, nullable=False):
+    def __init__(self, *, unique=False, nullable=True):
         self.unique = unique
         self.nullable = nullable
 
