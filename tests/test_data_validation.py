@@ -31,7 +31,6 @@ def test_data_validation():
         validate(df, against=assertions)
 
 
-@pytest.mark.skip(reason='Consumer for Custom Stmt Not implemented')
 def test_custom_statement():
     df = data_reader(
         'tests/transactions_sample.csv',
@@ -49,7 +48,7 @@ def test_custom_statement():
                         'type': 'custom',
                         'location': 'tests/custom_statement.py'
                                     '::ThereAreValuesGreaterThanX',
-                        'x': 3000
+                        'x': 2
                     }
                 ]
             }
