@@ -6,9 +6,9 @@ from .validator import Validator
 
 def data_treater(df, options):
     treat_dtypes = {
-        DTypes.INT64: Int64Treater,
+        DTypes.INT64: IntegerTreater,
         DTypes.DATETIME: DateTime64Treater,
-        DTypes.FLOAT64: Float64Treater,
+        DTypes.FLOAT64: FloatTreater,
         DTypes.STRING: StringTreater,
         DTypes.TIME: TimeTreater,
     }
@@ -44,7 +44,7 @@ class NumericTreater(Validator):
         return series
 
 
-class Float64Treater(NumericTreater):
+class FloatTreater(NumericTreater):
     def __init__(self, decimal_sep='.', **kwargs):
         super().__init__(**kwargs)
 
@@ -59,7 +59,7 @@ class Float64Treater(NumericTreater):
         return series.astype(float).astype('Float64')
 
 
-class Int64Treater(NumericTreater):
+class IntegerTreater(NumericTreater):
     def __call__(self, series):
         return super().__call__(series).astype(float).astype('Int64')
 
