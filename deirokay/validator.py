@@ -52,11 +52,12 @@ def validate(df, *,
 
 
 def raise_validation(validation_document):
-    for report in validation_document.get('items'):
-        result = report.get('result')
+    for item in validation_document.get('items'):
+        for stmt in item.get('statements'):
+            result = stmt.get('report').get('result')
 
-        if result != 'pass':
-            raise ValidationError('Validation failed')
+            if result != 'pass':
+                raise ValidationError('Validation failed')
 
 
 def save_validation_document(document, save_to):
