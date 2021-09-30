@@ -48,3 +48,13 @@ def test_data_reader_from_dict():
 
     print(df)
     print(df.dtypes)
+
+
+def test_data_reader_with_bools():
+    df = data_reader(
+        'tests/sample_with_bools.csv',
+        options_json='tests/sample_with_bools.json'
+    )
+
+    print(df)
+    print(df.dtypes)

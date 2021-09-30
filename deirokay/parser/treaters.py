@@ -11,6 +11,7 @@ def data_treater(df, options):
         DTypes.FLOAT64: FloatTreater,
         DTypes.STRING: StringTreater,
         DTypes.TIME: TimeTreater,
+        DTypes.BOOLEAN: BooleanTreater
     }
     for col, option in options.items():
         option: dict = option.copy()
@@ -40,6 +41,44 @@ class NumericTreater(Validator):
 
         if self.thousands_sep is not None:
             series = series.str.replace(self.thousands_sep, '', regex=False)
+
+        return series
+
+
+class BooleanTreater(Validator):
+    def __init__(self,
+                 truthies=['true', 'True'],
+                 falsies=['false', 'False'],
+                 ignore_case=False,
+                 default_value=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+
+        assert default_value in (True, False, None)
+
+        self.truthies = truthies
+        self.falsies = falsies
+        self.ignore_case = ignore_case
+        self.default_value = default_value
+
+        if self.ignore_case:
+            self.truthies = [truthy.lower() for truthy in truthies]
+            self.falsies = [falsy.lower() for falsy in falsies]
+
+    def _evaluate(self, value):
+        if self.ignore_case:
+            value = value.lower()
+        if value in self.truthies:
+            return True
+        if value in self.falsies:
+            return False
+        return self.default_value
+
+    def __call__(self, series):
+        super().__call__(series)
+        series = series.apply(self._evaluate).astype('boolean')
+        # Validate again
+        super().__call__(series)
 
         return series
 

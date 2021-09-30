@@ -10,3 +10,5 @@ class DTypes(str, Enum):
     DT = DATETIME
     DATE = DATETIME
     TIME = 'time'
+    BOOLEAN = 'boolean'
+    BOOL = BOOLEAN
