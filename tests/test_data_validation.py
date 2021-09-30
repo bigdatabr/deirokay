@@ -8,7 +8,6 @@ def test_data_validation():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        encoding='iso-8859-1', sep=';',
         options_json='tests/options.json'
     )
 
@@ -34,7 +33,6 @@ def test_data_validation():
 def test_custom_statement():
     df = data_reader(
         'tests/transactions_sample.csv',
-        encoding='iso-8859-1', sep=';',
         options_json='tests/options.json'
     )
 
@@ -61,7 +59,6 @@ def test_custom_statement():
 def test_not_null_statement():
     df = data_reader(
         'tests/transactions_sample.csv',
-        encoding='iso-8859-1', sep=';',
         options_json='tests/options.json'
     )
 

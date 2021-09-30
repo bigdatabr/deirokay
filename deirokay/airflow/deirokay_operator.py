@@ -17,7 +17,6 @@ class DeirokayOperator(BaseOperator):
         deirokay_options_json: str,
         deirokay_assertions_json: str,
         save_json: Optional[str] = None,
-        pandas_kwargs: Optional[dict] = {},
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -25,10 +24,8 @@ class DeirokayOperator(BaseOperator):
         self.path_to_file = path_to_file
         self.deirokay_options_json = deirokay_options_json
         self.deirokay_assertions_json = deirokay_assertions_json
-        self.pandas_kwargs = pandas_kwargs
 
     def execute(self, context):
         df = deirokay.data_reader(self.path_to_file,
-                                  options_json=self.deirokay_options_json,
-                                  **self.pandas_kwargs)
+                                  options_json=self.deirokay_options_json)
         deirokay.validate(df, against_json=self.deirokay_assertions_json)

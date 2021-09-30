@@ -7,17 +7,17 @@ from ..enums import DTypes
 from .treaters import data_treater
 
 
-def data_reader(file_path, options={}, options_json=None, **kwargs):
-    df = pandas_read(file_path, **kwargs)
-
-    if options:
-        data_treater(df, options)
-    elif options_json:
+def data_reader(file_path, options={}, options_json=None):
+    if options_json and not options:
         with open(options_json) as fp:
             options = json.load(fp)
-        for option in options.values():
-            option['dtype'] = DTypes(option['dtype'])
-        data_treater(df, options)
+        for column in options.get('columns').values():
+            column['dtype'] = DTypes(column['dtype'])
+
+    columns = options.pop('columns')
+
+    df = pandas_read(file_path, **options)
+    data_treater(df, columns)
 
     return df
 
