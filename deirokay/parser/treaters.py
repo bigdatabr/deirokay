@@ -31,16 +31,16 @@ def data_treater(df, options):
 
 
 class NumericTreater(Validator):
-    def __init__(self, thousands_sep=None, **kwargs):
+    def __init__(self, thousand_sep=None, **kwargs):
         super().__init__(**kwargs)
 
-        self.thousands_sep = thousands_sep
+        self.thousand_sep = thousand_sep
 
     def __call__(self, series):
         super().__call__(series)
 
-        if self.thousands_sep is not None:
-            series = series.str.replace(self.thousands_sep, '', regex=False)
+        if self.thousand_sep is not None:
+            series = series.str.replace(self.thousand_sep, '', regex=False)
 
         return series
 

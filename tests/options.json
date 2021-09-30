@@ -5,7 +5,7 @@
         "WERKS01": {
             "dtype": "integer",
             "nullable": false,
-            "thousands_sep": ".",
+            "thousand_sep": ".",
             "unique": false
         },
         "DT_OPERACAO01": {
@@ -15,7 +15,7 @@
         "NUM_TRANSACAO01": {
             "dtype": "integer",
             "nullable": false,
-            "thousands_sep": ".",
+            "thousand_sep": ".",
             "unique": false
         },
         "HR_TRANSACAO01": {
@@ -46,25 +46,25 @@
         "QTD_VENDIDA02": {
             "dtype": "float",
             "nullable": false,
-            "thousands_sep": ".",
+            "thousand_sep": ".",
             "decimal_sep": ","
         },
         "VLR_TOT_VD_ITM02": {
             "dtype": "float",
             "nullable": false,
-            "thousands_sep": ".",
+            "thousand_sep": ".",
             "decimal_sep": ","
         },
         "VLR_DESCONTO02": {
             "dtype": "float",
             "nullable": false,
-            "thousands_sep": ".",
+            "thousand_sep": ".",
             "decimal_sep": ","
         },
         "VLR_LIQUIDO02": {
             "dtype": "float",
             "nullable": false,
-            "thousands_sep": ".",
+            "thousand_sep": ".",
             "decimal_sep": ","
         }
     }

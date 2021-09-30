@@ -20,10 +20,10 @@ def test_data_reader_from_dict():
         'sep': ';',
         'columns': {
             'WERKS01': {'dtype': DTypes.INT64, 'nullable': False,
-                        'thousands_sep': '.', 'unique': False},
+                        'thousand_sep': '.', 'unique': False},
             'DT_OPERACAO01': {'dtype': DTypes.DATETIME, 'format': '%Y%m%d'},
             'NUM_TRANSACAO01': {'dtype': DTypes.INT64, 'nullable': False,
-                                'thousands_sep': '.', 'unique': False},
+                                'thousand_sep': '.', 'unique': False},
             'HR_TRANSACAO01': {'dtype': DTypes.TIME, 'format': '%H:%M:%S'},
             'TIPO_PDV': {'dtype': DTypes.STR},
             'PROD_VENDA': {'dtype': DTypes.INT64},
@@ -33,13 +33,13 @@ def test_data_reader_from_dict():
             'TIPO_PDV_ORIGIN': {'dtype': DTypes.STR},
             'TIPO_PDV_ORIGIN_GRP': {'dtype': DTypes.STR},
             'QTD_VENDIDA02': {'dtype': DTypes.FLOAT64, 'nullable': False,
-                              'thousands_sep': '.', 'decimal_sep': ','},
+                              'thousand_sep': '.', 'decimal_sep': ','},
             'VLR_TOT_VD_ITM02': {'dtype': DTypes.FLOAT64, 'nullable': False,
-                                 'thousands_sep': '.', 'decimal_sep': ','},
+                                 'thousand_sep': '.', 'decimal_sep': ','},
             'VLR_DESCONTO02': {'dtype': DTypes.FLOAT64, 'nullable': False,
-                               'thousands_sep': '.', 'decimal_sep': ','},
+                               'thousand_sep': '.', 'decimal_sep': ','},
             'VLR_LIQUIDO02': {'dtype': DTypes.FLOAT64, 'nullable': False,
-                              'thousands_sep': '.', 'decimal_sep': ','},
+                              'thousand_sep': '.', 'decimal_sep': ','},
         }
     }
 
