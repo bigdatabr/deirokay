@@ -23,8 +23,8 @@ def _load_custom_statement(location: str):
         raise ValueError('You should pass a valid Python file')
 
     if path.startswith('s3://'):
-        raise NotImplementedError('There is no implementation for S3-backed '
-                                  'custom statements')
+        raise NotImplementedError('There is no support for S3-backed '
+                                  'custom statements yet')
 
     module_dir = os.path.dirname(path)
 
@@ -52,6 +52,7 @@ def _process_stmt(statement):
 
     stmts_map = {
         'unique': core_stmts.Unique,
+        'not_null': core_stmts.NotNull,
         'custom': CustomStatement,
     }
     try:
@@ -87,7 +88,7 @@ def validate(df, *,
         try:
             raise_validation(validation_document)
         except Exception:
-            pprint(validation_document, )
+            pprint(validation_document)
             raise
 
     return validation_document

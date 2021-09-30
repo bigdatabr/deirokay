@@ -1,10 +1,11 @@
+import pandas as pd
 
 
 class BaseStatement:
-    def __init__(self, stmt_options: dict):
-        self.options = stmt_options
+    def __init__(self, options: dict):
+        self.options = options
 
-    def __call__(self, df):
+    def __call__(self, df: pd.DataFrame):
         internal_report = self.report(df)
         result = self.result(internal_report)
 
@@ -14,10 +15,20 @@ class BaseStatement:
         }
         return final_report
 
-    def report(self, df):
+    def report(self, df: pd.DataFrame) -> dict:
+        """
+            Receive a DataFrame containing only columns on the scope of
+            validation and returns a report of related metrics that can
+            be used later to declare this Statement as fulfilled or
+            failed.
+        """
         pass
 
-    def result(self, report):
+    def result(self, report: dict) -> bool:
+        """
+            Receive the report previously generated and declare this
+            statement as either fulfilled (True) or failed (False).
+        """
         return True
 
 
