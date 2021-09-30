@@ -12,7 +12,7 @@ with open('requirements-dev.txt') as f:
     requirements_dev = [line.strip() for line in f.readlines()]
 
 setup(
-    name="data-engineering",
+    name="deirokay",
     packages=find_packages(include='deirokay*'),
     version=__version__,
     author="Marcos Bressan",
