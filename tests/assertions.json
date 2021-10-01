@@ -4,12 +4,12 @@
         {
             "scope": [
                 "WERKS01",
-                "DT_OPERACAO01"
+                "PROD_VENDA"
             ],
             "statements": [
                 {
                     "type": "unique",
-                    "at_least_%": 90.0
+                    "at_least_%": 40.0
                 },
                 {
                     "type": "not_null",

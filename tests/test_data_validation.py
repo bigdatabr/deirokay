@@ -4,7 +4,7 @@ from deirokay import data_reader, validate
 from deirokay.exceptions import ValidationError
 
 
-def test_data_validation():
+def test_data_invalidation_from_dict():
 
     df = data_reader(
         'tests/transactions_sample.csv',
@@ -28,6 +28,16 @@ def test_data_validation():
 
     with pytest.raises(ValidationError):
         validate(df, against=assertions)
+
+
+def test_data_validation_from_json():
+
+    df = data_reader(
+        'tests/transactions_sample.csv',
+        options_json='tests/options.json'
+    )
+
+    validate(df, against_json='tests/assertions.json')
 
 
 def test_not_null_statement():

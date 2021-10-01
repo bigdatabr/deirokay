@@ -1,7 +1,4 @@
-import pytest
-
 from deirokay.airflow import DeirokayOperator
-from deirokay.exceptions import ValidationError
 
 
 def test_deirokay_operator():
@@ -12,5 +9,4 @@ def test_deirokay_operator():
         deirokay_assertions_json='tests/assertions.json',
     )
 
-    with pytest.raises(ValidationError):
-        operator.execute({})
+    operator.execute({})
