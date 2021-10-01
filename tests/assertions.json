@@ -9,7 +9,11 @@
             "statements": [
                 {
                     "type": "unique",
-                    "at_least_%": 1.0
+                    "at_least_%": 90.0
+                },
+                {
+                    "type": "not_null",
+                    "at_least_%": 95.0
                 }
             ]
         }
