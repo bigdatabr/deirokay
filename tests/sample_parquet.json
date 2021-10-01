@@ -1,0 +1,19 @@
+{
+    "columns": {
+        "name": {
+            "dtype": "string",
+            "nullable": false,
+            "unique": true
+        },
+        "age": {
+            "dtype": "integer",
+            "nullable": true,
+            "unique": false
+        },
+        "married": {
+            "dtype": "boolean",
+            "nullable": true,
+            "unique": false
+        }
+    }
+}

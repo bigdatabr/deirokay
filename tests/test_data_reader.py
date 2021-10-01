@@ -73,8 +73,8 @@ def test_data_reader_without_options_exception():
 
 def test_data_reader_parquet():
     df = data_reader(
-        'tests/sample_with_bools.parquet',
-        options_json='tests/sample_with_bools.json'
+        'tests/sample_parquet.parquet',
+        options_json='tests/sample_parquet.json'
     )
 
     print(df)
