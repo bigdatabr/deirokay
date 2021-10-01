@@ -66,6 +66,8 @@ class BooleanTreater(Validator):
             self.falsies = [falsy.lower() for falsy in falsies]
 
     def _evaluate(self, value):
+        if value is None or value is pd.NA:
+            return self.default_value
         if self.ignore_case:
             value = value.lower()
         if value in self.truthies:
