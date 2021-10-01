@@ -30,32 +30,6 @@ def test_data_validation():
         validate(df, against=assertions)
 
 
-def test_custom_statement():
-    df = data_reader(
-        'tests/transactions_sample.csv',
-        options_json='tests/options.json'
-    )
-
-    assertions = {
-        'name': 'VENDAS',
-        'items': [
-            {
-                'scope': 'NUM_TRANSACAO01',
-                'statements': [
-                    {
-                        'type': 'custom',
-                        'location': 'tests/custom_statement.py'
-                                    '::ThereAreValuesGreaterThanX',
-                        'x': 2
-                    }
-                ]
-            }
-        ]
-    }
-
-    validate(df, against=assertions)
-
-
 def test_not_null_statement():
     df = data_reader(
         'tests/transactions_sample.csv',
@@ -83,6 +57,59 @@ def test_not_null_statement():
                     }
                 ]
             },
+        ]
+    }
+
+    validate(df, against=assertions)
+
+
+def test_custom_statement():
+    df = data_reader(
+        'tests/transactions_sample.csv',
+        options_json='tests/options.json'
+    )
+
+    assertions = {
+        'name': 'VENDAS',
+        'items': [
+            {
+                'scope': 'NUM_TRANSACAO01',
+                'statements': [
+                    {
+                        'type': 'custom',
+                        'location': 'tests/custom_statement.py'
+                                    '::ThereAreValuesGreaterThanX',
+                        'x': 2
+                    }
+                ]
+            }
+        ]
+    }
+
+    validate(df, against=assertions)
+
+
+@pytest.mark.skip(reason='Need AWS credentials')
+def test_custom_statement_from_s3():
+    df = data_reader(
+        'tests/transactions_sample.csv',
+        options_json='tests/options.json'
+    )
+
+    assertions = {
+        'name': 'VENDAS',
+        'items': [
+            {
+                'scope': 'NUM_TRANSACAO01',
+                'statements': [
+                    {
+                        'type': 'custom',
+                        'location': 's3://bigdata-momo/temp/custom_statement.py'
+                                    '::ThereAreValuesGreaterThanX',
+                        'x': 2
+                    }
+                ]
+            }
         ]
     }
 

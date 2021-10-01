@@ -2,6 +2,7 @@ import importlib
 import json
 import os
 from pprint import pprint
+from tempfile import NamedTemporaryFile
 from typing import Optional
 
 import deirokay.statements as core_stmts
@@ -15,23 +16,38 @@ def _load_custom_statement(location: str):
                          'following pattern:\n'
                          '<.py file location>::<class name>')
 
-    path, class_name = location.split('::')
-    module_path, extension = os.path.splitext(path)
+    original_file_path, class_name = location.split('::')
+    module_path, extension = os.path.splitext(original_file_path)
     module_name = os.path.basename(module_path)
 
     if extension not in ('.py', '.o'):
         raise ValueError('You should pass a valid Python file')
 
-    if path.startswith('s3://'):
-        raise NotImplementedError('There is no support for S3-backed '
-                                  'custom statements yet')
+    if original_file_path.startswith('s3://'):
+        import boto3
+        import re
+        bucket, key = (
+            re.findall(r's3:\/\/([\w\-]+)\/([\w\-\/.]+)',
+                       original_file_path)[0]
+        )
+        fp = NamedTemporaryFile(suffix='.py')
+        boto3.client('s3').download_fileobj(bucket, key, fp)
+        file_path = fp.name
+    elif original_file_path.startswith('http'):
+        raise NotImplementedError('HTTP-backed statement not implemented')
+    else:
+        file_path = original_file_path
 
-    module_dir = os.path.dirname(path)
+    print(file_path)
+    module_dir = os.path.dirname(file_path)
 
     os.sys.path.insert(0, module_dir)
     module = importlib.import_module(module_name)
     class_ = getattr(module, class_name)
     os.sys.path.pop(0)
+
+    if original_file_path.startswith('s3://'):
+        fp.close()
 
     if not issubclass(class_, core_stmts.BaseStatement):
         raise ImportError('Your custom statement should be a subclass of '
