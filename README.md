@@ -123,6 +123,7 @@ DTypes     | String-like alias | Supported Arguments | Default             | Arg
 :----------|:-----------------:|:-------------------:|:-------------------:|:--------------------------------------
 All DTypes | -                 | nullable            | True                | Values can be null
 All DTypes | -                 | unique              | False               | Values shoud be unique
+All DTypes | -                 | rename              | None                | Rename column
 INTEGER    | 'integer'         | thousand_sep        | None                | Thousand separator (e.g., "1,988")
 FLOAT      | 'float'           | thousand_sep        | None                | Thousand separator (e.g., "1,988")
 FLOAT      | 'float'           | decimal_sep         | '.'                 | Decimal separator (e.g., "3.14")
@@ -313,4 +314,4 @@ The `location` parameter must follow the pattern
 
 Currently, you can pass a local path or an S3 key:
 - `/home/ubuntu/my_module.py::MyStatementClass`
-- `s3://my-bucket/my_statements/module_of_statements.py::Stmt` 
+- `s3://my-bucket/my_statements/module_of_statements.py::Stmt` (make sure you have boto3 installed)
