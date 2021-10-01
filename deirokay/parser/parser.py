@@ -8,7 +8,11 @@ from .treaters import data_treater
 
 
 def data_reader(file_path, options={}, options_json=None):
-    if options_json and not options:
+    if bool(options) == bool(options_json):
+        raise ValueError('Either `options` or `options_json` '
+                         'parameters should be set (but not both).')
+
+    if options_json:
         with open(options_json) as fp:
             options = json.load(fp)
 

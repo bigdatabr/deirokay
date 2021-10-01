@@ -1,3 +1,5 @@
+import pytest
+
 from deirokay import data_reader
 from deirokay.enums import DTypes
 
@@ -60,3 +62,10 @@ def test_data_reader_with_bools():
 
     print(df)
     print(df.dtypes)
+
+
+def test_data_reader_without_options_exception():
+    with pytest.raises(ValueError):
+        data_reader(
+            'tests/sample_with_bools.csv'
+        )
