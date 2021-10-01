@@ -70,6 +70,7 @@ def _process_stmt(statement):
         'unique': core_stmts.Unique,
         'not_null': core_stmts.NotNull,
         'custom': CustomStatement,
+        'row_count': core_stmts.RowCount,
     }
     try:
         return stmts_map[stmt_type](statement)

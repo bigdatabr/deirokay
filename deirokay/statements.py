@@ -103,3 +103,32 @@ class NotNull(Statement):
         if not report.get('not_null_rows_%') <= self.at_most_perc:
             return False
         return True
+
+
+class RowCount(Statement):
+    expected_parameters = ['min', 'max']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.min = self.options.get('min', None)
+        self.max = self.options.get('max', None)
+
+    def report(self, df):
+        row_count = len(df)
+
+        report = {
+            'rows': row_count,
+        }
+        return report
+
+    def result(self, report):
+        row_count = report['rows']
+
+        if self.min is not None:
+            if not row_count >= self.min:
+                return False
+        if self.max is not None:
+            if not row_count <= self.max:
+                return False
+        return True

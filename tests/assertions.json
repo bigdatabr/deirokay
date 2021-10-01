@@ -14,6 +14,11 @@
                 {
                     "type": "not_null",
                     "at_least_%": 95.0
+                },
+                {
+                    "type": "row_count",
+                    "min": 18,
+                    "max": 22
                 }
             ]
         }
