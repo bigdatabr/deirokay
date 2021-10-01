@@ -2,8 +2,23 @@ import pandas as pd
 
 
 class BaseStatement:
+    expected_parameters = ['type', 'location']
+
     def __init__(self, options: dict):
         self.options = options
+
+        cls = type(self)
+        unexpected_parameters = [
+            option for option in options
+            if option not in (cls.expected_parameters
+                              + BaseStatement.expected_parameters)
+        ]
+        if unexpected_parameters:
+            raise ValueError(
+                f'Invalid parameters passed to {cls.__name__} statement: '
+                f'{unexpected_parameters}\n'
+                f'The valid parameters are: {cls.expected_parameters}'
+            )
 
     def __call__(self, df: pd.DataFrame):
         internal_report = self.report(df)
@@ -22,7 +37,7 @@ class BaseStatement:
             be used later to declare this Statement as fulfilled or
             failed.
         """
-        pass
+        return {}
 
     def result(self, report: dict) -> bool:
         """
@@ -36,6 +51,8 @@ Statement = BaseStatement
 
 
 class Unique(Statement):
+    expected_parameters = ['at_least_%']
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -55,6 +72,8 @@ class Unique(Statement):
 
 
 class NotNull(Statement):
+    expected_parameters = ['at_least_%', 'at_most_%', 'multicolumn_logic']
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
