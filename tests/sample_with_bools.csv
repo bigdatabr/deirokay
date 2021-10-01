@@ -1,4 +1,4 @@
 name,age,married
 jorge,54,true
-maria,12,false
+maria,,false
 barros,64,

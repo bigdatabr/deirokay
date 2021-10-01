@@ -7,7 +7,7 @@
         },
         "age": {
             "dtype": "integer",
-            "nullable": false,
+            "nullable": true,
             "unique": false
         },
         "married": {
