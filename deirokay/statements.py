@@ -5,8 +5,10 @@ class BaseStatement:
     expected_parameters = ['type', 'location']
 
     def __init__(self, options: dict):
-        self.options = options
+        self._validate_options(options)
+        self.options = options.copy()
 
+    def _validate_options(self, options: dict):
         cls = type(self)
         unexpected_parameters = [
             option for option in options
