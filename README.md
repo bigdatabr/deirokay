@@ -18,6 +18,9 @@ command line:
 
 `pip install git+http://gitlab.bigdata/bressanmarcos/deirokay`
 
+If you want to be in sync with the latest release:
+
+`pip install git+http://gitlab.bigdata/bressanmarcos/deirokay@dev`
 
 ## Installation for development
 
