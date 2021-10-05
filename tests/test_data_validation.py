@@ -126,3 +126,31 @@ def test_custom_statement_from_s3():
     }
 
     validate(df, against=assertions)
+
+
+def test_data_validation_with_jinja():
+
+    df = data_reader(
+        'tests/transactions_sample.csv',
+        options_json='tests/options.json'
+    )
+
+    assertions = {
+        'name': 'VENDAS',
+        'items': [
+            {
+                'scope': ['WERKS01', 'PROD_VENDA'],
+                'statements': [
+                    {'type': 'unique', 'at_least_%': '{{ 40.0 }}'},
+                    {'type': 'not_null', 'at_least_%': 95.0},
+                    {'type': 'row_count', 'min': '{{ 18 }}', 'max': 22}
+                ]
+            }
+        ]
+    }
+
+    validate(df, against=assertions)
+
+
+if __name__ == "__main__":
+    test_data_validation_from_json()
