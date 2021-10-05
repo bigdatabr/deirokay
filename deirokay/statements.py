@@ -1,12 +1,16 @@
 import pandas as pd
+from jinja2 import BaseLoader
+from jinja2.nativetypes import NativeEnvironment
 
 
 class BaseStatement:
     expected_parameters = ['type', 'location']
+    jinjaenv = NativeEnvironment(loader=BaseLoader())
 
     def __init__(self, options: dict):
         self._validate_options(options)
-        self.options = options.copy()
+        self.options = options
+        self._parse_options()
 
     def _validate_options(self, options: dict):
         cls = type(self)
@@ -21,6 +25,12 @@ class BaseStatement:
                 f'{unexpected_parameters}\n'
                 f'The valid parameters are: {cls.expected_parameters}'
             )
+
+    def _parse_options(self):
+        for key, value in self.options.items():
+            if isinstance(value, str):
+                rendered = BaseStatement.jinjaenv.from_string(value).render()
+                self.options[key] = rendered
 
     def __call__(self, df: pd.DataFrame):
         internal_report = self.report(df)
