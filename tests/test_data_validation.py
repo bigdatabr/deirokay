@@ -114,8 +114,10 @@ def test_custom_statement_from_s3():
                 'statements': [
                     {
                         'type': 'custom',
-                        'location': 's3://bigdata-momo/temp/custom_statement.py'
-                                    '::ThereAreValuesGreaterThanX',
+                        'location': (
+                            's3://bigdata-momo/temp/custom_statement.py'
+                            '::ThereAreValuesGreaterThanX'
+                        ),
                         'x': 2
                     }
                 ]
