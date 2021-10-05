@@ -319,3 +319,31 @@ The `location` parameter must follow the pattern
 Currently, you can pass a local path or an S3 key:
 - `/home/ubuntu/my_module.py::MyStatementClass`
 - `s3://my-bucket/my_statements/module_of_statements.py::Stmt` (make sure you have boto3 installed)
+
+
+## Deirokay Airflow Operator
+
+Deirokay has its own Airflow Operator, which you can import to your DAG
+to validate your data.
+
+
+``` python
+from datetime import datetime
+
+from airflow.models import DAG
+from deirokay.airflow import DeirokayOperator
+
+
+dag = DAG(dag_id='data-validation',
+          schedule_interval='@daily',
+          default_args={
+              'owner': 'airflow',
+              'start_date': datetime(2021, 3, 2),
+          })
+
+operator = DeirokayOperator(task_id='deirokay-validate',
+                            path_to_file='tests/transactions_sample.csv',
+                            deirokay_options_json='tests/options.json',
+                            deirokay_assertions_json='tests/assertions.json',
+                            dag=dag)
+```
