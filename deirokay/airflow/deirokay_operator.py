@@ -29,3 +29,5 @@ class DeirokayOperator(BaseOperator):
         df = deirokay.data_reader(self.path_to_file,
                                   options_json=self.deirokay_options_json)
         deirokay.validate(df, against_json=self.deirokay_assertions_json)
+
+        return self.path_to_file
