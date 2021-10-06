@@ -2,6 +2,8 @@ import pandas as pd
 from jinja2 import BaseLoader
 from jinja2.nativetypes import NativeEnvironment
 
+from .history_template import get_series
+
 
 class BaseStatement:
     expected_parameters = ['type', 'location']
@@ -29,7 +31,10 @@ class BaseStatement:
     def _parse_options(self):
         for key, value in self.options.items():
             if isinstance(value, str):
-                rendered = BaseStatement.jinjaenv.from_string(value).render()
+                rendered = (
+                    BaseStatement.jinjaenv.from_string(value)
+                    .render(series=get_series)
+                )
                 self.options[key] = rendered
 
     def __call__(self, df: pd.DataFrame):
