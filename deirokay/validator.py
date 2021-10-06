@@ -4,6 +4,7 @@ import os
 from pprint import pprint
 from tempfile import NamedTemporaryFile
 from typing import Optional
+from copy import deepcopy
 
 import deirokay.statements as core_stmts
 
@@ -57,7 +58,6 @@ def _load_custom_statement(location: str):
 
 
 def _process_stmt(statement):
-    statement = statement.copy()
     stmt_type: core_stmts.Statement = statement.get('type')
 
     if stmt_type == 'custom':
@@ -85,7 +85,7 @@ def validate(df, *,
              save_to=None,
              raise_exception=True) -> dict:
     if against:
-        validation_document = against
+        validation_document = deepcopy(against)
     else:
         with open(against_json) as fp:
             validation_document = json.load(fp)
