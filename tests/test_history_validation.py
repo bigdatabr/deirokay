@@ -10,6 +10,7 @@ from deirokay.config import DEFAULTS
 
 @pytest.fixture
 def prepare_history_folder():
+    shutil.rmtree('tests/history', ignore_errors=True)
     os.mkdir('tests/history')
     yield
     shutil.rmtree('tests/history')
@@ -39,9 +40,17 @@ def test_data_validation_with_jinja(prepare_history_folder):
         ]
     }
 
-    validate(df, against=assertions, save_to='tests/history/',
-             current_date=datetime(1999, 1, 1))
-    validate(df, against=assertions, save_to='tests/history/',
-             current_date=datetime(1999, 1, 2))
-    validate(df, against=assertions, save_to='tests/history/',
-             current_date=datetime(1999, 1, 3))
+    doc = validate(df, against=assertions, save_to='tests/history/',
+                   current_date=datetime(1999, 1, 1))
+    assert doc['items'][0]['statements'][0]['min'] == pytest.approx(18.525)
+    assert doc['items'][0]['statements'][0]['max'] == pytest.approx(20.58)
+
+    doc = validate(df, against=assertions, save_to='tests/history/',
+                   current_date=datetime(1999, 1, 2))
+    assert doc['items'][0]['statements'][0]['min'] == pytest.approx(19.0)
+    assert doc['items'][0]['statements'][0]['max'] == pytest.approx(21.0)
+
+    doc = validate(df, against=assertions, save_to='tests/history/',
+                   current_date=datetime(1999, 1, 3))
+    assert doc['items'][0]['statements'][0]['min'] == pytest.approx(19.0)
+    assert doc['items'][0]['statements'][0]['max'] == pytest.approx(21.0)
