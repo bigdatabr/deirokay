@@ -1,6 +1,7 @@
 import importlib
 import json
 import os
+import warnings
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
@@ -127,7 +128,14 @@ def _raise_validation(validation_document):
 
 
 def _save_validation_document(document, save_to, current_date):
-    current_date = (current_date or datetime.utcnow()).strftime('%Y%m%dT%H%M%S')
+    if current_date is None:
+        warnings.warn(
+            'Document is being saved using the current date returned by the'
+            ' `datetime.utcnow()` method. Instead, prefer to explicitly pass a'
+            ' `current_date` argument to `validate`.'
+        )
+        current_date = datetime.utcnow()
+    current_date = current_date.strftime('%Y%m%dT%H%M%S')
 
     document_name = document['name']
     folder_path = Path(save_to, document_name)
