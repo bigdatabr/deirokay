@@ -12,6 +12,7 @@ from typing import Optional
 import deirokay.statements as core_stmts
 
 from .exceptions import ValidationError
+from .fs import split_s3_path
 
 
 def _load_custom_statement(location: str):
@@ -29,11 +30,7 @@ def _load_custom_statement(location: str):
 
     if original_file_path.startswith('s3://'):
         import boto3
-        import re
-        bucket, key = (
-            re.findall(r's3:\/\/([\w\-]+)\/([\w\-\/.]+)',
-                       original_file_path)[0]
-        )
+        bucket, key = split_s3_path(original_file_path)
         fp = NamedTemporaryFile(suffix='.py')
         boto3.client('s3').download_fileobj(bucket, key, fp)
         file_path = fp.name
@@ -85,12 +82,14 @@ def _process_stmt(statement, read_from=None):
 def validate(df, *,
              against: Optional[dict] = None,
              against_json: Optional[str] = None,
-             save_to=None,
+             save_to: str = None,
              current_date=None,
              raise_exception=True) -> dict:
-    if save_to and not os.path.isdir(save_to):
-        raise ValueError('The `save_to` parameter must be an existing'
-                         ' directory')
+
+    if save_to:
+        if not save_to.startswith('s3://') and not os.path.isdir(save_to):
+            raise ValueError('The `save_to` parameter must be an existing'
+                             ' directory or an S3 path.')
 
     if against:
         validation_document = deepcopy(against)
@@ -133,17 +132,27 @@ def _save_validation_document(document, save_to, current_date):
         warnings.warn(
             'Document is being saved using the current date returned by the'
             ' `datetime.utcnow()` method. Instead, prefer to explicitly pass a'
-            ' `current_date` argument to `validate`.'
+            ' `current_date` argument to `validate`.', Warning
         )
         current_date = datetime.utcnow()
     current_date = current_date.strftime('%Y%m%dT%H%M%S')
 
     document_name = document['name']
-    folder_path = Path(save_to, document_name)
-    folder_path.mkdir(parents=True, exist_ok=True)
+    folder_path = os.path.join(save_to, document_name)
+    if not save_to.startswith('s3://'):
+        Path(folder_path).mkdir(parents=True, exist_ok=True)
 
-    file_path = folder_path / f'{current_date}.json'
+    file_path = os.path.join(folder_path, f'{current_date}.json')
 
-    print(f'Saving validation document to "{file_path!s}".')
-    with open(file_path, 'w') as fp:
-        json.dump(document, fp, indent=4)
+    print(f'Saving validation document to "{file_path}".')
+    if not save_to.startswith('s3://'):
+        with open(file_path, 'w') as fp:
+            json.dump(document, fp, indent=4)
+    else:
+        import boto3
+        bucket, key = split_s3_path(str(file_path))
+        boto3.client('s3').put_object(
+            Body=json.dumps(document, indent=1),
+            Bucket=bucket,
+            Key=key
+        )
