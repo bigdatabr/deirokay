@@ -1,10 +1,12 @@
 import importlib
 import json
 import os
+from copy import deepcopy
+from datetime import datetime
+from pathlib import Path
 from pprint import pprint
 from tempfile import NamedTemporaryFile
 from typing import Optional
-from copy import deepcopy
 
 import deirokay.statements as core_stmts
 
@@ -83,6 +85,7 @@ def validate(df, *,
              against: Optional[dict] = None,
              against_json: Optional[str] = None,
              save_to=None,
+             current_date=None,
              raise_exception=True) -> dict:
     if against:
         validation_document = deepcopy(against)
@@ -99,11 +102,14 @@ def validate(df, *,
             stmt['report'] = report
 
     if save_to:
-        save_validation_document(validation_document, save_to)
+        if not os.path.isdir(save_to):
+            raise ValueError('The `save_to` parameter must be an existing'
+                             ' directory')
+        _save_validation_document(validation_document, save_to, current_date)
 
     if raise_exception:
         try:
-            raise_validation(validation_document)
+            _raise_validation(validation_document)
         except Exception:
             pprint(validation_document)
             raise
@@ -111,7 +117,7 @@ def validate(df, *,
     return validation_document
 
 
-def raise_validation(validation_document):
+def _raise_validation(validation_document):
     for item in validation_document.get('items'):
         for stmt in item.get('statements'):
             result = stmt.get('report').get('result')
@@ -120,7 +126,15 @@ def raise_validation(validation_document):
                 raise ValidationError('Validation failed')
 
 
-def save_validation_document(document, save_to):
-    print(f'Saving validation document to "{save_to}".')
-    with open(save_to, 'w') as fp:
+def _save_validation_document(document, save_to, current_date):
+    current_date = (current_date or datetime.utcnow()).strftime('%Y%m%dT%H%M%S')
+
+    document_name = document['name']
+    folder_path = Path(save_to, document_name)
+    folder_path.mkdir(parents=True, exist_ok=True)
+
+    file_path = folder_path / f'{current_date}.json'
+
+    print(f'Saving validation document to "{file_path!s}".')
+    with open(file_path, 'w') as fp:
         json.dump(document, fp, indent=4)

@@ -1,8 +1,21 @@
+import os
+import shutil
+from datetime import datetime
+
+import pytest
+
 from deirokay import data_reader, validate
 from deirokay.config import DEFAULTS
 
 
-def test_data_validation_with_jinja():
+@pytest.fixture
+def prepare_history_folder():
+    os.mkdir('tests/history')
+    yield
+    shutil.rmtree('tests/history')
+
+
+def test_data_validation_with_jinja(prepare_history_folder):
 
     DEFAULTS['log_folder'] = 'tests/history/'
 
@@ -26,9 +39,9 @@ def test_data_validation_with_jinja():
         ]
     }
 
-    validate(df, against=assertions,
-             save_to='tests/history/VENDAS/19990101.json')
-    validate(df, against=assertions,
-             save_to='tests/history/VENDAS/19990102.json')
-    validate(df, against=assertions,
-             save_to='tests/history/VENDAS/19990103.json')
+    validate(df, against=assertions, save_to='tests/history/',
+             current_date=datetime(1999, 1, 1))
+    validate(df, against=assertions, save_to='tests/history/',
+             current_date=datetime(1999, 1, 2))
+    validate(df, against=assertions, save_to='tests/history/',
+             current_date=datetime(1999, 1, 3))
