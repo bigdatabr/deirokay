@@ -216,8 +216,8 @@ from deirokay import validate
 
 df = data_reader('file.parquet', options_json='options.json')
 validation_result_document = validate(df,
-                               against_json='assertions.json',
-                               raise_exception=False)
+                                      against_json='assertions.json',
+                                      raise_exception=False)
 ```
 
 The resulting validation document will present the reports for each
@@ -268,7 +268,8 @@ class ThereAreValuesGreaterThanX(BaseStatement):
         super().__init__(*args, **kwargs)
 
         # All the arguments necessary for the statement are collected
-        # from `self.options`.
+        # from `self.options`. If they were templated arguments, now they
+        # should have been already rendered.
         self.x = self.options.get('x')
 
     def report(self, df) -> dict:
@@ -300,7 +301,8 @@ Statement for a validation process:
                 "statements": [
                     {
                         "type": "custom",
-                        "location": "/home/custom_statement.py::ThereAreValuesGreaterThanX",
+                        "location": "/home/custom_statement.py::"
+                                    "ThereAreValuesGreaterThanX",
                         "x": 2
                     }
                 ]
