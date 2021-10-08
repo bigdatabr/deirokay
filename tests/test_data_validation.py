@@ -150,7 +150,3 @@ def test_data_validation_with_jinja():
     }
 
     validate(df, against=assertions)
-
-
-if __name__ == "__main__":
-    test_data_validation_from_json()
