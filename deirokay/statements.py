@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandas as pd
 from jinja2 import BaseLoader
 from jinja2.nativetypes import NativeEnvironment
@@ -9,9 +11,10 @@ class BaseStatement:
     expected_parameters = ['type', 'location']
     jinjaenv = NativeEnvironment(loader=BaseLoader())
 
-    def __init__(self, options: dict):
+    def __init__(self, options: dict, read_from: Optional[str] = None):
         self._validate_options(options)
         self.options = options
+        self._read_from = read_from
         self._parse_options()
 
     def _validate_options(self, options: dict):
@@ -33,7 +36,9 @@ class BaseStatement:
             if isinstance(value, str):
                 rendered = (
                     BaseStatement.jinjaenv.from_string(value)
-                    .render(series=get_series)
+                    .render(
+                        series=lambda x, y: get_series(x, y, self._read_from)
+                    )
                 )
                 self.options[key] = rendered
 

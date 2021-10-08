@@ -60,7 +60,7 @@ def _load_custom_statement(location: str):
     return class_
 
 
-def _process_stmt(statement):
+def _process_stmt(statement, read_from=None):
     stmt_type: core_stmts.Statement = statement.get('type')
 
     if stmt_type == 'custom':
@@ -76,7 +76,7 @@ def _process_stmt(statement):
         'row_count': core_stmts.RowCount,
     }
     try:
-        return stmts_map[stmt_type](statement)
+        return stmts_map[stmt_type](statement, read_from)
     except KeyError:
         raise NotImplementedError(f'Statement type "{stmt_type}" '
                                   'not implemented.')
@@ -88,6 +88,10 @@ def validate(df, *,
              save_to=None,
              current_date=None,
              raise_exception=True) -> dict:
+    if save_to and not os.path.isdir(save_to):
+        raise ValueError('The `save_to` parameter must be an existing'
+                         ' directory')
+
     if against:
         validation_document = deepcopy(against)
     else:
@@ -99,13 +103,10 @@ def validate(df, *,
         df_scope = df[scope] if isinstance(scope, list) else df[[scope]]
 
         for stmt in item.get('statements'):
-            report = _process_stmt(stmt)(df_scope)
+            report = _process_stmt(stmt, read_from=save_to)(df_scope)
             stmt['report'] = report
 
     if save_to:
-        if not os.path.isdir(save_to):
-            raise ValueError('The `save_to` parameter must be an existing'
-                             ' directory')
         _save_validation_document(validation_document, save_to, current_date)
 
     if raise_exception:

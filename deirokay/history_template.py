@@ -1,7 +1,6 @@
 import json
 import os
-from functools import wraps
-from os.path import join
+from pathlib import Path
 
 import pandas as pd
 import pyjq
@@ -14,8 +13,8 @@ def series_from_disk(series_name, lookback, folder=None):
         folder = DEFAULTS['log_folder']
 
     acc = []
-    for parent, folders, files in os.walk(join(folder, series_name)):
-        acc += [join(parent, file) for file in files]
+    for parent, _, files in os.walk(Path(folder, series_name)):
+        acc += [Path(parent, file) for file in files]
 
     acc.sort(reverse=True)
 
@@ -82,17 +81,8 @@ class DocumentNode():
         return ItemNode([])
 
 
-def get_attribute_soft(getattribute):
-    @wraps(getattribute)
-    def wrapper(self, name):
-        try:
-            return getattribute(name)
-        except AttributeError:
-            return None
-    return wrapper
-
-
-def get_series(series_name: str, lookback: int) -> DocumentNode:
-    docs = series_from_disk(series_name, lookback)
+def get_series(series_name: str, lookback: int,
+               read_from: str) -> DocumentNode:
+    docs = series_from_disk(series_name, lookback, read_from)
 
     return DocumentNode(docs)
