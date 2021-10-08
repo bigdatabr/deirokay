@@ -2,6 +2,7 @@ import pytest
 
 from deirokay import data_reader, validate
 from deirokay.exceptions import ValidationError
+from deirokay.fs import split_s3_path
 
 
 def test_data_invalidation_from_dict():
@@ -99,8 +100,21 @@ def test_custom_statement():
     validate(df, against=assertions)
 
 
+@pytest.fixture
+def prepare_s3_custom_statement():
+    local_path = 'tests/custom_statement.py'
+    s3_path = 's3://bigdata-momo/temp/custom_statement.py'
+    bucket, key = split_s3_path(s3_path)
+
+    import boto3
+    s3 = boto3.client('s3')
+    s3.put_object(Body=local_path, Bucket=bucket, Key=key)
+    yield s3_path
+    s3.delete_object(Bucket=bucket, Key=key)
+
+
 @pytest.mark.skip(reason='Need AWS credentials')
-def test_custom_statement_from_s3():
+def test_custom_statement_from_s3(prepare_s3_custom_statement):
     df = data_reader(
         'tests/transactions_sample.csv',
         options_json='tests/options.json'
@@ -115,7 +129,7 @@ def test_custom_statement_from_s3():
                     {
                         'type': 'custom',
                         'location': (
-                            's3://bigdata-momo/temp/custom_statement.py'
+                            prepare_s3_custom_statement +
                             '::ThereAreValuesGreaterThanX'
                         ),
                         'x': 2
