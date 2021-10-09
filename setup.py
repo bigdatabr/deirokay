@@ -11,6 +11,9 @@ with open('requirements.txt') as f:
 with open('requirements-dev.txt') as f:
     requirements_dev = [line.strip() for line in f.readlines()]
 
+with open('requirements-s3.txt') as f:
+    requirements_s3 = [line.strip() for line in f.readlines()]
+
 setup(
     name="deirokay",
     packages=find_packages(include='deirokay*'),
@@ -30,6 +33,7 @@ setup(
     zip_safe=True,
     install_requires=requirements,
     extras_require={
-        'dev': requirements_dev
+        'dev': requirements_dev,
+        's3': requirements_s3
     }
 )
