@@ -1,63 +1,36 @@
-import importlib
-import json
 import os
 import warnings
 from copy import deepcopy
 from datetime import datetime
-from pathlib import Path
 from pprint import pprint
-from tempfile import NamedTemporaryFile
 from typing import Optional
 
 import deirokay.statements as core_stmts
 
 from .exceptions import ValidationError
-from .fs import split_s3_path
+from .fs import FileSystem, LocalFileSystem, fs_factory
 
 
 def _load_custom_statement(location: str):
     if '::' not in location:
-        raise ValueError('You should pass your class location using the '
-                         'following pattern:\n'
+        raise ValueError('You should pass your class location using the'
+                         ' following pattern:\n'
                          '<.py file location>::<class name>')
 
-    original_file_path, class_name = location.split('::')
-    module_path, extension = os.path.splitext(original_file_path)
-    module_name = os.path.basename(module_path)
+    file_path, class_name = location.split('::')
 
-    if extension not in ('.py', '.o'):
-        raise ValueError('You should pass a valid Python file')
+    fs = fs_factory(file_path)
+    module = fs.import_as_python_module()
+    cls = getattr(module, class_name)
 
-    if original_file_path.startswith('s3://'):
-        import boto3
-        bucket, key = split_s3_path(original_file_path)
-        fp = NamedTemporaryFile(suffix='.py')
-        boto3.client('s3').download_fileobj(bucket, key, fp)
-        file_path = fp.name
-    elif original_file_path.startswith('http'):
-        raise NotImplementedError('HTTP-backed statement not implemented')
-    else:
-        file_path = original_file_path
-
-    print(file_path)
-    module_dir = os.path.dirname(file_path)
-
-    os.sys.path.insert(0, module_dir)
-    module = importlib.import_module(module_name)
-    class_ = getattr(module, class_name)
-    os.sys.path.pop(0)
-
-    if original_file_path.startswith('s3://'):
-        fp.close()
-
-    if not issubclass(class_, core_stmts.BaseStatement):
+    if not issubclass(cls, core_stmts.BaseStatement):
         raise ImportError('Your custom statement should be a subclass of '
                           'BaseStatement')
 
-    return class_
+    return cls
 
 
-def _process_stmt(statement, read_from=None):
+def _process_stmt(statement, read_from: FileSystem = None):
     stmt_type: core_stmts.Statement = statement.get('type')
 
     if stmt_type == 'custom':
@@ -87,15 +60,15 @@ def validate(df, *,
              raise_exception=True) -> dict:
 
     if save_to:
-        if not save_to.startswith('s3://') and not os.path.isdir(save_to):
+        save_to = fs_factory(save_to)
+        if isinstance(save_to, LocalFileSystem) and not save_to.isdir():
             raise ValueError('The `save_to` parameter must be an existing'
                              ' directory or an S3 path.')
 
     if against:
         validation_document = deepcopy(against)
     else:
-        with open(against_json) as fp:
-            validation_document = json.load(fp)
+        validation_document = fs_factory(against_json).read_json()
 
     for item in validation_document.get('items'):
         scope = item.get('scope')
@@ -127,7 +100,9 @@ def _raise_validation(validation_document):
                 raise ValidationError('Validation failed')
 
 
-def _save_validation_document(document, save_to, current_date):
+def _save_validation_document(document: dict,
+                              save_to: FileSystem,
+                              current_date: Optional[datetime] = None):
     if current_date is None:
         warnings.warn(
             'Document is being saved using the current date returned by the'
@@ -138,21 +113,11 @@ def _save_validation_document(document, save_to, current_date):
     current_date = current_date.strftime('%Y%m%dT%H%M%S')
 
     document_name = document['name']
-    folder_path = os.path.join(save_to, document_name)
-    if not save_to.startswith('s3://'):
-        Path(folder_path).mkdir(parents=True, exist_ok=True)
+    folder_path = save_to/document_name
+    if isinstance(folder_path, LocalFileSystem):
+        folder_path.mkdir(parents=True, exist_ok=True)
 
-    file_path = os.path.join(folder_path, f'{current_date}.json')
+    file_path = folder_path/f'{current_date}.json'
 
-    print(f'Saving validation document to "{file_path}".')
-    if not save_to.startswith('s3://'):
-        with open(file_path, 'w') as fp:
-            json.dump(document, fp, indent=4)
-    else:
-        import boto3
-        bucket, key = split_s3_path(str(file_path))
-        boto3.client('s3').put_object(
-            Body=json.dumps(document, indent=1),
-            Bucket=bucket,
-            Key=key
-        )
+    print(f'Saving validation document to "{file_path!s}".')
+    file_path.write_json(document, indent=1)

@@ -108,7 +108,7 @@ def prepare_s3_custom_statement():
 
     import boto3
     s3 = boto3.client('s3')
-    s3.put_object(Body=local_path, Bucket=bucket, Key=key)
+    s3.upload_file(local_path, bucket, key)
     yield s3_path
     s3.delete_object(Bucket=bucket, Key=key)
 
