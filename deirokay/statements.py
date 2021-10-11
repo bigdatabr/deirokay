@@ -10,6 +10,7 @@ from .history_template import get_series
 
 class BaseStatement:
     expected_parameters = ['type', 'location']
+    table_only = False
     jinjaenv = NativeEnvironment(loader=BaseLoader())
 
     def __init__(self, options: dict, read_from: Optional[FileSystem] = None):
@@ -69,6 +70,14 @@ class BaseStatement:
         """
         return True
 
+    @staticmethod
+    def profile(df: pd.DataFrame) -> dict:
+        """
+            Given a template data table, generate a statement instance
+            from it.
+        """
+        raise NotImplementedError
+
 
 Statement = BaseStatement
 
@@ -91,7 +100,17 @@ class Unique(Statement):
         return report
 
     def result(self, report):
-        return report.get('unique_rows_%') > self.at_least_perc
+        return report.get('unique_rows_%') >= self.at_least_perc
+
+    @staticmethod
+    def profile(df):
+        unique = ~df.duplicated(keep=False)
+
+        statement = {
+            'type': 'unique',
+            'at_least_%': float(100.0*unique.sum()/len(unique)),
+        }
+        return statement
 
 
 class NotNull(Statement):
@@ -127,9 +146,22 @@ class NotNull(Statement):
             return False
         return True
 
+    @staticmethod
+    def profile(df):
+        not_nulls = ~df.isnull().all(axis=1)
+
+        statement = {
+            'type': 'not_null',
+            'multicolumn_logic': 'all',
+            'at_least_%': float(100.0*not_nulls.sum()/len(not_nulls)),
+            'at_most_%': float(100.0*not_nulls.sum()/len(not_nulls))
+        }
+        return statement
+
 
 class RowCount(Statement):
     expected_parameters = ['min', 'max']
+    table_only = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -155,3 +187,14 @@ class RowCount(Statement):
             if not row_count <= self.max:
                 return False
         return True
+
+    @staticmethod
+    def profile(df):
+        row_count = len(df)
+
+        statement = {
+            'type': 'row_count',
+            'min': row_count,
+            'max': row_count,
+        }
+        return statement
