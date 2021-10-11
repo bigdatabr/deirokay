@@ -21,7 +21,7 @@ def test_data_validation_with_jinja(prepare_history_folder):
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options_json='tests/options.json'
+        options='tests/options.json'
     )
 
     assertions = {
@@ -80,7 +80,7 @@ def test_data_validation_with_jinja_using_s3(prepare_history_s3):
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options_json='tests/options.json'
+        options='tests/options.json'
     )
 
     assertions = {

@@ -5,7 +5,7 @@ def test_profiling():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options_json='tests/options.json'
+        options='tests/options.json'
     )
 
     validation_document = profile(df, 'transactions_sample')
