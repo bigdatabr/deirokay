@@ -10,6 +10,7 @@ from .history_template import get_series
 
 class BaseStatement:
     expected_parameters = ['type', 'location']
+    table_only = False
     jinjaenv = NativeEnvironment(loader=BaseLoader())
 
     def __init__(self, options: dict, read_from: Optional[FileSystem] = None):
@@ -70,7 +71,7 @@ class BaseStatement:
         return True
 
     @staticmethod
-    def profile(df: pd.DataFrame, all_columns: bool) -> dict:
+    def profile(df: pd.DataFrame) -> dict:
         """
             Given a template data table, generate a statement instance
             from it.
@@ -102,7 +103,7 @@ class Unique(Statement):
         return report.get('unique_rows_%') >= self.at_least_perc
 
     @staticmethod
-    def profile(df, all_columns):
+    def profile(df):
         unique = ~df.duplicated(keep=False)
 
         statement = {
@@ -148,6 +149,7 @@ class NotNull(Statement):
 
 class RowCount(Statement):
     expected_parameters = ['min', 'max']
+    table_only = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

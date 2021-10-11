@@ -15,9 +15,9 @@ def _generate_items(df):
     items = []
 
     df_columns = list(df.columns)
-    scope__all_columns = zip([df_columns] + df_columns,
-                             [True] + [False]*len(df_columns))
-    for scope, all_columns in scope__all_columns:
+    scope__table_stmt = zip([df_columns] + df_columns,
+                            [True] + [False]*len(df_columns))
+    for scope, table_only in scope__table_stmt:
         df_scope = df[scope] if isinstance(scope, list) else df[[scope]]
         item = {
             'scope': scope
@@ -26,11 +26,12 @@ def _generate_items(df):
         statements = item['statements'] = []
 
         for stmt_cls in profiling_statement_classes:
-            try:
-                statement = stmt_cls.profile(df_scope, all_columns=all_columns)
-                statements.append(statement)
-            except NotImplementedError:
-                pass
+            if table_only and stmt_cls.table_only or not stmt_cls.table_only:
+                try:
+                    statement = stmt_cls.profile(df_scope)
+                    statements.append(statement)
+                except NotImplementedError:
+                    pass
 
     return items
 
