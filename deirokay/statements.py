@@ -69,6 +69,14 @@ class BaseStatement:
         """
         return True
 
+    @staticmethod
+    def profile(df: pd.DataFrame, all_columns: bool) -> dict:
+        """
+            Given a template data table, generate a statement instance
+            from it.
+        """
+        raise NotImplementedError
+
 
 Statement = BaseStatement
 
@@ -91,7 +99,17 @@ class Unique(Statement):
         return report
 
     def result(self, report):
-        return report.get('unique_rows_%') > self.at_least_perc
+        return report.get('unique_rows_%') >= self.at_least_perc
+
+    @staticmethod
+    def profile(df, all_columns):
+        unique = ~df.duplicated(keep=False)
+
+        statement = {
+            'type': 'unique',
+            'at_least_%': float(100.0*unique.sum()/len(unique)),
+        }
+        return statement
 
 
 class NotNull(Statement):
