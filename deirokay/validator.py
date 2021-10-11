@@ -1,4 +1,4 @@
-import os
+import inspect
 import warnings
 from copy import deepcopy
 from datetime import datetime
@@ -9,6 +9,15 @@ import deirokay.statements as core_stmts
 
 from .exceptions import ValidationError
 from .fs import FileSystem, LocalFileSystem, fs_factory
+
+# List all Core statement classes automatically
+core_statement_classes = {
+    cls.name: cls
+    for _, cls in inspect.getmembers(core_stmts)
+    if isinstance(cls, type) and
+    issubclass(cls, core_stmts.BaseStatement) and
+    cls is not core_stmts.BaseStatement
+}
 
 
 def _load_custom_statement(location: str):
@@ -34,22 +43,18 @@ def _process_stmt(statement, read_from: FileSystem = None):
     stmt_type: core_stmts.Statement = statement.get('type')
 
     if stmt_type == 'custom':
-        location = statement.get('location')
+        location = statement.pop('location')
         CustomStatement = _load_custom_statement(location)
+        return CustomStatement(statement, read_from)
     else:
-        CustomStatement = None
-
-    stmts_map = {
-        'unique': core_stmts.Unique,
-        'not_null': core_stmts.NotNull,
-        'custom': CustomStatement,
-        'row_count': core_stmts.RowCount,
-    }
-    try:
-        return stmts_map[stmt_type](statement, read_from)
-    except KeyError:
-        raise NotImplementedError(f'Statement type "{stmt_type}" '
-                                  'not implemented.')
+        try:
+            return core_statement_classes[stmt_type](statement, read_from)
+        except KeyError:
+            raise NotImplementedError(
+                f'Statement type "{stmt_type}" not implemented.\n'
+                f'The available types are {list(core_statement_classes)}'
+                ' or `custom` for your own statements.'
+            )
 
 
 def validate(df, *,

@@ -265,7 +265,9 @@ from deirokay.statements import BaseStatement
 
 
 class ThereAreValuesGreaterThanX(BaseStatement):
-
+    # Give your statement class a name (only for completeness,
+    # its name is only useful when proposing it in a Merge Request)
+    name = 'there_are_values_greater_than_x'
     # Declare which parameters are valid for this statement
     expected_parameters = ['x']
 

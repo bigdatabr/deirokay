@@ -9,7 +9,8 @@ from .history_template import get_series
 
 
 class BaseStatement:
-    expected_parameters = ['type', 'location']
+    name = 'base_statement'
+    expected_parameters = ['type']
     table_only = False
     jinjaenv = NativeEnvironment(loader=BaseLoader())
 
@@ -83,6 +84,7 @@ Statement = BaseStatement
 
 
 class Unique(Statement):
+    name = 'unique'
     expected_parameters = ['at_least_%']
 
     def __init__(self, *args, **kwargs):
@@ -114,6 +116,7 @@ class Unique(Statement):
 
 
 class NotNull(Statement):
+    name = 'not_null'
     expected_parameters = ['at_least_%', 'at_most_%', 'multicolumn_logic']
 
     def __init__(self, *args, **kwargs):
@@ -160,6 +163,7 @@ class NotNull(Statement):
 
 
 class RowCount(Statement):
+    name = 'row_count'
     expected_parameters = ['min', 'max']
     table_only = True
 
