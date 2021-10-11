@@ -1,4 +1,5 @@
 from os.path import splitext
+from typing import Union
 
 import pandas as pd
 
@@ -7,13 +8,9 @@ from ..fs import fs_factory
 from .treaters import data_treater
 
 
-def data_reader(file_path, options={}, options_json=None):
-    if bool(options) == bool(options_json):
-        raise ValueError('Either `options` or `options_json` '
-                         'parameters should be set (but not both).')
-
-    if options_json:
-        options = fs_factory(options_json).read_json()
+def data_reader(file_path: str, options: Union[dict, str]):
+    if isinstance(options, str):
+        options = fs_factory(options).read_json()
 
     for column in options.get('columns').values():
         column['dtype'] = DTypes(column['dtype'])

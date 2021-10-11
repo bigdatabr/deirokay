@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 import deirokay
 from airflow.models.baseoperator import BaseOperator
@@ -14,20 +14,20 @@ class DeirokayOperator(BaseOperator):
     def __init__(
         self,
         path_to_file: str,
-        deirokay_options_json: str,
-        deirokay_assertions_json: str,
-        save_json: Optional[str] = None,
+        deirokay_options: Union[dict, str],
+        deirokay_assertions: Union[dict, str],
+        save_to: Optional[str] = None,
         **kwargs
     ):
         super().__init__(**kwargs)
 
         self.path_to_file = path_to_file
-        self.deirokay_options_json = deirokay_options_json
-        self.deirokay_assertions_json = deirokay_assertions_json
+        self.deirokay_options = deirokay_options
+        self.deirokay_assertions = deirokay_assertions
 
     def execute(self, context):
         df = deirokay.data_reader(self.path_to_file,
-                                  options_json=self.deirokay_options_json)
-        deirokay.validate(df, against_json=self.deirokay_assertions_json)
+                                  options=self.deirokay_options)
+        deirokay.validate(df, against=self.deirokay_assertions)
 
         return self.path_to_file

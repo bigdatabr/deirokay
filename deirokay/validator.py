@@ -3,7 +3,7 @@ import warnings
 from copy import deepcopy
 from datetime import datetime
 from pprint import pprint
-from typing import Optional
+from typing import Optional, Union
 
 import deirokay.statements as core_stmts
 
@@ -58,11 +58,10 @@ def _process_stmt(statement, read_from: FileSystem = None):
 
 
 def validate(df, *,
-             against: Optional[dict] = None,
-             against_json: Optional[str] = None,
-             save_to: str = None,
-             current_date=None,
-             raise_exception=True) -> dict:
+             against: Union[str, dict],
+             save_to: Optional[str] = None,
+             current_date: Optional[datetime] = None,
+             raise_exception: bool = True) -> dict:
 
     if save_to:
         save_to = fs_factory(save_to)
@@ -70,10 +69,10 @@ def validate(df, *,
             raise ValueError('The `save_to` parameter must be an existing'
                              ' directory or an S3 path.')
 
-    if against:
-        validation_document = deepcopy(against)
+    if isinstance(against, str):
+        validation_document = fs_factory(against).read_json()
     else:
-        validation_document = fs_factory(against_json).read_json()
+        validation_document = deepcopy(against)
 
     for item in validation_document.get('items'):
         scope = item.get('scope')
