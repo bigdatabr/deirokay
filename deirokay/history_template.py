@@ -1,7 +1,7 @@
 import warnings
 
+import jq
 import pandas as pd
-import pyjq
 
 from .fs import FileSystem
 
@@ -22,12 +22,16 @@ class NullCallableNode():
 
 
 class StatementNode():
+    detail_keys = jq.compile('.[].report.detail | keys')
+
     def __init__(self, statements):
-        attributes = pyjq.all('.[].report.detail | keys', statements)
+        attributes = StatementNode.detail_keys.input(statements).all()
         attributes = set([key for sub in attributes for key in sub])
 
         for att in attributes:
-            child = pyjq.all(f'.[].report.detail.{att}', statements)
+            child = (
+                jq.compile(f'.[].report.detail.{att}').input(statements).all()
+            )
             setattr(self, att, pd.Series(child))
 
     def __getattr__(self, name):
@@ -35,18 +39,18 @@ class StatementNode():
 
 
 class ItemNode():
+    attribute_keys = jq.compile(
+        '.[].statements[] | if .alias != null then .alias else .type end'
+    )
+
     def __init__(self, items):
-        attributes = set(pyjq.all(
-            '.[].statements[] | if .alias != null then .alias else .type end',
-            items
-        ))
+        attributes = set(ItemNode.attribute_keys.input(items).all())
 
         for att in attributes:
-            child = pyjq.all(
+            child = jq.compile(
                 '.[].statements[] | '
-                f'select(.alias == "{att}" or .type == "{att}")',
-                items
-            )
+                f'select(.alias == "{att}" or .type == "{att}")'
+            ).input(items).all()
             setattr(self, att, StatementNode(child))
 
     def __getattr__(self, name):
@@ -54,18 +58,18 @@ class ItemNode():
 
 
 class DocumentNode():
+    attribute_keys = jq.compile(
+        '.[].items[] | if .alias != null then .alias else .scope end'
+    )
+
     def __init__(self, docs):
-        attributes = set(pyjq.all(
-            '.[].items[] | if .alias != null then .alias else .scope end',
-            docs
-        ))
+        attributes = set(DocumentNode.attribute_keys.input(docs).all())
 
         for att in attributes:
-            child = pyjq.all(
+            child = jq.compile(
                 '.[].items[] | '
-                f'select(.alias == "{att}" or .scope == "{att}")',
-                docs
-            )
+                f'select(.alias == "{att}" or .scope == "{att}")'
+            ).input(docs).all()
             setattr(self, att, ItemNode(child))
 
     def __getattr__(self, name):
