@@ -191,6 +191,7 @@ Here is an example of Validation Document in JSON format:
 ``` JSON
 {
     "name": "VENDAS",
+    "description": "An optional field to provide further textual information",
     "items": [
         {
             "scope": [
@@ -299,6 +300,7 @@ Statement for a validation process:
 ``` JSON
 {
         "name": "VENDAS",
+        "description": "Validation using custom statement",
         "items": [
             {
                 "scope": "NUM_TRANSACAO01",
