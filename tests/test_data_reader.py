@@ -10,6 +10,7 @@ def test_data_reader_from_json():
         'tests/transactions_sample.csv',
         options_json='tests/options.json'
     )
+    assert len(df) == 20
 
     print(df)
     print(df.dtypes)
@@ -49,6 +50,7 @@ def test_data_reader_from_dict():
         'tests/transactions_sample.csv',
         options=options
     )
+    assert len(df) == 20
 
     print(df)
     print(df.dtypes)
