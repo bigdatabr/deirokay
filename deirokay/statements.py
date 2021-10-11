@@ -4,6 +4,7 @@ import pandas as pd
 from jinja2 import BaseLoader
 from jinja2.nativetypes import NativeEnvironment
 
+from .fs import FileSystem
 from .history_template import get_series
 
 
@@ -11,7 +12,7 @@ class BaseStatement:
     expected_parameters = ['type', 'location']
     jinjaenv = NativeEnvironment(loader=BaseLoader())
 
-    def __init__(self, options: dict, read_from: Optional[str] = None):
+    def __init__(self, options: dict, read_from: Optional[FileSystem] = None):
         self._validate_options(options)
         self.options = options
         self._read_from = read_from
