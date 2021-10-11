@@ -146,6 +146,18 @@ class NotNull(Statement):
             return False
         return True
 
+    @staticmethod
+    def profile(df):
+        not_nulls = ~df.isnull().all(axis=1)
+
+        statement = {
+            'type': 'not_null',
+            'multicolumn_logic': 'all',
+            'at_least_%': float(100.0*not_nulls.sum()/len(not_nulls)),
+            'at_most_%': float(100.0*not_nulls.sum()/len(not_nulls))
+        }
+        return statement
+
 
 class RowCount(Statement):
     expected_parameters = ['min', 'max']
@@ -175,3 +187,14 @@ class RowCount(Statement):
             if not row_count <= self.max:
                 return False
         return True
+
+    @staticmethod
+    def profile(df):
+        row_count = len(df)
+
+        statement = {
+            'type': 'row_count',
+            'min': row_count,
+            'max': row_count,
+        }
+        return statement
