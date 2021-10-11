@@ -9,7 +9,7 @@ def test_data_invalidation_from_dict():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options_json='tests/options.json'
+        options='tests/options.json'
     )
 
     assertions = {
@@ -35,16 +35,16 @@ def test_data_validation_from_json():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options_json='tests/options.json'
+        options='tests/options.json'
     )
 
-    validate(df, against_json='tests/assertions.json')
+    validate(df, against='tests/assertions.json')
 
 
 def test_not_null_statement():
     df = data_reader(
         'tests/transactions_sample.csv',
-        options_json='tests/options.json'
+        options='tests/options.json'
     )
 
     assertions = {
@@ -77,7 +77,7 @@ def test_not_null_statement():
 def test_custom_statement():
     df = data_reader(
         'tests/transactions_sample.csv',
-        options_json='tests/options.json'
+        options='tests/options.json'
     )
 
     assertions = {
@@ -117,7 +117,7 @@ def prepare_s3_custom_statement():
 def test_custom_statement_from_s3(prepare_s3_custom_statement):
     df = data_reader(
         'tests/transactions_sample.csv',
-        options_json='tests/options.json'
+        options='tests/options.json'
     )
 
     assertions = {
@@ -146,7 +146,7 @@ def test_data_validation_with_jinja():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options_json='tests/options.json'
+        options='tests/options.json'
     )
 
     assertions = {
