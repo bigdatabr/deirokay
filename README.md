@@ -18,7 +18,11 @@ command line:
 
 `pip install git+http://gitlab.bigdata/bressanmarcos/deirokay`
 
-If you want to be in sync with the latest release:
+To include optional dependences for AWS S3, install:
+
+`pip install git+http://gitlab.bigdata/bressanmarcos/deirokay[s3]`
+
+If you want to be in sync with the latest (and possibly unstable) release:
 
 `pip install git+http://gitlab.bigdata/bressanmarcos/deirokay@dev`
 

@@ -1,9 +1,9 @@
-import json
 from os.path import splitext
 
 import pandas as pd
 
 from ..enums import DTypes
+from ..fs import fs_factory
 from .treaters import data_treater
 
 
@@ -13,8 +13,7 @@ def data_reader(file_path, options={}, options_json=None):
                          'parameters should be set (but not both).')
 
     if options_json:
-        with open(options_json) as fp:
-            options = json.load(fp)
+        options = fs_factory(options_json).read_json()
 
     for column in options.get('columns').values():
         column['dtype'] = DTypes(column['dtype'])
