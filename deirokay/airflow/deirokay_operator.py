@@ -1,8 +1,9 @@
 import logging
 from typing import Optional, Union
 
-import deirokay
 from airflow.models.baseoperator import BaseOperator
+
+import deirokay
 
 logger = logging.getLogger(__name__)
 
@@ -14,20 +15,19 @@ class DeirokayOperator(BaseOperator):
     def __init__(
         self,
         path_to_file: str,
-        deirokay_options: Union[dict, str],
-        deirokay_assertions: Union[dict, str],
+        options: Union[dict, str],
+        against: Union[dict, str],
         save_to: Optional[str] = None,
         **kwargs
     ):
         super().__init__(**kwargs)
 
         self.path_to_file = path_to_file
-        self.deirokay_options = deirokay_options
-        self.deirokay_assertions = deirokay_assertions
+        self.options = options
+        self.against = against
 
     def execute(self, context):
-        df = deirokay.data_reader(self.path_to_file,
-                                  options=self.deirokay_options)
-        deirokay.validate(df, against=self.deirokay_assertions)
+        df = deirokay.data_reader(self.path_to_file, options=self.options)
+        deirokay.validate(df, against=self.against)
 
         return self.path_to_file
