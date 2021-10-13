@@ -8,8 +8,9 @@ def test_data_reader_from_json():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options_json='tests/options.json'
+        options='tests/options.json'
     )
+    assert len(df) == 20
 
     print(df)
     print(df.dtypes)
@@ -49,6 +50,7 @@ def test_data_reader_from_dict():
         'tests/transactions_sample.csv',
         options=options
     )
+    assert len(df) == 20
 
     print(df)
     print(df.dtypes)
@@ -57,7 +59,7 @@ def test_data_reader_from_dict():
 def test_data_reader_with_bools():
     df = data_reader(
         'tests/sample_with_bools.csv',
-        options_json='tests/sample_with_bools.json'
+        options='tests/sample_with_bools.json'
     )
 
     print(df)
@@ -65,7 +67,7 @@ def test_data_reader_with_bools():
 
 
 def test_data_reader_without_options_exception():
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         data_reader(
             'tests/sample_with_bools.csv'
         )
@@ -74,7 +76,7 @@ def test_data_reader_without_options_exception():
 def test_data_reader_parquet():
     df = data_reader(
         'tests/sample_parquet.parquet',
-        options_json='tests/sample_parquet.json'
+        options='tests/sample_parquet.json'
     )
 
     print(df)

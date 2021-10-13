@@ -105,12 +105,12 @@ Now, import `Deirokay.data_reader` and pass the JSON file
 as argument:
 ```
 >>> from deirokay import data_reader
->>> data_reader('file.csv', options_json='options.json')
+>>> data_reader('file.csv', options='options.json')
      name   age  is_married
 0    john    55        True
 1  mariah    44        <NA>
 2    carl  <NA>       False
->>> data_reader('file.csv', options_json='options.json').dtypes
+>>> data_reader('file.csv', options='options.json').dtypes
 name           object
 age             Int64
 is_married    boolean
@@ -191,6 +191,7 @@ Here is an example of Validation Document in JSON format:
 ``` JSON
 {
     "name": "VENDAS",
+    "description": "An optional field to provide further textual information",
     "items": [
         {
             "scope": [
@@ -218,9 +219,9 @@ method and call it following the example below:
 from deirokay import data_reader
 from deirokay import validate
 
-df = data_reader('file.parquet', options_json='options.json')
+df = data_reader('file.parquet', options='options.json')
 validation_result_document = validate(df,
-                                      against_json='assertions.json',
+                                      against='assertions.json',
                                       raise_exception=False)
 ```
 
@@ -264,7 +265,9 @@ from deirokay.statements import BaseStatement
 
 
 class ThereAreValuesGreaterThanX(BaseStatement):
-
+    # Give your statement class a name (only for completeness,
+    # its name is only useful when proposing it in a Merge Request)
+    name = 'there_are_values_greater_than_x'
     # Declare which parameters are valid for this statement
     expected_parameters = ['x']
 
@@ -299,6 +302,7 @@ Statement for a validation process:
 ``` JSON
 {
         "name": "VENDAS",
+        "description": "Validation using custom statement",
         "items": [
             {
                 "scope": "NUM_TRANSACAO01",
@@ -352,7 +356,7 @@ dag = DAG(dag_id='data-validation',
 
 operator = DeirokayOperator(task_id='deirokay-validate',
                             path_to_file='tests/transactions_sample.csv',
-                            deirokay_options_json='tests/options.json',
-                            deirokay_assertions_json='tests/assertions.json',
+                            options='tests/options.json',
+                            against='tests/assertions.json',
                             dag=dag)
 ```
