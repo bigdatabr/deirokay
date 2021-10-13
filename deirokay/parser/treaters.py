@@ -40,7 +40,16 @@ class NumericTreater(Validator):
         super().__call__(series)
 
         if self.thousand_sep is not None:
-            series = series.str.replace(self.thousand_sep, '', regex=False)
+            try:
+                series = series.str.replace(self.thousand_sep, '', regex=False)
+            except AttributeError as e:
+                print(*e.args)
+                raise AttributeError(
+                    'Make sure you are not declaring a `thousand_sep` to'
+                    ' read a non-text-like column. This may happen when'
+                    ' reading numeric columns from a .parquet file,'
+                    ' for instance.'
+                )
 
         return series
 
@@ -86,7 +95,7 @@ class BooleanTreater(Validator):
 
 
 class FloatTreater(NumericTreater):
-    def __init__(self, decimal_sep='.', **kwargs):
+    def __init__(self, decimal_sep=None, **kwargs):
         super().__init__(**kwargs)
 
         self.decimal_sep = decimal_sep
@@ -95,7 +104,16 @@ class FloatTreater(NumericTreater):
         series = super().__call__(series)
 
         if self.decimal_sep is not None:
-            series = series.str.replace(self.decimal_sep, '.', regex=False)
+            try:
+                series = series.str.replace(self.decimal_sep, '.', regex=False)
+            except AttributeError as e:
+                print(*e.args)
+                raise AttributeError(
+                    'Make sure you are not declaring a `decimal_sep` to'
+                    ' read a non-text-like column. This may happen when'
+                    ' reading numeric columns from a .parquet file,'
+                    ' for instance.'
+                )
 
         return series.astype(float).astype('Float64')
 
