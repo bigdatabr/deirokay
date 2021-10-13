@@ -333,6 +333,27 @@ Currently, you can pass a local path or an S3 key:
 - `/home/ubuntu/my_module.py::MyStatementClass`
 - `s3://my-bucket/my_statements/module_of_statements.py::Stmt` (make sure you have boto3 installed)
 
+## Data Profiling: Auto-generated Validation Document
+
+You may generate a basic validation document by consuming a sample file.
+It is recommended that you review the generated document and
+supplement it with additional statements.
+
+
+``` python
+from deirokay import data_reader, profile
+
+
+df = data_reader(
+    'tests/transactions_sample.csv',
+    options='tests/options.json'
+)
+
+validation_document = profile(df,
+                              document_name='my-document-name',
+                              save_to='my-validation-document')
+```
+
 
 ## Deirokay Airflow Operator
 
