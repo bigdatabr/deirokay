@@ -30,7 +30,8 @@ class StatementNode():
 
         for att in attributes:
             child = (
-                jq.compile(f'.[].report.detail.{att}').input(statements).all()
+                jq.compile(f'.[].report.detail["{att}"]')
+                .input(statements).all()
             )
             setattr(self, att, pd.Series(child))
 
@@ -63,7 +64,11 @@ class DocumentNode():
     )
 
     def __init__(self, docs):
-        attributes = set(DocumentNode.attribute_keys.input(docs).all())
+        try:
+            attributes = set(DocumentNode.attribute_keys.input(docs).all())
+        except TypeError:
+            print('List-like scopes must be aliased.')
+            raise
 
         for att in attributes:
             child = jq.compile(

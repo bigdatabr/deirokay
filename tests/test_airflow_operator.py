@@ -9,4 +9,4 @@ def test_deirokay_operator():
         against='tests/assertions.json',
     )
 
-    operator.execute({})
+    operator.execute({'ts_nodash': '20001231T101010'})
