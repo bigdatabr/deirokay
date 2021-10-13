@@ -7,6 +7,13 @@ so that you can create your statements about your data
 without worrying whether or not your file has been properly
 parsed.
 
+You can use Deirokay for:
+- Data parsing from files;
+- Data validation, via Deirokay Statements;
+- Data profiling, which generates Deirokay Statements automatically.
+You may use them later with new documents to make sure they are still
+valid.
+
 To start using Deirokay, install its package and follow
 the instructions bellow:
 
