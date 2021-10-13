@@ -78,6 +78,9 @@ class DocumentNode():
 
 def get_series(series_name: str, lookback: int,
                read_from: FileSystem) -> DocumentNode:
+    if read_from is None:
+        raise ValueError('You cannot access previous logs without providing'
+                         ' a source/destination directory.')
     docs = series_from_fs(series_name, lookback, read_from)
 
     if not docs:
