@@ -1,109 +1,93 @@
-import importlib
-import json
-import os
+import inspect
+import warnings
+from copy import deepcopy
+from datetime import datetime
 from pprint import pprint
-from tempfile import NamedTemporaryFile
-from typing import Optional
+from typing import Optional, Union
 
 import deirokay.statements as core_stmts
 
 from .exceptions import ValidationError
+from .fs import FileSystem, LocalFileSystem, fs_factory
+
+# List all Core statement classes automatically
+core_statement_classes = {
+    cls.name: cls
+    for _, cls in inspect.getmembers(core_stmts)
+    if isinstance(cls, type) and
+    issubclass(cls, core_stmts.BaseStatement) and
+    cls is not core_stmts.BaseStatement
+}
 
 
 def _load_custom_statement(location: str):
     if '::' not in location:
-        raise ValueError('You should pass your class location using the '
-                         'following pattern:\n'
+        raise ValueError('You should pass your class location using the'
+                         ' following pattern:\n'
                          '<.py file location>::<class name>')
 
-    original_file_path, class_name = location.split('::')
-    module_path, extension = os.path.splitext(original_file_path)
-    module_name = os.path.basename(module_path)
+    file_path, class_name = location.split('::')
 
-    if extension not in ('.py', '.o'):
-        raise ValueError('You should pass a valid Python file')
+    fs = fs_factory(file_path)
+    module = fs.import_as_python_module()
+    cls = getattr(module, class_name)
 
-    if original_file_path.startswith('s3://'):
-        import boto3
-        import re
-        bucket, key = (
-            re.findall(r's3:\/\/([\w\-]+)\/([\w\-\/.]+)',
-                       original_file_path)[0]
-        )
-        fp = NamedTemporaryFile(suffix='.py')
-        boto3.client('s3').download_fileobj(bucket, key, fp)
-        file_path = fp.name
-    elif original_file_path.startswith('http'):
-        raise NotImplementedError('HTTP-backed statement not implemented')
-    else:
-        file_path = original_file_path
-
-    print(file_path)
-    module_dir = os.path.dirname(file_path)
-
-    os.sys.path.insert(0, module_dir)
-    module = importlib.import_module(module_name)
-    class_ = getattr(module, class_name)
-    os.sys.path.pop(0)
-
-    if original_file_path.startswith('s3://'):
-        fp.close()
-
-    if not issubclass(class_, core_stmts.BaseStatement):
+    if not issubclass(cls, core_stmts.BaseStatement):
         raise ImportError('Your custom statement should be a subclass of '
                           'BaseStatement')
 
-    return class_
+    return cls
 
 
-def _process_stmt(statement):
-    statement = statement.copy()
+def _process_stmt(statement, read_from: FileSystem = None):
     stmt_type: core_stmts.Statement = statement.get('type')
 
     if stmt_type == 'custom':
-        location = statement.get('location')
+        location = statement.pop('location')
         CustomStatement = _load_custom_statement(location)
+        return CustomStatement(statement, read_from)
     else:
-        CustomStatement = None
-
-    stmts_map = {
-        'unique': core_stmts.Unique,
-        'not_null': core_stmts.NotNull,
-        'custom': CustomStatement,
-        'row_count': core_stmts.RowCount,
-    }
-    try:
-        return stmts_map[stmt_type](statement)
-    except KeyError:
-        raise NotImplementedError(f'Statement type "{stmt_type}" '
-                                  'not implemented.')
+        try:
+            return core_statement_classes[stmt_type](statement, read_from)
+        except KeyError:
+            raise NotImplementedError(
+                f'Statement type "{stmt_type}" not implemented.\n'
+                f'The available types are {list(core_statement_classes)}'
+                ' or `custom` for your own statements.'
+            )
 
 
 def validate(df, *,
-             against: Optional[dict] = None,
-             against_json: Optional[str] = None,
-             save_to=None,
-             raise_exception=True) -> dict:
-    if against:
-        validation_document = against
+             against: Union[str, dict],
+             save_to: Optional[str] = None,
+             current_date: Optional[datetime] = None,
+             raise_exception: bool = True) -> dict:
+
+    if save_to:
+        save_to = fs_factory(save_to)
+        if isinstance(save_to, LocalFileSystem) and not save_to.isdir():
+            raise ValueError('The `save_to` parameter must be an existing'
+                             ' directory or an S3 path.')
+
+    if isinstance(against, str):
+        validation_document = fs_factory(against).read_json()
     else:
-        with open(against_json) as fp:
-            validation_document = json.load(fp)
+        validation_document = deepcopy(against)
 
     for item in validation_document.get('items'):
         scope = item.get('scope')
         df_scope = df[scope] if isinstance(scope, list) else df[[scope]]
 
         for stmt in item.get('statements'):
-            report = _process_stmt(stmt)(df_scope)
+            report = _process_stmt(stmt, read_from=save_to)(df_scope)
             stmt['report'] = report
 
     if save_to:
-        save_validation_document(validation_document, save_to)
+        _save_validation_document(validation_document, save_to, current_date)
 
     if raise_exception:
         try:
-            raise_validation(validation_document)
+            _raise_validation(validation_document)
         except Exception:
             pprint(validation_document)
             raise
@@ -111,7 +95,7 @@ def validate(df, *,
     return validation_document
 
 
-def raise_validation(validation_document):
+def _raise_validation(validation_document):
     for item in validation_document.get('items'):
         for stmt in item.get('statements'):
             result = stmt.get('report').get('result')
@@ -120,7 +104,24 @@ def raise_validation(validation_document):
                 raise ValidationError('Validation failed')
 
 
-def save_validation_document(document, save_to):
-    print(f'Saving validation document to "{save_to}".')
-    with open(save_to, 'w') as fp:
-        json.dump(document, fp, indent=4)
+def _save_validation_document(document: dict,
+                              save_to: FileSystem,
+                              current_date: Optional[datetime] = None):
+    if current_date is None:
+        warnings.warn(
+            'Document is being saved using the current date returned by the'
+            ' `datetime.utcnow()` method. Instead, prefer to explicitly pass a'
+            ' `current_date` argument to `validate`.', Warning
+        )
+        current_date = datetime.utcnow()
+    current_date = current_date.strftime('%Y%m%dT%H%M%S')
+
+    document_name = document['name']
+    folder_path = save_to/document_name
+    if isinstance(folder_path, LocalFileSystem):
+        folder_path.mkdir(parents=True, exist_ok=True)
+
+    file_path = folder_path/f'{current_date}.json'
+
+    print(f'Saving validation document to "{file_path!s}".')
+    file_path.write_json(document, indent=1)

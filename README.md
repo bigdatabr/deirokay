@@ -7,6 +7,13 @@ so that you can create your statements about your data
 without worrying whether or not your file has been properly
 parsed.
 
+You can use Deirokay for:
+- Data parsing from files;
+- Data validation, via Deirokay Statements;
+- Data profiling, which generates Deirokay Statements automatically.
+You may use them later with new documents to make sure they are still
+valid.
+
 To start using Deirokay, install its package and follow
 the instructions bellow:
 
@@ -18,6 +25,13 @@ command line:
 
 `pip install git+http://gitlab.bigdata/bressanmarcos/deirokay`
 
+To include optional dependences for AWS S3, install:
+
+`pip install git+http://gitlab.bigdata/bressanmarcos/deirokay[s3]`
+
+If you want to be in sync with the latest (and possibly unstable) release:
+
+`pip install git+http://gitlab.bigdata/bressanmarcos/deirokay@dev`
 
 ## Installation for development
 
@@ -98,12 +112,12 @@ Now, import `Deirokay.data_reader` and pass the JSON file
 as argument:
 ```
 >>> from deirokay import data_reader
->>> data_reader('file.csv', options_json='options.json')
+>>> data_reader('file.csv', options='options.json')
      name   age  is_married
 0    john    55        True
 1  mariah    44        <NA>
 2    carl  <NA>       False
->>> data_reader('file.csv', options_json='options.json').dtypes
+>>> data_reader('file.csv', options='options.json').dtypes
 name           object
 age             Int64
 is_married    boolean
@@ -184,6 +198,7 @@ Here is an example of Validation Document in JSON format:
 ``` JSON
 {
     "name": "VENDAS",
+    "description": "An optional field to provide further textual information",
     "items": [
         {
             "scope": [
@@ -211,10 +226,10 @@ method and call it following the example below:
 from deirokay import data_reader
 from deirokay import validate
 
-df = data_reader('file.parquet', options_json='options.json')
+df = data_reader('file.parquet', options='options.json')
 validation_result_document = validate(df,
-                               against_json='assertions.json',
-                               raise_exception=False)
+                                      against='assertions.json',
+                                      raise_exception=False)
 ```
 
 The resulting validation document will present the reports for each
@@ -257,7 +272,9 @@ from deirokay.statements import BaseStatement
 
 
 class ThereAreValuesGreaterThanX(BaseStatement):
-
+    # Give your statement class a name (only for completeness,
+    # its name is only useful when proposing it in a Merge Request)
+    name = 'there_are_values_greater_than_x'
     # Declare which parameters are valid for this statement
     expected_parameters = ['x']
 
@@ -265,7 +282,8 @@ class ThereAreValuesGreaterThanX(BaseStatement):
         super().__init__(*args, **kwargs)
 
         # All the arguments necessary for the statement are collected
-        # from `self.options`.
+        # from `self.options`. If they were templated arguments, now they
+        # should have been already rendered.
         self.x = self.options.get('x')
 
     def report(self, df) -> dict:
@@ -291,13 +309,15 @@ Statement for a validation process:
 ``` JSON
 {
         "name": "VENDAS",
+        "description": "Validation using custom statement",
         "items": [
             {
                 "scope": "NUM_TRANSACAO01",
                 "statements": [
                     {
                         "type": "custom",
-                        "location": "/home/custom_statement.py::ThereAreValuesGreaterThanX",
+                        "location": "/home/custom_statement.py::"
+                                    "ThereAreValuesGreaterThanX",
                         "x": 2
                     }
                 ]
@@ -319,3 +339,52 @@ The `location` parameter must follow the pattern
 Currently, you can pass a local path or an S3 key:
 - `/home/ubuntu/my_module.py::MyStatementClass`
 - `s3://my-bucket/my_statements/module_of_statements.py::Stmt` (make sure you have boto3 installed)
+
+## Data Profiling: Auto-generated Validation Document
+
+You may generate a basic validation document by consuming a sample file.
+It is recommended that you review the generated document and
+supplement it with additional statements.
+
+
+``` python
+from deirokay import data_reader, profile
+
+
+df = data_reader(
+    'tests/transactions_sample.csv',
+    options='tests/options.json'
+)
+
+validation_document = profile(df,
+                              document_name='my-document-name',
+                              save_to='my-validation-document')
+```
+
+
+## Deirokay Airflow Operator
+
+Deirokay has its own Airflow Operator, which you can import to your DAG
+to validate your data.
+
+
+``` python
+from datetime import datetime
+
+from airflow.models import DAG
+from deirokay.airflow import DeirokayOperator
+
+
+dag = DAG(dag_id='data-validation',
+          schedule_interval='@daily',
+          default_args={
+              'owner': 'airflow',
+              'start_date': datetime(2021, 3, 2),
+          })
+
+operator = DeirokayOperator(task_id='deirokay-validate',
+                            path_to_file='tests/transactions_sample.csv',
+                            options='tests/options.json',
+                            against='tests/assertions.json',
+                            dag=dag)
+```

@@ -1,31 +1,41 @@
 import logging
-from typing import Optional
+from datetime import datetime
+from typing import Optional, Union
+
+from airflow.models.baseoperator import BaseOperator
 
 import deirokay
-from airflow.models.baseoperator import BaseOperator
 
 logger = logging.getLogger(__name__)
 
 
 class DeirokayOperator(BaseOperator):
 
-    ui_color = '#1d3e63'
+    template_fields = ['path_to_file', 'options', 'against', 'save_to']
+    template_fields_renderers = {'options': 'json', 'against': 'json'}
+    ui_color = '#59f75e'
 
     def __init__(
         self,
         path_to_file: str,
-        deirokay_options_json: str,
-        deirokay_assertions_json: str,
-        save_json: Optional[str] = None,
+        options: Union[dict, str],
+        against: Union[dict, str],
+        save_to: Optional[str] = None,
         **kwargs
     ):
         super().__init__(**kwargs)
 
         self.path_to_file = path_to_file
-        self.deirokay_options_json = deirokay_options_json
-        self.deirokay_assertions_json = deirokay_assertions_json
+        self.options = options
+        self.against = against
+        self.save_to = save_to
 
     def execute(self, context):
-        df = deirokay.data_reader(self.path_to_file,
-                                  options_json=self.deirokay_options_json)
-        deirokay.validate(df, against_json=self.deirokay_assertions_json)
+        current_date = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S')
+        df = deirokay.data_reader(self.path_to_file, options=self.options)
+        deirokay.validate(df,
+                          against=self.against,
+                          save_to=self.save_to,
+                          current_date=current_date)
+
+        return self.path_to_file
