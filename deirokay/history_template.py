@@ -67,8 +67,10 @@ class DocumentNode():
         try:
             attributes = set(DocumentNode.attribute_keys.input(docs).all())
         except TypeError:
-            print('List-like scopes must be aliased.')
-            raise
+            raise TypeError(
+                'List-like scopes must be aliased when using `series`'
+                ' templates. Make sure your last Deirokay logs obey this rule.'
+            )
 
         for att in attributes:
             child = jq.compile(
