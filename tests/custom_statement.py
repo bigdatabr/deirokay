@@ -2,7 +2,7 @@ from deirokay.statements import BaseStatement
 
 
 class ThereAreValuesGreaterThanX(BaseStatement):
-
+    name = 'there_are_values_greater_than_x'
     expected_parameters = ['x']
 
     def __init__(self, *args, **kwargs):
