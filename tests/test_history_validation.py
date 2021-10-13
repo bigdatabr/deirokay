@@ -1,20 +1,9 @@
-import os
-import shutil
 from datetime import datetime
 
 import pytest
 
 from deirokay import data_reader, validate
 from deirokay.fs import split_s3_path
-
-
-@pytest.fixture
-def prepare_history_folder():
-    local_path = 'tests/history/'
-    shutil.rmtree(local_path, ignore_errors=True)
-    os.mkdir(local_path)
-    yield local_path
-    shutil.rmtree(local_path)
 
 
 def test_data_validation_with_jinja(prepare_history_folder):
