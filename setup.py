@@ -1,6 +1,13 @@
+import os
+from os.path import dirname, join
+
 from setuptools import find_packages, setup
 
-from deirokay.__version__ import __version__
+with open(join(dirname(__file__), 'deirokay', '__version__.py')) as v:
+    version = (
+        os.popen(f"python -c '{v.read().strip()};print(__version__)'")
+        .read().strip()
+    )
 
 with open('README.md') as f:
     long_description = f.read()
@@ -17,7 +24,7 @@ with open('requirements-s3.txt') as f:
 setup(
     name="deirokay",
     packages=find_packages(include='deirokay*'),
-    version=__version__,
+    version=version,
     author="Marcos Bressan",
     author_email="marcos.bressan@bigdata.com.br",
     description="A tool for data profiling and data validation",
