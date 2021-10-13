@@ -1,0 +1,28 @@
+{
+    "name": "VENDAS",
+    "description": "A sample file",
+    "items": [
+        {
+            "scope": [
+                "WERKS01",
+                "PROD_VENDA"
+            ],
+            "alias": "werks_prod",
+            "statements": [
+                {
+                    "type": "unique",
+                    "at_least_%": 40.0
+                },
+                {
+                    "type": "not_null",
+                    "at_least_%": 95.0
+                },
+                {
+                    "type": "row_count",
+                    "min": "{{ 0.95 * (series('VENDAS', 3).werks_prod.row_count.rows.mean()|default(19.5, true)) }}",
+                    "max": "{{ 1.05 * (series('VENDAS', 3).werks_prod.row_count.rows.mean()|default(19.6, true)) }}"
+                }
+            ]
+        }
+    ]
+}

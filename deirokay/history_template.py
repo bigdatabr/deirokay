@@ -30,7 +30,8 @@ class StatementNode():
 
         for att in attributes:
             child = (
-                jq.compile(f'.[].report.detail.{att}').input(statements).all()
+                jq.compile(f'.[].report.detail["{att}"]')
+                .input(statements).all()
             )
             setattr(self, att, pd.Series(child))
 
@@ -63,7 +64,13 @@ class DocumentNode():
     )
 
     def __init__(self, docs):
-        attributes = set(DocumentNode.attribute_keys.input(docs).all())
+        try:
+            attributes = set(DocumentNode.attribute_keys.input(docs).all())
+        except TypeError:
+            raise TypeError(
+                'List-like scopes must be aliased when using `series`'
+                ' templates. Make sure your last Deirokay logs obey this rule.'
+            )
 
         for att in attributes:
             child = jq.compile(
@@ -78,6 +85,9 @@ class DocumentNode():
 
 def get_series(series_name: str, lookback: int,
                read_from: FileSystem) -> DocumentNode:
+    if read_from is None:
+        raise ValueError('You cannot access previous logs without providing'
+                         ' a source/destination directory.')
     docs = series_from_fs(series_name, lookback, read_from)
 
     if not docs:
