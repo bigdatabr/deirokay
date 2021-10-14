@@ -81,3 +81,11 @@ def test_data_reader_parquet():
 
     print(df)
     print(df.dtypes)
+
+
+def test_data_reader_with_invalid_boolean():
+    with pytest.raises(ValueError):
+        data_reader(
+            'tests/sample_with_invalid_bool.csv',
+            options='tests/sample_with_bools.json'
+        )
