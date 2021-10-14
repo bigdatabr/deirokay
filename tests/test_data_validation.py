@@ -3,6 +3,7 @@ import pytest
 from deirokay import data_reader, validate
 from deirokay.exceptions import ValidationError
 from deirokay.fs import split_s3_path
+from deirokay.enums import Level
 
 
 def test_data_invalidation_from_dict():
@@ -158,6 +159,41 @@ def test_data_validation_with_jinja():
                     {'type': 'unique', 'at_least_%': '{{ 40.0 }}'},
                     {'type': 'not_null', 'at_least_%': 95.0},
                     {'type': 'row_count', 'min': '{{ 18 }}', 'max': 22}
+                ]
+            }
+        ]
+    }
+
+    validate(df, against=assertions)
+
+
+def test_data_validation_with_levels():
+
+    df = data_reader(
+        'tests/transactions_sample.csv',
+        options='tests/options.json'
+    )
+
+    assertions = {
+        'name': 'VENDAS',
+        'items': [
+            {
+                'scope': ['WERKS01', 'PROD_VENDA'],
+                'statements': [
+                    {
+                        'type': 'unique',
+                        'severity': Level.WARNING,
+                        'at_least_%': '{{ 100.0 }}'
+                    },
+                    {
+                        'type': 'not_null',
+                        'at_least_%': 100.0,
+                    },
+                    {
+                        'type': 'row_count',
+                        'min': '{{ 18 }}',
+                        'max': 22
+                    }
                 ]
             }
         ]

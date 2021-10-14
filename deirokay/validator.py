@@ -2,13 +2,14 @@ import inspect
 import warnings
 from copy import deepcopy
 from datetime import datetime
-from pprint import pprint
+import json
 from typing import Optional, Union
 
 import deirokay.statements as core_stmts
 
 from .exceptions import ValidationError
 from .fs import FileSystem, LocalFileSystem, fs_factory
+from .enums import Level
 
 # List all Core statement classes automatically
 core_statement_classes = {
@@ -41,6 +42,7 @@ def _load_custom_statement(location: str):
 
 def _process_stmt(statement, read_from: FileSystem = None):
     stmt_type = statement.pop('type')
+    severity = statement.pop('severity', None)
     location = statement.pop('location', None)
 
     if stmt_type == 'custom':
@@ -60,6 +62,8 @@ def _process_stmt(statement, read_from: FileSystem = None):
     statement_instance = cls(statement, read_from)
 
     statement['type'] = stmt_type
+    if severity:
+        statement['severity'] = severity
     if location:
         statement['location'] = location
 
@@ -70,7 +74,8 @@ def validate(df, *,
              against: Union[str, dict],
              save_to: Optional[str] = None,
              current_date: Optional[datetime] = None,
-             raise_exception: bool = True) -> dict:
+             raise_exception: bool = True,
+             exception_level: int = Level.CRITICAL) -> dict:
 
     if save_to:
         save_to = fs_factory(save_to)
@@ -99,22 +104,26 @@ def validate(df, *,
         _save_validation_document(validation_document, save_to, current_date)
 
     if raise_exception:
-        try:
-            _raise_validation(validation_document)
-        except Exception:
-            pprint(validation_document)
-            raise
+        _raise_validation(validation_document, exception_level)
 
     return validation_document
 
 
-def _raise_validation(validation_document):
+def _raise_validation(validation_document, exception_level):
+    raise_flag = False
     for item in validation_document.get('items'):
         for stmt in item.get('statements'):
+            severity = stmt.get('severity', Level.CRITICAL)
             result = stmt.get('report').get('result')
 
             if result != 'pass':
-                raise ValidationError('Validation failed')
+                print('Validation failed:')
+                print(json.dumps(stmt, indent=4))
+                if severity >= exception_level:
+                    raise_flag = True
+
+    if raise_flag:
+        raise ValidationError('Validation failed')
 
 
 def _save_validation_document(document: dict,
