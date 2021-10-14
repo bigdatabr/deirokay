@@ -11,6 +11,7 @@ def data_treater(df, options):
         DTypes.DATETIME: DateTime64Treater,
         DTypes.FLOAT64: FloatTreater,
         DTypes.STRING: StringTreater,
+        DTypes.DATE: DateTreater,
         DTypes.TIME: TimeTreater,
         DTypes.BOOLEAN: BooleanTreater
     }
@@ -145,6 +146,14 @@ class DateTime64Treater(Validator):
         super().__call__(series)
 
         return pd.to_datetime(series, format=self.format)
+
+
+class DateTreater(DateTime64Treater):
+    def __init__(self, format='%Y-%m-%d', **kwargs):
+        super().__init__(format, **kwargs)
+
+    def __call__(self, series):
+        return super().__call__(series).dt.date
 
 
 class TimeTreater(DateTime64Treater):

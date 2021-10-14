@@ -147,6 +147,7 @@ BOOLEAN    | 'boolean'         | ignore_case         | False               | Ign
 BOOLEAN    | 'boolean'         | default_value       | None                | Value to use if not truthy nor falsy
 DATETIME   | 'datetime'        | format              | '%Y-%m-%d %H:%M:%S' | Date Time format
 TIME       | 'time'            | format              | '%H:%M:%S'          | Time format
+DATE       | 'date'            | format              | '%Y-%m-%d'          | Date format
 STRING     | 'string'          | treat_null_as       | None                | Value to replace when null (e.g., "")
 
 Along with the specification for the columns, Deirokay options also
