@@ -40,21 +40,30 @@ def _load_custom_statement(location: str):
 
 
 def _process_stmt(statement, read_from: FileSystem = None):
-    stmt_type: core_stmts.Statement = statement.get('type')
+    stmt_type = statement.pop('type')
+    location = statement.pop('location', None)
 
     if stmt_type == 'custom':
-        location = statement.pop('location')
-        CustomStatement = _load_custom_statement(location)
-        return CustomStatement(statement, read_from)
+        if not location:
+            raise KeyError('A custom statement must define a `location`'
+                           ' parameter.')
+        cls = _load_custom_statement(location)
+    elif stmt_type in core_statement_classes:
+        cls = core_statement_classes[stmt_type]
     else:
-        try:
-            return core_statement_classes[stmt_type](statement, read_from)
-        except KeyError:
-            raise NotImplementedError(
-                f'Statement type "{stmt_type}" not implemented.\n'
-                f'The available types are {list(core_statement_classes)}'
-                ' or `custom` for your own statements.'
-            )
+        raise NotImplementedError(
+            f'Statement type "{stmt_type}" not implemented.\n'
+            f'The available types are {list(core_statement_classes)}'
+            ' or `custom` for your own statements.'
+        )
+
+    statement_instance = cls(statement, read_from)
+
+    statement['type'] = stmt_type
+    if location:
+        statement['location'] = location
+
+    return statement_instance
 
 
 def validate(df, *,
@@ -80,6 +89,10 @@ def validate(df, *,
 
         for stmt in item.get('statements'):
             report = _process_stmt(stmt, read_from=save_to)(df_scope)
+            if report['result'] is True:
+                report['result'] = 'pass'
+            else:
+                report['result'] = 'fail'
             stmt['report'] = report
 
     if save_to:
