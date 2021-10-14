@@ -10,7 +10,7 @@ class DTypes(str, Enum):
     STR = STRING
     DATETIME = 'datetime'
     DT = DATETIME
-    DATE = DATETIME
+    DATE = 'date'
     TIME = 'time'
     BOOLEAN = 'boolean'
     BOOL = BOOLEAN
