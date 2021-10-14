@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 from ..enums import DTypes
 from .validator import Validator
@@ -65,25 +66,36 @@ class BooleanTreater(Validator):
 
         assert default_value in (True, False, None)
 
-        self.truthies = truthies
-        self.falsies = falsies
         self.ignore_case = ignore_case
         self.default_value = default_value
 
         if self.ignore_case:
-            self.truthies = [truthy.lower() for truthy in truthies]
-            self.falsies = [falsy.lower() for falsy in falsies]
+            self.truthies = set(truthy.lower() for truthy in truthies)
+            self.falsies = set(falsy.lower() for falsy in falsies)
+        else:
+            self.truthies = set(truthies)
+            self.falsies = set(falsies)
+
+        if self.truthies & self.falsies:
+            raise ValueError('Truthies and Falsies sets should be'
+                             ' disjoint sets.')
 
     def _evaluate(self, value):
-        if value is None or value is pd.NA:
-            return self.default_value
-        if self.ignore_case:
-            value = value.lower()
-        if value in self.truthies:
+        if value is True:
             return True
-        if value in self.falsies:
+        if value is False:
             return False
-        return self.default_value
+        if value is None or value is np.nan or value is pd.NA:
+            return self.default_value
+
+        _value = value.lower() if self.ignore_case else value
+        if _value in self.truthies:
+            return True
+        if _value in self.falsies:
+            return False
+        raise ValueError(f'Unexpected boolean value: "{value}"'
+                         f' ({value.__class__})\n'
+                         f'Expected values: {self.truthies | self.falsies}')
 
     def __call__(self, series):
         super().__call__(series)
