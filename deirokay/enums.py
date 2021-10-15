@@ -14,3 +14,9 @@ class DTypes(str, Enum):
     TIME = 'time'
     BOOLEAN = 'boolean'
     BOOL = BOOLEAN
+
+
+class SeverityLevel(int, Enum):
+    MINIMAL = 1
+    WARNING = 3
+    CRITICAL = 5

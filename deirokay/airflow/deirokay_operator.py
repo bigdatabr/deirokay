@@ -2,9 +2,13 @@ import logging
 from datetime import datetime
 from typing import Optional, Union
 
+from airflow.exceptions import AirflowFailException, AirflowSkipException
 from airflow.models.baseoperator import BaseOperator
 
 import deirokay
+from deirokay.enums import SeverityLevel
+from deirokay.exceptions import ValidationError
+from deirokay.validator import raise_validation
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +25,8 @@ class DeirokayOperator(BaseOperator):
         options: Union[dict, str],
         against: Union[dict, str],
         save_to: Optional[str] = None,
+        soft_fail_level: int = SeverityLevel.MINIMAL,
+        hard_fail_level: int = SeverityLevel.CRITICAL,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -29,13 +35,24 @@ class DeirokayOperator(BaseOperator):
         self.options = options
         self.against = against
         self.save_to = save_to
+        self.soft_fail_level = soft_fail_level
+        self.hard_fail_level = hard_fail_level
 
     def execute(self, context):
         current_date = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S')
         df = deirokay.data_reader(self.path_to_file, options=self.options)
-        deirokay.validate(df,
-                          against=self.against,
-                          save_to=self.save_to,
-                          current_date=current_date)
 
-        return self.path_to_file
+        validation_document = deirokay.validate(
+            df,
+            against=self.against,
+            save_to=self.save_to,
+            current_date=current_date,
+            raise_exception=False
+        )
+        try:
+            raise_validation(validation_document, SeverityLevel.MINIMAL)
+        except ValidationError as e:
+            if e.level >= self.hard_fail_level:
+                raise AirflowFailException from e
+            if e.level >= self.soft_fail_level:
+                raise AirflowSkipException from e
