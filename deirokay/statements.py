@@ -129,9 +129,10 @@ class NotNull(Statement):
 
     def report(self, df):
         if self.multicolumn_logic == 'all':
-            not_nulls = ~df.isnull().all(axis=1)
-        else:
+            #  REMINDER: ~all == any
             not_nulls = ~df.isnull().any(axis=1)
+        else:
+            not_nulls = ~df.isnull().all(axis=1)
 
         report = {
             'null_rows': int((~not_nulls).sum()),
@@ -154,7 +155,7 @@ class NotNull(Statement):
 
         statement = {
             'type': 'not_null',
-            'multicolumn_logic': 'all',
+            'multicolumn_logic': 'any',
             'at_least_%': float(100.0*not_nulls.sum()/len(not_nulls)),
             'at_most_%': float(100.0*not_nulls.sum()/len(not_nulls))
         }
