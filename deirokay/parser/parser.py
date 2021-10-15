@@ -41,7 +41,10 @@ def pandas_read(file_path, **kwargs):
 
     pd_read_func = getattr(pd, f'read_{file_extension}', None)
     if pd_read_func is None:
-        other_readers = {'xls': pd.read_excel}
+        other_readers = {
+            'xls': pd.read_excel,
+            'xlsx': pd.read_excel
+        }
         try:
             pd_read_func = other_readers[file_extension]
         except KeyError:
