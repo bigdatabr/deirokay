@@ -8,7 +8,7 @@ from ..fs import fs_factory
 from .treaters import data_treater
 
 
-def data_reader(file_path: str, options: Union[dict, str]):
+def data_reader(data: Union[str, pd.DataFrame], options: Union[dict, str]):
     if isinstance(options, str):
         options = fs_factory(options).read_json()
 
@@ -17,7 +17,10 @@ def data_reader(file_path: str, options: Union[dict, str]):
 
     columns = options.pop('columns')
 
-    df = pandas_read(file_path, **options)
+    if isinstance(data, str):
+        df = pandas_read(data, **options)
+    else:
+        df = data.copy()
     data_treater(df, columns)
 
     return df
