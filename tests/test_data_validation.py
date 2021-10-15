@@ -3,7 +3,7 @@ import pytest
 from deirokay import data_reader, validate
 from deirokay.exceptions import ValidationError
 from deirokay.fs import split_s3_path
-from deirokay.enums import Level
+from deirokay.enums import SeverityLevel
 
 
 def test_data_invalidation_from_dict():
@@ -182,7 +182,7 @@ def test_data_validation_with_levels():
                 'statements': [
                     {
                         'type': 'unique',
-                        'severity': Level.WARNING,
+                        'severity': SeverityLevel.WARNING,
                         'at_least_%': '{{ 100.0 }}'
                     },
                     {

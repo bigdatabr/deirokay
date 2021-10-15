@@ -6,7 +6,7 @@ from airflow.exceptions import AirflowFailException, AirflowSkipException
 from airflow.models.baseoperator import BaseOperator
 
 import deirokay
-from deirokay.enums import Level
+from deirokay.enums import SeverityLevel
 from deirokay.exceptions import ValidationError
 from deirokay.validator import raise_validation
 
@@ -25,8 +25,8 @@ class DeirokayOperator(BaseOperator):
         options: Union[dict, str],
         against: Union[dict, str],
         save_to: Optional[str] = None,
-        soft_fail_level: int = Level.MINIMAL,
-        hard_fail_level: int = Level.CRITICAL,
+        soft_fail_level: int = SeverityLevel.MINIMAL,
+        hard_fail_level: int = SeverityLevel.CRITICAL,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -50,7 +50,7 @@ class DeirokayOperator(BaseOperator):
             raise_exception=False
         )
         try:
-            raise_validation(validation_document, Level.MINIMAL)
+            raise_validation(validation_document, SeverityLevel.MINIMAL)
         except ValidationError as e:
             if e.level >= self.hard_fail_level:
                 raise AirflowFailException from e

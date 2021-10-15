@@ -120,7 +120,6 @@ def raise_validation(validation_document, exception_level):
                 if severity >= exception_level:
                     if highest_level is None or severity > highest_level:
                         highest_level = severity
-                    print('Validation failed (suppressed)')
                 print('Validation failed:')
                 print(json.dumps(stmt, indent=4))
 
