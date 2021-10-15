@@ -1,5 +1,5 @@
 import pytest
-
+import pandas as pd
 from deirokay import data_reader
 from deirokay.enums import DTypes
 
@@ -89,3 +89,15 @@ def test_data_reader_with_invalid_boolean():
             'tests/sample_with_invalid_bool.csv',
             options='tests/sample_with_bools.json'
         )
+
+
+def test_data_reader_from_dataframe():
+    df = pd.DataFrame({
+        'name': ['jorge', 'maria', 'barros'],
+        'age': [54, None, 64],
+        'married': [True, False, None]
+    })
+    df = data_reader(df, options='tests/sample_with_bools.json')
+
+    print(df)
+    print(df.dtypes)
