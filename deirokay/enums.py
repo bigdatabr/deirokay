@@ -16,7 +16,7 @@ class DTypes(str, Enum):
     BOOL = BOOLEAN
 
 
-class Level(int, Enum):
-    CRITICAL = 50
-    WARNING = 30
-    MINIMAL = 0
+class SeverityLevel(int, Enum):
+    MINIMAL = 1
+    WARNING = 3
+    CRITICAL = 5

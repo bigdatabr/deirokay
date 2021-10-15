@@ -1,7 +1,7 @@
-from .enums import Level
+from .enums import SeverityLevel
 
 
 class ValidationError(Exception):
-    def __init__(self, level: Level, message='Validation failed'):
+    def __init__(self, level: SeverityLevel, message='Validation failed'):
         self.level = level
         super().__init__(message)

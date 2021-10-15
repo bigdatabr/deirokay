@@ -25,7 +25,7 @@ class DeirokayOperator(BaseOperator):
         options: Union[dict, str],
         against: Union[dict, str],
         save_to: Optional[str] = None,
-        soft_fail_level: int = Level.WARNING,
+        soft_fail_level: int = Level.MINIMAL,
         hard_fail_level: int = Level.CRITICAL,
         **kwargs
     ):
@@ -56,5 +56,3 @@ class DeirokayOperator(BaseOperator):
                 raise AirflowFailException from e
             if e.level >= self.soft_fail_level:
                 raise AirflowSkipException from e
-
-        return self.path_to_file

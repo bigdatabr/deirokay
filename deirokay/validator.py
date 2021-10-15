@@ -9,7 +9,7 @@ import deirokay.statements as core_stmts
 
 from .exceptions import ValidationError
 from .fs import FileSystem, LocalFileSystem, fs_factory
-from .enums import Level
+from .enums import SeverityLevel
 
 # List all Core statement classes automatically
 core_statement_classes = {
@@ -75,7 +75,7 @@ def validate(df, *,
              save_to: Optional[str] = None,
              current_date: Optional[datetime] = None,
              raise_exception: bool = True,
-             exception_level: int = Level.CRITICAL) -> dict:
+             exception_level: int = SeverityLevel.CRITICAL) -> dict:
 
     if save_to:
         save_to = fs_factory(save_to)
@@ -113,7 +113,7 @@ def raise_validation(validation_document, exception_level):
     highest_level = None
     for item in validation_document.get('items'):
         for stmt in item.get('statements'):
-            severity = stmt.get('severity', Level.CRITICAL)
+            severity = stmt.get('severity', SeverityLevel.CRITICAL)
             result = stmt.get('report').get('result')
 
             if result != 'pass':
@@ -125,7 +125,8 @@ def raise_validation(validation_document, exception_level):
                 print(json.dumps(stmt, indent=4))
 
     if highest_level is not None:
-        raise ValidationError(highest_level, 'Validation failed')
+        raise ValidationError(highest_level, 'Validation failed with severity'
+                                             f' level {highest_level}')
 
 
 def _save_validation_document(document: dict,
