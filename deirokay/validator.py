@@ -104,26 +104,28 @@ def validate(df, *,
         _save_validation_document(validation_document, save_to, current_date)
 
     if raise_exception:
-        _raise_validation(validation_document, exception_level)
+        raise_validation(validation_document, exception_level)
 
     return validation_document
 
 
-def _raise_validation(validation_document, exception_level):
-    raise_flag = False
+def raise_validation(validation_document, exception_level):
+    highest_level = None
     for item in validation_document.get('items'):
         for stmt in item.get('statements'):
             severity = stmt.get('severity', Level.CRITICAL)
             result = stmt.get('report').get('result')
 
             if result != 'pass':
+                if severity >= exception_level:
+                    if highest_level is None or severity > highest_level:
+                        highest_level = severity
+                    print('Validation failed (suppressed)')
                 print('Validation failed:')
                 print(json.dumps(stmt, indent=4))
-                if severity >= exception_level:
-                    raise_flag = True
 
-    if raise_flag:
-        raise ValidationError('Validation failed')
+    if highest_level is not None:
+        raise ValidationError(highest_level, 'Validation failed')
 
 
 def _save_validation_document(document: dict,
