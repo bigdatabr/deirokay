@@ -1,2 +1,2 @@
-pandas
-jq
+pandas~=1.3.4
+jq~=1.2.1
