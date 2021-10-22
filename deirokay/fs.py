@@ -3,6 +3,8 @@ import os
 import re
 from pathlib import Path
 import importlib
+from os.path import splitext
+import yaml
 
 from tempfile import NamedTemporaryFile
 from typing import List, Optional
@@ -45,6 +47,20 @@ class FileSystem():
     def ls(self, recursive=False, files_only=False):
         raise NotImplementedError
 
+    def read_dict(self) -> dict:
+        extension = splitext(self.path)[1]
+        if extension == '.json':
+            return self.read_json()
+        elif extension in ('.yaml', '.yml'):
+            return self.read_yaml()
+        raise NotImplementedError(f'No parser for file type: {extension}')
+
+    def read_yaml(self):
+        raise NotImplementedError
+
+    def write_yaml(self, doc: dict, **kwargs):
+        raise NotImplementedError
+
     def read_json(self):
         raise NotImplementedError
 
@@ -84,6 +100,14 @@ class LocalFileSystem(FileSystem):
                 acc += [os.path.join(parent, folder) for folder in folders]
             acc += [os.path.join(parent, file) for file in files]
         return [LocalFileSystem(path) for path in acc]
+
+    def read_yaml(self) -> dict:
+        with open(self.path) as fp:
+            return yaml.load(fp, Loader=yaml.CLoader)
+
+    def write_yaml(self, doc: dict, **kwargs) -> None:
+        with open(self.path, 'w') as fp:
+            yaml.dump(doc, fp, **kwargs)
 
     def read_json(self) -> dict:
         with open(self.path) as fp:
@@ -143,6 +167,17 @@ class S3FileSystem(FileSystem):
                          client=self.client)
             for key in acc
         ]
+
+    def read_yaml(self) -> dict:
+        o = self.client.get_object(Bucket=self.bucket, Key=self.prefix_or_key)
+        return yaml.load(o['Body'], Loader=yaml.CLoader)
+
+    def write_yaml(self, doc: dict, **kwargs) -> None:
+        return self.client.put_object(
+            Body=yaml.dump(doc, **kwargs),
+            Bucket=self.bucket,
+            Key=self.prefix_or_key
+        )
 
     def read_json(self) -> dict:
         o = self.client.get_object(Bucket=self.bucket, Key=self.prefix_or_key)

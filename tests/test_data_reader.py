@@ -1,5 +1,6 @@
-import pytest
 import pandas as pd
+import pytest
+
 from deirokay import data_reader
 from deirokay.enums import DTypes
 
@@ -9,6 +10,18 @@ def test_data_reader_from_json():
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json'
+    )
+    assert len(df) == 20
+
+    print(df)
+    print(df.dtypes)
+
+
+def test_data_reader_from_yaml():
+
+    df = data_reader(
+        'tests/transactions_sample.csv',
+        options='tests/options.yaml'
     )
     assert len(df) == 20
 
