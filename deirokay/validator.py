@@ -77,7 +77,7 @@ def validate(df, *,
                              ' directory or an S3 path.')
 
     if isinstance(against, str):
-        validation_document = fs_factory(against).read_json()
+        validation_document = fs_factory(against).read_dict()
     else:
         validation_document = deepcopy(against)
 
