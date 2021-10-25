@@ -47,13 +47,21 @@ class FileSystem():
     def ls(self, recursive=False, files_only=False):
         raise NotImplementedError
 
-    def read_dict(self) -> dict:
-        extension = splitext(self.path)[1]
+    def read_dict(self, *args, **kwargs) -> dict:
+        extension = splitext(self.path)[1].lower()
         if extension == '.json':
-            return self.read_json()
+            return self.read_json(*args, **kwargs)
         elif extension in ('.yaml', '.yml'):
-            return self.read_yaml()
+            return self.read_yaml(*args, **kwargs)
         raise NotImplementedError(f'No parser for file type: {extension}')
+
+    def write_dict(self, *args, **kwargs):
+        extension = splitext(self.path)[1].lower()
+        if extension == '.json':
+            return self.write_json(*args, **kwargs)
+        elif extension in ('.yaml', '.yml'):
+            return self.write_yaml(*args, **kwargs)
+        raise NotImplementedError(f'No serializer for file type: {extension}')
 
     def read_yaml(self):
         raise NotImplementedError
