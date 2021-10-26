@@ -1,15 +1,16 @@
 import inspect
+import json
 import warnings
 from copy import deepcopy
 from datetime import datetime
-import json
+from os.path import splitext
 from typing import Optional, Union
 
 import deirokay.statements as core_stmts
 
+from .enums import SeverityLevel
 from .exceptions import ValidationError
 from .fs import FileSystem, LocalFileSystem, fs_factory
-from .enums import SeverityLevel
 
 # List all Core statement classes automatically
 core_statement_classes = {
@@ -41,11 +42,10 @@ def _load_custom_statement(location: str):
 
 
 def _process_stmt(statement, read_from: FileSystem = None):
-    stmt_type = statement.pop('type')
-    severity = statement.pop('severity', None)
-    location = statement.pop('location', None)
+    stmt_type = statement.get('type')
 
     if stmt_type == 'custom':
+        location = statement.get('location')
         if not location:
             raise KeyError('A custom statement must define a `location`'
                            ' parameter.')
@@ -61,18 +61,13 @@ def _process_stmt(statement, read_from: FileSystem = None):
 
     statement_instance = cls(statement, read_from)
 
-    statement['type'] = stmt_type
-    if severity:
-        statement['severity'] = severity
-    if location:
-        statement['location'] = location
-
     return statement_instance
 
 
 def validate(df, *,
              against: Union[str, dict],
              save_to: Optional[str] = None,
+             save_format: str = None,
              current_date: Optional[datetime] = None,
              raise_exception: bool = True,
              exception_level: int = SeverityLevel.CRITICAL) -> dict:
@@ -84,9 +79,14 @@ def validate(df, *,
                              ' directory or an S3 path.')
 
     if isinstance(against, str):
-        validation_document = fs_factory(against).read_json()
+        save_format = save_format or splitext(against)[1].lstrip('.')
+        validation_document = fs_factory(against).read_dict()
     else:
+        save_format = save_format or 'yaml'
         validation_document = deepcopy(against)
+    assert save_format.lower() in ('json', 'yaml', 'yml'), (
+        f'Not a valid format {save_format}'
+    )
 
     for item in validation_document.get('items'):
         scope = item.get('scope')
@@ -101,7 +101,8 @@ def validate(df, *,
             stmt['report'] = report
 
     if save_to:
-        _save_validation_document(validation_document, save_to, current_date)
+        _save_validation_document(validation_document, save_to,
+                                  save_format, current_date)
 
     if raise_exception:
         raise_validation(validation_document, exception_level)
@@ -130,6 +131,7 @@ def raise_validation(validation_document, exception_level):
 
 def _save_validation_document(document: dict,
                               save_to: FileSystem,
+                              save_format: Optional[str] = None,
                               current_date: Optional[datetime] = None):
     if current_date is None:
         warnings.warn(
@@ -145,7 +147,7 @@ def _save_validation_document(document: dict,
     if isinstance(folder_path, LocalFileSystem):
         folder_path.mkdir(parents=True, exist_ok=True)
 
-    file_path = folder_path/f'{current_date}.json'
+    file_path = folder_path/f'{current_date}.{save_format}'
 
     print(f'Saving validation document to "{file_path!s}".')
-    file_path.write_json(document, indent=1)
+    file_path.write_dict(document, indent=2)

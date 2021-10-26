@@ -22,11 +22,11 @@ def data_treater(df, options):
         rename_to = option.pop('rename', None)
 
         if dtype is not None:
-            try:
-                df[col] = treat_dtypes[dtype](**option)(df[col])
-            except KeyError:
+            treater = treat_dtypes.get(dtype)
+            if not treater:
                 raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
                                           " implemented yet")
+            df[col] = treater(**option)(df[col])
 
         if rename_to is not None:
             df.rename(columns={col: rename_to}, inplace=True)

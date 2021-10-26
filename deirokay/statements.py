@@ -10,7 +10,7 @@ from .history_template import get_series
 
 class BaseStatement:
     name = 'base_statement'
-    expected_parameters = []
+    expected_parameters = ['type', 'severity', 'location']
     table_only = False
     jinjaenv = NativeEnvironment(loader=BaseLoader())
 
@@ -24,7 +24,8 @@ class BaseStatement:
         cls = type(self)
         unexpected_parameters = [
             option for option in options
-            if option not in cls.expected_parameters
+            if option not in (cls.expected_parameters +
+                              BaseStatement.expected_parameters)
         ]
         if unexpected_parameters:
             raise ValueError(
