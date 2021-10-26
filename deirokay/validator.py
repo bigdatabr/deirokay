@@ -41,11 +41,10 @@ def _load_custom_statement(location: str):
 
 
 def _process_stmt(statement, read_from: FileSystem = None):
-    stmt_type = statement.pop('type')
-    severity = statement.pop('severity', None)
-    location = statement.pop('location', None)
+    stmt_type = statement.get('type')
 
     if stmt_type == 'custom':
+        location = statement.get('location')
         if not location:
             raise KeyError('A custom statement must define a `location`'
                            ' parameter.')
@@ -60,12 +59,6 @@ def _process_stmt(statement, read_from: FileSystem = None):
         )
 
     statement_instance = cls(statement, read_from)
-
-    statement['type'] = stmt_type
-    if severity:
-        statement['severity'] = severity
-    if location:
-        statement['location'] = location
 
     return statement_instance
 
