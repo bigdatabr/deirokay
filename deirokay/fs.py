@@ -69,7 +69,7 @@ class FileSystem():
     def write_yaml(self, doc: dict, **kwargs):
         raise NotImplementedError
 
-    def read_json(self):
+    def read_json(self) -> dict:
         raise NotImplementedError
 
     def write_json(self, doc: dict, **kwargs):
@@ -115,7 +115,7 @@ class LocalFileSystem(FileSystem):
 
     def write_yaml(self, doc: dict, **kwargs) -> None:
         with open(self.path, 'w') as fp:
-            yaml.dump(doc, fp, **kwargs)
+            yaml.dump(doc, fp, sort_keys=False, **kwargs)
 
     def read_json(self) -> dict:
         with open(self.path) as fp:
@@ -182,7 +182,7 @@ class S3FileSystem(FileSystem):
 
     def write_yaml(self, doc: dict, **kwargs) -> None:
         return self.client.put_object(
-            Body=yaml.dump(doc, **kwargs),
+            Body=yaml.dump(doc, sort_keys=False, **kwargs),
             Bucket=self.bucket,
             Key=self.prefix_or_key
         )
