@@ -13,7 +13,7 @@ def series_from_fs(series_name: str, lookback: int, folder: FileSystem):
     acc.sort(reverse=True)
     acc = acc[:min(lookback, len(acc))]
 
-    return [file.read_json() for file in acc]
+    return [file.read_dict() for file in acc]
 
 
 class NullCallableNode():

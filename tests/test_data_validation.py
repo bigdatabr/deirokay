@@ -1,9 +1,9 @@
 import pytest
 
 from deirokay import data_reader, validate
+from deirokay.enums import SeverityLevel
 from deirokay.exceptions import ValidationError
 from deirokay.fs import split_s3_path
-from deirokay.enums import SeverityLevel
 
 
 def test_data_invalidation_from_dict():
@@ -30,6 +30,16 @@ def test_data_invalidation_from_dict():
 
     with pytest.raises(ValidationError):
         validate(df, against=assertions)
+
+
+def test_data_validation_from_yaml():
+
+    df = data_reader(
+        'tests/transactions_sample.csv',
+        options='tests/options.yaml'
+    )
+
+    validate(df, against='tests/assertions.yml')
 
 
 def test_data_validation_from_json():

@@ -1,0 +1,53 @@
+sep: ;
+encoding: iso-8859-1
+columns:
+  WERKS01:
+    dtype: integer
+    nullable: false
+    thousand_sep: .
+    unique: false
+  DT_OPERACAO01:
+    dtype: datetime
+    format: '%Y%m%d'
+  NUM_TRANSACAO01:
+    dtype: integer
+    nullable: false
+    thousand_sep: .
+    unique: false
+  HR_TRANSACAO01:
+    dtype: time
+    format: '%H:%M:%S'
+  TIPO_PDV:
+    dtype: string
+  PROD_VENDA:
+    dtype: integer
+  COD_MERC_SERV02:
+    dtype: integer
+  COD_SETVENDAS:
+    dtype: integer
+  NUMERO_PDV_ORIGIN:
+    dtype: integer
+  TIPO_PDV_ORIGIN:
+    dtype: string
+  TIPO_PDV_ORIGIN_GRP:
+    dtype: string
+  QTD_VENDIDA02:
+    decimal_sep: ','
+    dtype: float
+    nullable: false
+    thousand_sep: .
+  VLR_TOT_VD_ITM02:
+    decimal_sep: ','
+    dtype: float
+    nullable: false
+    thousand_sep: .
+  VLR_DESCONTO02:
+    decimal_sep: ','
+    dtype: float
+    nullable: false
+    thousand_sep: .
+  VLR_LIQUIDO02:
+    decimal_sep: ','
+    dtype: float
+    nullable: false
+    thousand_sep: .
