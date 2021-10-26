@@ -45,6 +45,6 @@ def profile(df: pd.DataFrame, document_name: str,
     validation_document['items'] = _generate_items(df)
 
     if save_to:
-        fs_factory(save_to).write_json(validation_document, indent=2)
+        fs_factory(save_to).write_dict(validation_document, indent=2)
 
     return validation_document

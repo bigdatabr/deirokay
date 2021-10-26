@@ -10,7 +10,7 @@ from .treaters import data_treater
 
 def data_reader(data: Union[str, pd.DataFrame], options: Union[dict, str]):
     if isinstance(options, str):
-        options = fs_factory(options).read_json()
+        options = fs_factory(options).read_dict()
 
     for column in options.get('columns').values():
         column['dtype'] = DTypes(column['dtype'])
