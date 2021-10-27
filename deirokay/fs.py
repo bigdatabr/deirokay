@@ -1,13 +1,13 @@
+import importlib
 import json
 import os
 import re
-from pathlib import Path
-import importlib
 from os.path import splitext
-import yaml
-
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import List, Optional
+
+import yaml
 
 boto3_import_error = None
 try:
