@@ -1,4 +1,14 @@
 # Deirokay
+`master`:
+![pipeline status](http://gitlab.bigdata/data-engineers/deirokay/badges/master/pipeline.svg)
+![test coverage](http://gitlab.bigdata/data-engineers/deirokay/badges/master/coverage.svg)
+![docstring coverage](http://gitlab.bigdata/data-engineers/deirokay/-/jobs/artifacts/master/raw/badge.svg?job=docstring-checker)
+
+`dev`:
+![pipeline status](http://gitlab.bigdata/data-engineers/deirokay/badges/dev/pipeline.svg)
+![test coverage](http://gitlab.bigdata/data-engineers/deirokay/badges/dev/coverage.svg)
+![docstring coverage](http://gitlab.bigdata/data-engineers/deirokay/-/jobs/artifacts/dev/raw/badge.svg?job=docstring-checker)
+
 
 Deirokay (*dejɾo'kaj*) is a tool for data profiling and data validation.
 
@@ -24,15 +34,15 @@ the instructions bellow.
 Install Deirokay directly from `master` branch typing in your
 command line:
 
-`pip install git+http://gitlab.bigdata/bressanmarcos/deirokay`
+`pip install git+http://gitlab.bigdata/data-engineers/deirokay`
 
 To include optional dependences for AWS S3, install:
 
-`pip install git+http://gitlab.bigdata/bressanmarcos/deirokay[s3]`
+`pip install git+http://gitlab.bigdata/data-engineers/deirokay[s3]`
 
 If you want to be in sync with the latest (and possibly unstable) release:
 
-`pip install git+http://gitlab.bigdata/bressanmarcos/deirokay@dev`
+`pip install git+http://gitlab.bigdata/data-engineers/deirokay@dev`
 
 ## Installation for development
 
@@ -40,7 +50,7 @@ If you wish to contribute for Deirokay development, maybe
 you will want to install a more complete set of packages for
 testing and to help you in your development.
 
-`pip install git+http://gitlab.bigdata/bressanmarcos/deirokay[dev]`
+`pip install git+http://gitlab.bigdata/data-engineers/deirokay[dev]`
 
 ## Getting started
 
