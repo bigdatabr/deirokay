@@ -1,0 +1,6 @@
+verbose: 3
+exclude: ".*/tests/"
+skip_magic: True
+skip_init: True
+skip_file_doc: True
+skip_private: True
