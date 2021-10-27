@@ -52,12 +52,13 @@ syntax-checker:
   before_script:
     - python -V
     - pip install flake8 isort
-    # Print changed files (except deleted)
-    - git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME
   script:
-    - PYTHON_TOUCHED_FILES=$(git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; })
     - |
       if [[ -n "$CI_MERGE_REQUEST_IID" ]]; then
+        echo "Changed files (except deleted):"
+        git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+        PYTHON_TOUCHED_FILES=$(git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; })
+
         if [[ -n "$PYTHON_TOUCHED_FILES" ]]; then
           flake8 $PYTHON_TOUCHED_FILES --exclude=docs,htmlcov,venv,.cache,.coverage,.git
           isort -c $PYTHON_TOUCHED_FILES
@@ -74,12 +75,13 @@ docstring-checker:
   before_script:
     - python -V
     - pip install docstr-coverage
-    # Print changed .py files (except deleted)
-    - git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; }
   script:
-    - PYTHON_TOUCHED_FILES=$(git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; })
     - |
       if [[ -n "$CI_MERGE_REQUEST_IID" ]]; then
+        echo "Changed .py files (except deleted):"
+        git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; }
+        PYTHON_TOUCHED_FILES=$(git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; })
+
         if [[ -n "$PYTHON_TOUCHED_FILES" ]]; then
           docstr-coverage $PYTHON_TOUCHED_FILES --config .docstr.yml
         fi
@@ -89,6 +91,7 @@ docstring-checker:
   artifacts:
     paths:
       - badge.svg
+    when: always
 
 unit-test:
   stage: test
