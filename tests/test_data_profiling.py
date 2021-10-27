@@ -1,4 +1,4 @@
-from deirokay import data_reader, validate, profile
+from deirokay import data_reader, profile, validate
 
 
 def test_profiling():
