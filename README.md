@@ -138,9 +138,9 @@ dtype: object
 The `options` argument also accepts `dict` objects directly.
 When parsing your file, you may also provide a set of different
 arguments, which varies in function of the data types. When
-passing Deirokay file options as `dict`, you may optionally
-import the available data types from the `deirokay.enums.DTypes`
-enumeration class.
+passing Deirokay file options as `dict`, you may optionally import
+the available data types from the `deirokay.enums.DTypes` enumeration
+class.
 
 Below you will find a list of current data types and their
 supported arguments.
@@ -236,8 +236,7 @@ Here is an example of Validation Document in JSON format:
 To test your data against this document, import the `deirokay.validate`
 method and call it following the example below:
 ``` python
-from deirokay import data_reader
-from deirokay import validate
+from deirokay import data_reader, validate
 
 df = data_reader('file.parquet', options='options.json')
 validation_result_document = validate(df,
@@ -246,9 +245,60 @@ validation_result_document = validate(df,
 ```
 
 The resulting validation document will present the reports for each
-statement, as well as its final result: `pass` or `fail`.
+statement, as well as its final result: `pass` or `fail`. You may
+probably want to save your validation result document by passing a path
+to a folder (local or in S3) as `save_to` argument to `validate`. The
+results are saved in a subfolder named after your validation document
+name, and the current datetime (possibly overridden by `current_date`
+argument) is used as the file name.
+By default, the validation result document will be saved in the same file
+format as the original validation document (you may specify another
+format -- either `json` or `yaml` -- in the `save_format` argument).
 
-Currently, the following statement types are supported:
+Here is an example of validation result document:
+
+``` JSON
+{
+    "name": "VENDAS",
+    "description": "An optional field to provide further textual information",
+    "items": [
+        {
+            "scope": [
+                "WERKS01",
+                "DT_OPERACAO01"
+            ],
+            "statements": [
+                {
+                    "type": "unique",
+                    "at_least_%": 90.0,
+                    "report": {
+                        "detail": {
+                            "unique_rows": 1500,
+                            "unique_rows_%": 99.0
+                        },
+                        "result": "pass"
+                    }
+                },
+                {
+                    "type": "not_null",
+                    "at_least_%": 95.0,
+                    "report": {
+                        "detail": {
+                            "null_rows": 0,
+                            "null_rows_%": 0.0,
+                            "not_null_rows": 1500,
+                            "not_null_rows_%": 100.0
+                        },
+                        "result": "pass"
+                    }
+                }
+            ]
+        }
+    ]
+}
+```
+
+These are some of the statement types currently supported by Deirokay:
 
 Statement Type | Available Arguments
 ---|---
@@ -261,7 +311,7 @@ Statement Type | Available Arguments
 The following section illustrates how to create and use `custom` type
 statements.
 
-### Creating Custom Statements
+## Creating Custom Statements
 
 Deirokay is designed to be broadly extensible. Even if your set
 of rules about your data is not in the bultin set of Deirokay
@@ -357,6 +407,86 @@ Currently, you can pass either a local path or an S3 key:
 - `s3://my-bucket/my_statements/module_of_statements.py::Stmt`
 (make sure you have `boto3` installed)
 
+## Jinja Templating and Statements based on Past Validation Data
+
+Some validation statements may present dynamic behaviour, maybe
+folowing a natural uptrend or downtrend movement of your data. Suppose
+you expect the number of rows of your data file to possibly fluctuate
++/- 3% around a 7-day moving average. Deirokay allows you to refer to
+past validation data by means of a special function called `series`.
+
+To use it, replace a static value for your statement parameter by a
+templated argument, such as the following:
+
+``` yaml
+name: VENDAS
+items:
+- scope:
+  - WERKS01
+  - PROD_VENDA
+  #  When the scope has more than one column or has special characters,
+  #  you should provide an `alias` string to refer to this item.
+  alias: werks_prod
+  statements:
+  - type: row_count
+    min: '{{ 0.97 * (series("VENDAS", 7).werks_prod.row_count.rows.mean()
+      |default(19, true)) }}'
+    max: '{{ 1.03 * (series("VENDAS", 7).werks_prod.row_count.rows.mean()
+      |default(21, true)) }}'
+```
+
+The YAML validation document above (could be JSON) presents some new
+features. A templated Jinja argument is identified by a pair of double
+braces (`{{ }}`) surrounding its content. Deirokay has a special
+callable named `series` that you can use to retrieve past data as a
+`pandas.Series` object.
+When declared, `series` receives a validation document name and a
+number of logs to look behind. Next, you should provide a path to a
+statement report value, following the sequence:
+scope (possibly aliased) => statement type name => statement result
+metric name. This returns a `pandas.Series` object you can take any
+calculation from (`mean`, `min`, `max`, etc.).
+
+To illustrate this path, take the templated argument from the YAML
+document above as an example:
+
+``` python
+series("VENDAS", 7).werks_prod.row_count.rows.mean()
+```
+- `series("VENDAS", 7)`: Retrieve the 7 last validation logs for
+"VENDAS";
+- `werks_prod`: Consider the `werks_prod`-aliased item (could be the
+scope value itself if it is a string for a single column name);
+- `row_count`: Use statistics from `row_count` statement;
+- `rows`: Use the `rows` metric reported by the selected statement
+(you should know the statistics reported by your statement).
+- `mean()`: Since the previous object is already a pandas Series, this
+call gets its mean value.
+
+When your validation results have no history, this call returns `None`.
+In Jinja, you may provide a default value to replace a null variable
+by using `|default(<default value>, true)`.
+
+Finally, here is an example of validation result log. Notice that the
+templates are already rendered before being saved:
+
+``` yaml
+name: VENDAS
+items:
+- scope:
+  - WERKS01
+  - PROD_VENDA
+  alias: werks_prod
+  statements:
+  - type: row_count
+    min: 1490.0
+    max: 1510.0
+    report:
+      detail:
+        rows: 1500
+      result: pass
+```
+
 ## Data Profiling: Auto-generated Validation Document
 
 You may generate a basic validation document by consuming a sample file.
@@ -380,7 +510,6 @@ validation_document = profile(df,
                               document_name='my-document-name',
                               save_to='my-validation-document.json')
 ```
-
 
 ## Deirokay Airflow Operator
 
