@@ -52,6 +52,10 @@ testing and to help you in your development.
 
 `pip install git+http://gitlab.bigdata/data-engineers/deirokay[dev]`
 
+## API Reference
+
+Please, [read the docs](http://data-engineers.docs.bigdata/deirokay).
+
 ## Getting started
 
 Suppose the following CSV file:
