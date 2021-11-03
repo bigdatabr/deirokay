@@ -8,3 +8,5 @@ apache-airflow-providers-ftp==2.*
 apache-airflow-providers-http==2.*
 apache-airflow-providers-imap==2.*
 apache-airflow-providers-sqlite==2.*
+Sphinx
+sphinx-rtd-theme
