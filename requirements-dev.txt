@@ -1,3 +1,5 @@
+Sphinx
+sphinx-rtd-theme
 pytest
 pytest-cov
 boto3

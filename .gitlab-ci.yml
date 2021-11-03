@@ -22,6 +22,7 @@ stages:
   - ci setup
   - code quality
   - test
+  - deploy
 
 image: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
@@ -103,3 +104,18 @@ unit-test:
     - pip install .[dev]
   script:
     - pytest --cov=. -vvv --disable-warnings
+
+pages:
+  stage: deploy
+  interruptible: true
+  needs:
+    - Build and Push CI Docker Image
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  script:
+    - cd docs/
+    - make clean html
+    - cp -r build/html ../public/
+  artifacts:
+    paths:
+    - public
