@@ -1,3 +1,8 @@
+"""
+Functions for data profiling and auto-generation of Deirokay Validation
+Documents.
+"""
+
 from typing import Optional
 
 import pandas as pd
@@ -36,8 +41,34 @@ def _generate_items(df):
     return items
 
 
-def profile(df: pd.DataFrame, document_name: str,
-            save_to: Optional[str] = None):
+def profile(df: pd.DataFrame,
+            document_name: str,
+            save_to: Optional[str] = None) -> dict:
+    """Generate a validation document from a given template DataFrame
+    using profiling methods for builtin Deirokay statements.
+    This function should be used only as a draft for a validation
+    document or as a means to quickly launch a first version with
+    minimum efforts.
+    The user is encouraged to correct and supplement the generated
+    document to better meet their expectations.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame to use as template, ideally parsed with Deirokay
+        `data_reader`.
+    document_name : str
+        The validation document name.
+    save_to : Optional[str], optional
+        Path (lcaol or S3) where to save the validation document to.
+        The file format is inferred by the its extension.
+        If None, no document will be saved. By default None.
+
+    Returns
+    -------
+    dict
+        The auto-generated validation document as Python `dict`.
+    """
     validation_document = {
         'name': document_name,
         'description': f'Auto generated using Deirokay {__version__}',

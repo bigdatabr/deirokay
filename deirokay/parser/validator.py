@@ -1,4 +1,6 @@
 class Validator:
+    """Base validation class for column data type validation.
+    """
     def __init__(self, *, unique=False, nullable=True):
         self.unique = unique
         self.nullable = nullable
