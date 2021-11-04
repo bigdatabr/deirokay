@@ -1,3 +1,7 @@
+"""
+Set of functions related to Deirokay validation.
+"""
+
 import inspect
 import json
 import warnings
@@ -6,7 +10,10 @@ from datetime import datetime
 from os.path import splitext
 from typing import Optional, Union
 
+import pandas
+
 import deirokay.statements as core_stmts
+from deirokay.statements import BaseStatement
 
 from .enums import SeverityLevel
 from .exceptions import ValidationError
@@ -17,12 +24,13 @@ core_statement_classes = {
     cls.name: cls
     for _, cls in inspect.getmembers(core_stmts)
     if isinstance(cls, type) and
-    issubclass(cls, core_stmts.BaseStatement) and
-    cls is not core_stmts.BaseStatement
+    issubclass(cls, BaseStatement) and
+    cls is not BaseStatement
 }
 
 
 def _load_custom_statement(location: str):
+    """Load a custom statement from a .py file"""
     if '::' not in location:
         raise ValueError('You should pass your class location using the'
                          ' following pattern:\n'
@@ -34,14 +42,41 @@ def _load_custom_statement(location: str):
     module = fs.import_as_python_module()
     cls = getattr(module, class_name)
 
-    if not issubclass(cls, core_stmts.BaseStatement):
+    if not issubclass(cls, BaseStatement):
         raise ImportError('Your custom statement should be a subclass of '
                           'BaseStatement')
 
     return cls
 
 
-def _process_stmt(statement, read_from: FileSystem = None):
+def _process_stmt(statement: dict,
+                  read_from: FileSystem = None) -> BaseStatement:
+    """Receive statement dict and call the proper statement class.
+    The `name` attribute of the class is used to bind the statement
+    type to its class.
+
+    Parameters
+    ----------
+    statement : dict
+        Dict from Validation Document representing statement and its
+        parameters.
+    read_from : FileSystem, optional
+        FS object pointing to path to validation logs. It is used when
+        retrieving past statistics with templated arguments.
+        By default None.
+
+    Returns
+    -------
+    BaseStatement
+        Instance of Statement class.
+
+    Raises
+    ------
+    KeyError
+        Custom statement should present a `location` default parameter.
+    NotImplementedError
+        Declared statement type does not exist.
+    """
     stmt_type = statement.get('type')
 
     if stmt_type == 'custom':
@@ -64,13 +99,71 @@ def _process_stmt(statement, read_from: FileSystem = None):
     return statement_instance
 
 
-def validate(df, *,
+def validate(df: pandas.DataFrame, *,
              against: Union[str, dict],
              save_to: Optional[str] = None,
              save_format: str = None,
              current_date: Optional[datetime] = None,
              raise_exception: bool = True,
-             exception_level: int = SeverityLevel.CRITICAL) -> dict:
+             exception_level: SeverityLevel = SeverityLevel.CRITICAL) -> dict:
+    """Validate a Deirokay DataFrame against a well-defined Validation
+    Document.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        DataFrame preferencially parsed by Deirokay `data_reader`.
+    against : Union[str, dict]
+        A `dict`-like Validation Document or a local/S3 path to a
+        validation file in either YAML or JSON format.
+    save_to : Optional[str], optional
+        Path to folder where the validation result document will be
+        saved to. An subfolder named the same as the validation
+        document named will be created in this path, and the results
+        will be saved inside following the
+        `<current_date>.<save_format>` pattern. `<current_date>` is
+        formatted as `%Y%m%dT%H%M%S` and `<save_format>` can be either
+        `yaml` or `json`.
+        If None, no validation log will be saved. By default None.
+    save_format : str, optional
+        Format in which to save the validation document
+        (`yaml` or `json`).
+        Only valid when `save_to` is not None.
+        If None and `against` is a Python dictionary, defaults to YAML.
+        If None and `against` is a valid path to a YAML or JSON file,
+        it will keep this format.
+        By default None
+    current_date : Optional[datetime], optional
+        Python `datetime.datetime` to use in log file name when saving
+        validation result.
+        Only valid when `save_to` is not None.
+        If None, defaults to `datetime.utcnow()` value and raises a
+        warning.
+        By default None
+    raise_exception : bool, optional
+        Whether or not to raise a ValidationError exception whenever a
+        statement whose level is greater or equal to `exception_level`
+        fails.
+        By default True
+    exception_level : SeverityLevel, optional
+        Minimum statement severity to raise exception for when
+        statement validation fails.
+        Only valid when `raise_exception` is True.
+        By default SeverityLevel.CRITICAL (5).
+
+    Returns
+    -------
+    dict
+        Validation Result Document.
+
+    Raises
+    ------
+    ValueError
+        `save_to` parameter is not a directory neither an S3 path.
+    ValidationError
+        Validation failed for at least one statement whose severity is
+        greater or equal to `exception_level`.
+    """
 
     if save_to:
         save_to = fs_factory(save_to)
@@ -110,9 +203,27 @@ def validate(df, *,
     return validation_document
 
 
-def raise_validation(validation_document, exception_level):
+def raise_validation(validation_result_document: dict,
+                     exception_level: SeverityLevel):
+    """Check for a validation result `dict` and raise a
+    `ValidationError` exception whenever a statement whose severity
+    level is greater or equal to `exception_level` fails.
+
+    Parameters
+    ----------
+    validation_result_document : dict
+        Validation Result Document generated by a Deirokay validation.
+    exception_level : SeverityLevel
+        Integer for the minimum severity level to raise exception for.
+
+    Raises
+    ------
+    ValidationError
+        Validation failed for at least one statement whose severity is
+        greater or equal to `exception_level`.
+    """
     highest_level = None
-    for item in validation_document.get('items'):
+    for item in validation_result_document.get('items'):
         for stmt in item.get('statements'):
             severity = stmt.get('severity', SeverityLevel.CRITICAL)
             result = stmt.get('report').get('result')
@@ -143,11 +254,11 @@ def _save_validation_document(document: dict,
     current_date = current_date.strftime('%Y%m%dT%H%M%S')
 
     document_name = document['name']
-    folder_path = save_to/document_name
+    folder_path = save_to / document_name
     if isinstance(folder_path, LocalFileSystem):
         folder_path.mkdir(parents=True, exist_ok=True)
 
-    file_path = folder_path/f'{current_date}.{save_format}'
+    file_path = folder_path / f'{current_date}.{save_format}'
 
     print(f'Saving validation document to "{file_path!s}".')
     file_path.write_dict(document, indent=2)
