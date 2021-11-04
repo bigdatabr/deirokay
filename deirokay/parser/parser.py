@@ -1,3 +1,7 @@
+"""
+Functions to parse files into pandas DataFrames.
+"""
+
 from os.path import splitext
 from typing import Union
 
@@ -8,7 +12,24 @@ from ..fs import fs_factory
 from .treaters import data_treater
 
 
-def data_reader(data: Union[str, pd.DataFrame], options: Union[dict, str]):
+def data_reader(data: Union[str, pd.DataFrame],
+                options: Union[dict, str]) -> pd.DataFrame:
+    """Create a DataFrame from a file or an existing DataFrame and
+    apply Deirokay treatments to correctly parse it and pre-validate
+    its content.
+
+    Parameters
+    ----------
+    data : Union[str, pd.DataFrame]
+        [description]
+    options : Union[dict, str]
+        Either a `dict` or a local/S3 path to an YAML/JSON file.
+
+    Returns
+    -------
+    pd.DataFrame
+        A pandas DataFrame treated by Deirokay.
+    """
     if isinstance(options, str):
         options = fs_factory(options).read_dict()
 
@@ -26,7 +47,25 @@ def data_reader(data: Union[str, pd.DataFrame], options: Union[dict, str]):
     return df
 
 
-def pandas_read(file_path, **kwargs):
+def pandas_read(file_path: str, **kwargs) -> pd.DataFrame:
+    """Infer the file type by its extension and call the proper
+    `pandas` method to parse it.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to file.
+
+    Returns
+    -------
+    pd.DataFrame
+        The pandas DataFrame.
+
+    Raises
+    ------
+    TypeError
+        File extension/type not supported.
+    """
     file_extension = splitext(file_path)[1].lstrip('.')
 
     pandas_kwargs = {}

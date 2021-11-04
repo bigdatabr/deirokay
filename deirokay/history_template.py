@@ -1,3 +1,8 @@
+"""
+Set of functions and classes related to gathering of past validation
+logs from a given directory and assembling them as pandas Series.
+"""
+
 import warnings
 
 import jq
@@ -7,6 +12,23 @@ from .fs import FileSystem
 
 
 def series_from_fs(series_name: str, lookback: int, folder: FileSystem):
+    """List log files as FileSystem objects for a given Validation
+    Document.
+
+    Parameters
+    ----------
+    series_name : str
+        Validation Document name.
+    lookback : int
+        How many logs to look behind.
+    folder : FileSystem
+        Where logs are read from.
+
+    Returns
+    -------
+    List[FileSystem]
+        List of logs to be queried.
+    """
 
     acc = (folder/series_name).ls(recursive=True, files_only=True)
 
@@ -17,11 +39,13 @@ def series_from_fs(series_name: str, lookback: int, folder: FileSystem):
 
 
 class NullCallableNode():
+    """Dummy node which returns nothing."""
     def __getattr__(self, name):
         return lambda: None
 
 
 class StatementNode():
+    """Node at Statement level."""
     detail_keys = jq.compile('.[].report.detail | keys')
 
     def __init__(self, statements):
@@ -40,6 +64,7 @@ class StatementNode():
 
 
 class ItemNode():
+    """Node at Item level."""
     attribute_keys = jq.compile(
         '.[].statements[] | if .alias != null then .alias else .type end'
     )
@@ -59,6 +84,7 @@ class ItemNode():
 
 
 class DocumentNode():
+    """Node at Document root level."""
     attribute_keys = jq.compile(
         '.[].items[] | if .alias != null then .alias else .scope end'
     )
@@ -85,6 +111,29 @@ class DocumentNode():
 
 def get_series(series_name: str, lookback: int,
                read_from: FileSystem) -> DocumentNode:
+    """Construct a traversable object tree based on past validation
+    logs. This method is aliased as `series` when called from inside
+    a Validation Document.
+
+    Parameters
+    ----------
+    series_name : str
+        The Validation Document name.
+    lookback : int
+        How many logs to look behind.
+    read_from : FileSystem
+        Base folder where logs are read from.
+
+    Returns
+    -------
+    DocumentNode
+        Root node for object tree.
+
+    Raises
+    ------
+    ValueError
+        `read_from` can not be None.
+    """
     if read_from is None:
         raise ValueError('You cannot access previous logs without providing'
                          ' a source/destination directory.')

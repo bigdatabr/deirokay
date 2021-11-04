@@ -1,3 +1,8 @@
+"""
+Classes and functions to treat column data types according to
+Deirokay data types.
+"""
+
 import numpy as np
 import pandas as pd
 
@@ -5,7 +10,22 @@ from ..enums import DTypes
 from .validator import Validator
 
 
-def data_treater(df, options):
+def data_treater(df: pd.DataFrame, options: dict):
+    """Receive options dict and call the proper treater class for each
+    Deirokay data type.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Raw DataFrame to be treated.
+    options : dict
+        Deirokay options.
+
+    Raises
+    ------
+    NotImplementedError
+        Data type not valid or not implemented.
+    """
     treat_dtypes = {
         DTypes.INT64: IntegerTreater,
         DTypes.DATETIME: DateTime64Treater,
@@ -33,6 +53,7 @@ def data_treater(df, options):
 
 
 class NumericTreater(Validator):
+    """Base class for numeric treaters"""
     def __init__(self, thousand_sep=None, **kwargs):
         super().__init__(**kwargs)
 
@@ -57,6 +78,7 @@ class NumericTreater(Validator):
 
 
 class BooleanTreater(Validator):
+    """Treater for boolean-like variables"""
     def __init__(self,
                  truthies=['true', 'True'],
                  falsies=['false', 'False'],
@@ -108,6 +130,7 @@ class BooleanTreater(Validator):
 
 
 class FloatTreater(NumericTreater):
+    """Treater for float variables"""
     def __init__(self, decimal_sep=None, **kwargs):
         super().__init__(**kwargs)
 
@@ -132,11 +155,13 @@ class FloatTreater(NumericTreater):
 
 
 class IntegerTreater(NumericTreater):
+    """Treater for integer variables"""
     def __call__(self, series):
         return super().__call__(series).astype(float).astype('Int64')
 
 
 class DateTime64Treater(Validator):
+    """Treater for datetime variables"""
     def __init__(self, format='%Y-%m-%d %H:%M:%S', **kwargs):
         super().__init__(**kwargs)
 
@@ -149,6 +174,7 @@ class DateTime64Treater(Validator):
 
 
 class DateTreater(DateTime64Treater):
+    """Treater for date-only variables"""
     def __init__(self, format='%Y-%m-%d', **kwargs):
         super().__init__(format, **kwargs)
 
@@ -157,6 +183,7 @@ class DateTreater(DateTime64Treater):
 
 
 class TimeTreater(DateTime64Treater):
+    """Treater for time-only variables"""
     def __init__(self, format='%H:%M:%S', **kwargs):
         super().__init__(format, **kwargs)
 
@@ -165,6 +192,7 @@ class TimeTreater(DateTime64Treater):
 
 
 class StringTreater(Validator):
+    """Treater for string variables"""
     def __init__(self, treat_null_as=None, **kwargs):
         super().__init__(**kwargs)
 

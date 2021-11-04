@@ -1,7 +1,12 @@
+"""
+Deirokay enumeration classes.
+"""
+
 from enum import Enum
 
 
 class DTypes(str, Enum):
+    """Deirokay data types."""
     INT64 = 'integer'
     INTEGER = INT64
     FLOAT64 = 'float'
@@ -17,6 +22,7 @@ class DTypes(str, Enum):
 
 
 class SeverityLevel(int, Enum):
+    """Deirokay named Severity levels."""
     MINIMAL = 1
     WARNING = 3
     CRITICAL = 5
