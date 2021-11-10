@@ -79,16 +79,15 @@ def _import_file_as_python_module(path_to_file: str) -> ModuleType:
 
 class FileSystem():
     """Abstract file system operations over folders and files in
-    any place, such as local or in S3 buckets."""
+    any place, such as local or in S3 buckets.
+
+    Parameters
+    ----------
+    path : str
+        Path to file or folder.
+    """
 
     def __init__(self, path: str):
-        """Construct a FileSystem object from a path.
-
-        Parameters
-        ----------
-        path : str
-            Path to file or folder.
-        """
         self.path = path
 
     def ls(self, recursive=False, files_only=False) -> List['FileSystem']:
