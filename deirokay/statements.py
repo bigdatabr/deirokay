@@ -15,6 +15,15 @@ from .history_template import get_series
 class BaseStatement:
     """Base abstract statement class for all Deirokay statements.
 
+    Parameters
+    ----------
+    options : dict
+        Statement parameters provided by user.
+    read_from : Optional[FileSystem], optional
+        Where read past validation logs from
+        (necessary for templated moving statistics).
+        By default None.
+
     Attributes
     ----------
     name : str
@@ -36,17 +45,6 @@ class BaseStatement:
     jinjaenv = NativeEnvironment(loader=BaseLoader())
 
     def __init__(self, options: dict, read_from: Optional[FileSystem] = None):
-        """Load statement options and render its parameters.
-
-        Parameters
-        ----------
-        options : dict
-            Statement parameters provided by user.
-        read_from : Optional[FileSystem], optional
-            Where read past validation logs from
-            (necessary for templated moving statistics).
-            By default None.
-        """
         self._validate_options(options)
         self.options = options
         self._read_from = read_from
@@ -148,11 +146,12 @@ class BaseStatement:
 
 # docstr-coverage:inherited
 class Unique(BaseStatement):
+    """Check if the rows of a scoped DataFrame are unique."""
+
     name = 'unique'
     expected_parameters = ['at_least_%']
 
     def __init__(self, *args, **kwargs):
-        """Check if the rows of a scoped DataFrame are unique."""
         super().__init__(*args, **kwargs)
 
         self.at_least_perc = self.options.get('at_least_%', 100.0)
@@ -185,11 +184,12 @@ class Unique(BaseStatement):
 
 # docstr-coverage:inherited
 class NotNull(BaseStatement):
+    """Check if the rows of a scoped DataFrame are not null."""
+
     name = 'not_null'
     expected_parameters = ['at_least_%', 'at_most_%', 'multicolumn_logic']
 
     def __init__(self, *args, **kwargs):
-        """Check if the rows of a scoped DataFrame are not null."""
         super().__init__(*args, **kwargs)
 
         self.at_least_perc = self.options.get('at_least_%', 100.0)
@@ -238,13 +238,14 @@ class NotNull(BaseStatement):
 
 # docstr-coverage:inherited
 class RowCount(BaseStatement):
+    """Check if the number of rows in a DataFrame is within a
+    range."""
+
     name = 'row_count'
     expected_parameters = ['min', 'max']
     table_only = True
 
     def __init__(self, *args, **kwargs):
-        """Check if the number of rows in a DataFrame is within a
-        range."""
         super().__init__(*args, **kwargs)
 
         self.min = self.options.get('min', None)
