@@ -46,6 +46,9 @@ def profile(df: pd.DataFrame,
             save_to: Optional[str] = None) -> dict:
     """Generate a validation document from a given template DataFrame
     using profiling methods for builtin Deirokay statements.
+    By default, statement objects are generated for the entire template
+    DataFrame (the entire set of columns), and then for each of its
+    columns individually.
     This function should be used only as a draft for a validation
     document or as a means to quickly launch a first version with
     minimum efforts.
