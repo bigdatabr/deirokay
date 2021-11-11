@@ -1,6 +1,6 @@
-==============
-About Deirokay
-==============
+========
+Deirokay
+========
 
 
 .. include:: contents.rst
