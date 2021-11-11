@@ -14,16 +14,17 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
+from deirokay.__version__ import __version__  # noqa E402
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'Momo'
+project = 'Deirokay'
 copyright = '2021, Big Data'
-author = 'Big Data'
+author = 'Marcos Bressan'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = __version__
 
 
 # -- General configuration ---------------------------------------------------
