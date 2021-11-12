@@ -96,11 +96,11 @@ docstr-coverage:
 
 unit-test:
   stage: test
+  image: registry.bigdata/ci-images/pytest
   interruptible: true
   before_script:
     - python -V
-    - ls -al
-    - apt update && apt install -y git
+    - apt-get update & apt-get install build-essential -y
     - pip install .[dev]
   script:
     - pytest --cov=. -vvv --disable-warnings
