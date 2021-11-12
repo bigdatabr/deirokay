@@ -107,6 +107,7 @@ unit-test:
 
 pages:
   stage: deploy
+  image: registry.bigdata/ci-images/sphinx-rtd
   interruptible: true
   needs:
     - Build and Push CI Docker Image
