@@ -19,29 +19,10 @@ cache:
     - .cache/pip-cache
 
 stages:
-  - ci setup
   - code quality
+  - ci setup
   - test
   - deploy
-
-image: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-
-Build and Push CI Docker Image:
-  stage: ci setup
-  image: docker:20.10.8
-  interruptible: true
-  services:
-    - name: docker:20.10.8-dind
-      command: ["--insecure-registry", "registry.bigdata"]
-  variables:
-    DOCKER_TLS_CERTDIR: ""
-  before_script:
-    - echo -n $CI_REGISTRY_TOKEN | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-  script:
-    - docker pull $CI_REGISTRY_IMAGE:latest || true
-    - docker build -f Dockerfile.ci --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --tag $CI_REGISTRY_IMAGE:latest .
-    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-    - docker push $CI_REGISTRY_IMAGE:latest
 
 syntax-checker:
   stage: code quality
@@ -70,8 +51,8 @@ syntax-checker:
       fi
 
 docstr-coverage:
-  image: registry.bigdata/ci-images/docstr-coverage
   stage: code quality
+  image: registry.bigdata/ci-images/docstr-coverage
   allow_failure: true
   interruptible: true
   variables:
@@ -94,13 +75,30 @@ docstr-coverage:
       - badge.svg
     when: always
 
+Build and Push CI Docker Image:
+  stage: ci setup
+  image: docker:20.10.8
+  interruptible: true
+  services:
+    - name: docker:20.10.8-dind
+      command: ["--insecure-registry", "registry.bigdata"]
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - echo -n $CI_REGISTRY_TOKEN | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build -f Dockerfile.ci --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --tag $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+
 unit-test:
   stage: test
+  image: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
   interruptible: true
   before_script:
     - python -V
     - ls -al
-    - apt update && apt install -y git
     - pip install .[dev]
   script:
     - pytest --cov=. -vvv --disable-warnings
