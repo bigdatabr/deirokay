@@ -69,17 +69,17 @@ syntax-checker:
         isort -c *
       fi
 
-docstring-checker:
+docstr-coverage:
+  image: registry.bigdata/ci-images/docstr-coverage
   stage: code quality
   allow_failure: true
   interruptible: true
-  before_script:
-    - python -V
-    - pip install docstr-coverage
+  variables:
+    GIT_DEPTH: 0
   script:
     - |
       if [[ -n "$CI_MERGE_REQUEST_IID" ]]; then
-        echo "Changed .py files (except deleted):"
+        echo "Since this is a Merge Request, only the following files will be checked:"
         git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; }
         PYTHON_TOUCHED_FILES=$(git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; })
 
