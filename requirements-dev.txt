@@ -1,8 +1,5 @@
-Sphinx
-sphinx-rtd-theme
 pytest
 pytest-cov
-docstr-coverage
 boto3
 s3fs
 fastparquet

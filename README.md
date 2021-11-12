@@ -2,12 +2,12 @@
 `master`:
 ![pipeline status](http://gitlab.bigdata/data-engineers/deirokay/badges/master/pipeline.svg)
 ![test coverage](http://gitlab.bigdata/data-engineers/deirokay/badges/master/coverage.svg)
-![docstring coverage](http://gitlab.bigdata/data-engineers/deirokay/-/jobs/artifacts/master/raw/badge.svg?job=docstring-checker)
+![docstr-coverage](http://gitlab.bigdata/data-engineers/deirokay/-/jobs/artifacts/master/raw/badge.svg?job=docstr-coverage)
 
 `dev`:
 ![pipeline status](http://gitlab.bigdata/data-engineers/deirokay/badges/dev/pipeline.svg)
 ![test coverage](http://gitlab.bigdata/data-engineers/deirokay/badges/dev/coverage.svg)
-![docstring coverage](http://gitlab.bigdata/data-engineers/deirokay/-/jobs/artifacts/dev/raw/badge.svg?job=docstring-checker)
+![docstr-coverage](http://gitlab.bigdata/data-engineers/deirokay/-/jobs/artifacts/dev/raw/badge.svg?job=docstr-coverage)
 
 
 Deirokay (*dejɾo'kaj*) is a tool for data profiling and data validation.
