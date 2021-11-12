@@ -45,14 +45,14 @@ Build and Push CI Docker Image:
 
 syntax-checker:
   stage: code quality
+  image: registry.bigdata/ci-images/syntax-checker
   rules:
     - if: '$CI_MERGE_REQUEST_IID'
       allow_failure: false
     - allow_failure: true
   interruptible: true
-  before_script:
-    - python -V
-    - pip install flake8 isort
+  variables:
+    GIT_DEPTH: 0
   script:
     - |
       if [[ -n "$CI_MERGE_REQUEST_IID" ]]; then
