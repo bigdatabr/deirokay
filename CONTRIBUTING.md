@@ -19,7 +19,8 @@ To run all tests, run `pytest` (or `python3 -m pytest`).
 
 Use this script as your pre-commit hook (`.git/hooks/pre-commit`) to
 execute `flake8` (syntax checker) and `isort`
-('import' order checker) automatically before all commits you make:
+('import' order checker) automatically before all commits you make. Make sure
+you make this file executable with `chmod +x .git/hooks/pre-commit`.
 
 ``` sh
 #!/bin/sh
