@@ -230,8 +230,7 @@ class NotNull(BaseStatement):
         statement = {
             'type': 'not_null',
             'multicolumn_logic': 'any',
-            'at_least_%': float(100.0*not_nulls.sum()/len(not_nulls)),
-            'at_most_%': float(100.0*not_nulls.sum()/len(not_nulls))
+            'at_least_%': float(100.0*not_nulls.sum()/len(not_nulls))
         }
         return statement
 
