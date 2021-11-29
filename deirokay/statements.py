@@ -4,6 +4,7 @@ Module for BaseStatement and builtin Deirokay statements.
 
 from typing import Optional
 
+import numpy as np
 import pandas as pd
 from jinja2 import BaseLoader
 from jinja2.nativetypes import NativeEnvironment
@@ -283,3 +284,244 @@ class RowCount(BaseStatement):
             'max': row_count,
         }
         return statement
+
+
+class Contain(BaseStatement):
+    """
+    Checks if a given column contains specific values. We can also check the
+    number of occurrences of that values, asserting a minimum or maximum value
+    of appearances.
+    """
+    name = 'contain'
+    expected_parameters = [
+        'rule',
+        'values',
+        'occurrences_per_value',
+        'min_occurrences',
+        'max_occurrences'
+    ]
+    table_only = False
+
+    def __init__(self, *args, **kwargs):
+        """
+        Check if the values in a given column are in a list of expected
+        values.
+        """
+        super().__init__(*args, **kwargs)
+
+        self.rule = self.options.get('rule', None)
+        self.values = self.options.get('values', None)
+
+        self.min_occurrences = self.options.get('min_occurrences', None)
+        self.max_occurrences = self.options.get('max_occurrences', None)
+        self.occurrences_per_value = self.options.get(
+            'occurrences_per_value', {}
+        )
+
+        self._set_default_minmax_occurrences()
+        self._assert_parameters()
+
+    def _set_default_minmax_occurrences(self):
+        min_occurrences_rule_default = {
+            'all': 1,
+            'only': 0,
+            'all_and_only': 1
+        }
+        max_occurrences_rule_default = {
+            'all': np.inf,
+            'only': np.inf,
+            'all_and_only': np.inf
+        }
+
+        if self.min_occurrences is None:
+            self.min_occurrences = min_occurrences_rule_default[self.rule]
+        if self.max_occurrences is None:
+            self.max_occurrences = max_occurrences_rule_default[self.rule]
+
+    def _assert_parameters(self):
+        assert self.rule in ('all', 'only', 'all_and_only')
+        assert self.min_occurrences >= 0
+        assert self.max_occurrences >= 0
+
+    # docstr-coverage:inherited
+    def report(self, df):
+        count_isin = {}
+        for col in df.columns:
+            count_isin[col] = df[col].value_counts().to_dict()
+
+        report = {
+            'col_value_count': count_isin,
+        }
+        return report
+
+    # docstr-coverage:inherited
+    def result(self, report):
+        col_value_count = report['col_value_count']
+        self._set_min_max_boundaries(col_value_count)
+        self._set_values_scope()
+
+        check_interval = self._check_interval(col_value_count)
+        check_rule = self._check_rule(col_value_count)
+
+        return check_rule and check_interval
+
+    def _set_min_max_boundaries(self, col_value_count):
+        """
+        Sets, for each column/value, the maxmimum and minimum number of
+        expected occurrences. They are set with `self.max_occurrences`
+        and `self.min_occurrences` attributes. Also, we can specify
+        special boundaries for one or more values, using
+        `self.occurrences_per_value` attribute.
+
+        Parameters
+        ----------
+        col_value_count: dict
+            Description of columns and quantities of occurrences per
+            value, calculated in `self.report()` method
+        """
+        min_max_boundaries = {}
+
+        # Global boundaries
+        for col, values_in_col in col_value_count.items():
+            min_max_boundaries[col] = {}
+            for value in self.values:
+                min_max_value = min_max_boundaries[col]
+                min_max_value.update({
+                    value: {
+                        'min_occurrences': self.min_occurrences,
+                        'max_occurrences': self.max_occurrences
+                    }
+                })
+
+                min_max_boundaries[col] = min_max_value
+
+        # Dedicated boundaries
+        for col in col_value_count.keys():
+            if self.occurrences_per_value:
+                for value in self.occurrences_per_value.keys():
+                    min_max_boundaries[col][value][
+                        'min_occurrences'
+                    ] = self.occurrences_per_value[value].get(
+                        'min_occurrences', self.min_occurrences
+                    )
+
+                    min_max_boundaries[col][value][
+                        'max_occurrences'
+                    ] = self.occurrences_per_value[value].get(
+                        'max_occurrences', self.max_occurrences
+                    )
+
+        self.min_max_boundaries = min_max_boundaries
+
+    def _set_values_scope(self):
+        """
+        Sets the scope of values to be analyzed according to the
+        given `self.rule`. Excludes the cases of values where
+        its corresponding `max_occurrences` is zero, because
+        these cases doesn't matter for the `rule` analysis, as
+        they must be absent in the column.
+        """
+        values_scope_filter = {}
+        for col in self.min_max_boundaries.keys():
+            values_col = []
+            for value in self.min_max_boundaries[col]:
+                if self.min_max_boundaries[col][value]['max_occurrences'] != 0:
+                    values_col.append(value)
+                values_scope_filter[col] = values_col
+        self.values_scope_filter = values_scope_filter
+
+    def _check_interval(self, col_value_count):
+        """
+        Checks if each value is inside an interval of min and max number
+        of occurrencies. These values are set globally in
+        `self.min_occurrencies` and `self.max_occurrencies`, but the
+        user can specify dedicated intervals for a given value inside
+        `self.occurrences_per_value`
+        """
+        for col, values in col_value_count.items():
+            for value in self.values:
+                min_value = self.min_max_boundaries[col][value][
+                    'min_occurrences'
+                ]
+                max_value = self.min_max_boundaries[col][value][
+                    'max_occurrences'
+                ]
+                if value in values.keys():
+                    if not (
+                        min_value <= col_value_count[col][value] <= max_value
+                    ):
+                        return False
+                else:
+                    if self.rule != 'only' and max_value != 0\
+                       and min_value != 0:
+                        return False
+        return True
+
+    def _check_rule(self, col_value_count):
+        """
+        Checks if given columns attend the given requirements
+        of presence or absence of values, according to a criteria specified in
+        `self.rule`
+
+        Parameters
+        ----------
+        col_value_count: dict
+            Got from `report` method, it contains the count of occurrences
+            for each column for each value
+
+        Notes
+        -----
+        `self.rule` parameter defines the criteria to use for checking the
+        presence or absence of values in a column. Its values should be:
+
+        * all: all the values in `self.values` are present in the column, but
+          there can be other values also
+        * only: only the values in `self.values` (but not necessarilly all of
+          them) are present in the given column
+        * all_and_only: the column must contain exactly the values in
+          `self.values` - neither more than less. As the name says, it is an
+          `and` boolean operation between `all` and `only` modes
+        """
+        if self.rule == 'all':
+            return self._check_all(col_value_count)
+        elif self.rule == 'only':
+            return self._check_only(col_value_count)
+        elif self.rule == 'all_and_only':
+            is_check_all = self._check_all(col_value_count)
+            is_check_only = self._check_only(col_value_count)
+            return is_check_all and is_check_only
+
+    def _check_all(self, col_value_count):
+        """
+        Checks if values in df contains all the expected values
+        """
+        for col in col_value_count.keys():
+            values_in_col = set(col_value_count[col].keys())
+            values = set(self.values_scope_filter[col])
+            if values - values_in_col != set():
+                return False
+        return True
+
+    def _check_only(self, col_value_count):
+        """
+        Checks if all values in df are inside the expected values
+        """
+        for col in col_value_count.keys():
+            values_in_col = set(col_value_count[col].keys())
+            values = set(self.values_scope_filter[col])
+            if values_in_col - values:
+                return False
+        return True
+
+    # docstr-coverage:inherited
+    @staticmethod
+    def profile(df):
+        min_occurrences = {x: df[x].value_counts().min() for x in df.columns}
+        max_occurrences = {x: df[x].value_counts().max() for x in df.columns}
+        return {
+            'type': 'contain',
+            'rule': 'all_and_only',
+            'values': {x: df[x].unique().tolist() for x in df.columns},
+            'min_occurrences': min_occurrences,
+            'max_occurrences': max_occurrences
+        }
