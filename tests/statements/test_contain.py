@@ -61,7 +61,6 @@ def test_max_min(occurrences, result):
     Tries it with the global `max/min_occurrences` parameters
     and the `occurrences_per_value` parameter also.
     """
-    print(occurrences, result)
     df = pd.read_csv('tests/statements/test_contain.csv', sep=';')
 
     options = {
@@ -125,8 +124,8 @@ def test_profile():
     expected_profile = {
         'type': 'contain',
         'rule': 'all_and_only',
-        'values': {'test_maxmin': ['RJ', 'SP', 'ES']},
-        'min_occurrences': {'test_maxmin': 2},
-        'max_occurrences': {'test_maxmin': 5}
+        'values': ['RJ', 'SP', 'ES'],
+        'min_occurrences': 2,
+        'max_occurrences': 5}
     }
     assert prof == expected_profile
