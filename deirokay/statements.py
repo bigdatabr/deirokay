@@ -518,10 +518,16 @@ class Contain(BaseStatement):
     def profile(df):
         min_occurrences = {x: df[x].value_counts().min() for x in df.columns}
         max_occurrences = {x: df[x].value_counts().max() for x in df.columns}
+
+        min_occurrences = min(list(min_occurrences.values()))
+        max_occurrences = max(list(max_occurrences.values()))
+
+        values = [df[x].unique().tolist() for x in df.columns]
+        values = set().union(*values)
         return {
             'type': 'contain',
             'rule': 'all_and_only',
-            'values': {x: df[x].unique().tolist() for x in df.columns},
+            'values': values,
             'min_occurrences': min_occurrences,
             'max_occurrences': max_occurrences
         }
