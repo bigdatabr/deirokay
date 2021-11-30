@@ -419,8 +419,6 @@ class Contain(BaseStatement):
                         )
 
         self.min_max_boundaries = min_max_boundaries
-        print(min_max_boundaries)
-        print('**********')
 
     def _set_values_scope(self):
         """
@@ -525,15 +523,22 @@ class Contain(BaseStatement):
     # docstr-coverage:inherited
     @staticmethod
     def profile(df):
+        if {'<M8[ns]', '>M8[ns]'}.intersection(df.dtypes.tolist()):
+            raise NotImplementedError("Deirokay can't serialize datetime64")
+
         min_occurrences = {x: df[x].value_counts().min() for x in df.columns}
         max_occurrences = {x: df[x].value_counts().max() for x in df.columns}
 
         min_occurrences = min(list(min_occurrences.values()))
         max_occurrences = max(list(max_occurrences.values()))
 
-        values = [df[x].unique().tolist() for x in df.columns]
+        values = [list(df[x].unique()) for x in df.columns]
         values = list(set().union(*values))
-        values.sort()
+        try:
+            values.sort()
+        except TypeError:
+            raise NotImplementedError("Can't handle mixed types")
+
         return {
             'type': 'contain',
             'rule': 'all_and_only',
