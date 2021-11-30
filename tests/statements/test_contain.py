@@ -43,16 +43,16 @@ def test_rules(rule, scope, result):
                           ({
                               'min_occurrences': 2,
                               'max_occurrences': 5,
-                              'occurrences_per_value': {
-                                  'RJ': {'min_occurrences': 4},
-                                  'ES': {'max_occurrences': 4}
-                              }
+                              'occurrences_per_value': [
+                                  {'values': ['RJ'], 'min_occurrences': 4},
+                                  {'values': ['ES'], 'max_occurrences': 4}
+                              ]
                           }, 'fail'),
                           ({
                               'min_occurrences': 3,
-                              'occurrences_per_value': {
-                                  'SP': {'min_occurrences': 2}
-                              }
+                              'occurrences_per_value': [
+                                  {'values': ['SP'], 'min_occurrences': 2}
+                              ]
                           }, 'pass')])
 def test_max_min(occurrences, result):
     """
@@ -124,8 +124,8 @@ def test_profile():
     expected_profile = {
         'type': 'contain',
         'rule': 'all_and_only',
-        'values': ['RJ', 'SP', 'ES'],
+        'values': ['ES', 'RJ', 'SP'],
         'min_occurrences': 2,
         'max_occurrences': 5}
-    }
+
     assert prof == expected_profile

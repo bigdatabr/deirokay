@@ -398,20 +398,29 @@ class Contain(BaseStatement):
         # Dedicated boundaries
         for col in col_value_count.keys():
             if self.occurrences_per_value:
-                for value in self.occurrences_per_value.keys():
-                    min_max_boundaries[col][value][
-                        'min_occurrences'
-                    ] = self.occurrences_per_value[value].get(
-                        'min_occurrences', self.min_occurrences
-                    )
+                for occurrence in self.occurrences_per_value:
+                    values = []
+                    if type(occurrence['values']) == str:
+                        values.append(occurrence['values'])
+                    else:
+                        values = occurrence['values']
 
-                    min_max_boundaries[col][value][
-                        'max_occurrences'
-                    ] = self.occurrences_per_value[value].get(
-                        'max_occurrences', self.max_occurrences
-                    )
+                    for value in values:
+                        min_max_boundaries[col][value][
+                            'min_occurrences'
+                        ] = occurrence.get(
+                            'min_occurrences', self.min_occurrences
+                        )
+
+                        min_max_boundaries[col][value][
+                            'max_occurrences'
+                        ] = occurrence.get(
+                            'max_occurrences', self.max_occurrences
+                        )
 
         self.min_max_boundaries = min_max_boundaries
+        print(min_max_boundaries)
+        print('**********')
 
     def _set_values_scope(self):
         """
@@ -523,7 +532,8 @@ class Contain(BaseStatement):
         max_occurrences = max(list(max_occurrences.values()))
 
         values = [df[x].unique().tolist() for x in df.columns]
-        values = set().union(*values)
+        values = list(set().union(*values))
+        values.sort()
         return {
             'type': 'contain',
             'rule': 'all_and_only',
