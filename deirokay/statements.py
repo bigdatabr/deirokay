@@ -523,7 +523,9 @@ class Contain(BaseStatement):
     # docstr-coverage:inherited
     @staticmethod
     def profile(df):
-        if {'<M8[ns]', '>M8[ns]'}.intersection(df.dtypes.tolist()):
+        if {np.dtype('<M8[ns]'), np.dtype('>M8[ns]')}.intersection(
+            set(df.dtypes.tolist())
+        ):
             raise NotImplementedError("Deirokay can't serialize datetime64")
 
         min_occurrences = {x: df[x].value_counts().min() for x in df.columns}
