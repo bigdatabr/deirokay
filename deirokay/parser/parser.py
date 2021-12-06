@@ -9,7 +9,7 @@ import pandas as pd
 
 from ..enums import DTypes
 from ..fs import fs_factory
-from .treaters import data_treater
+from . import treaters
 
 
 def data_reader(data: Union[str, pd.DataFrame],
@@ -32,9 +32,6 @@ def data_reader(data: Union[str, pd.DataFrame],
     """
     if isinstance(options, str):
         options = fs_factory(options).read_dict()
-
-    for column in options.get('columns').values():
-        column['dtype'] = DTypes(column['dtype'])
 
     columns = options.pop('columns')
 
@@ -90,3 +87,52 @@ def pandas_read(file_path: str, **kwargs) -> pd.DataFrame:
             raise TypeError('File type not supported')
 
     return pd_read_func(file_path, **pandas_kwargs)
+
+
+def get_dtype_treater(dtype: Union[DTypes, str]) -> treaters.Validator:
+    """Map a dtype to its Treater class."""
+    treat_dtypes = {
+        DTypes.INT64: treaters.IntegerTreater,
+        DTypes.DATETIME: treaters.DateTime64Treater,
+        DTypes.FLOAT64: treaters.FloatTreater,
+        DTypes.STRING: treaters.StringTreater,
+        DTypes.DATE: treaters.DateTreater,
+        DTypes.TIME: treaters.TimeTreater,
+        DTypes.BOOLEAN: treaters.BooleanTreater
+    }
+    if isinstance(dtype, str):
+        dtype = DTypes(dtype)
+    return treat_dtypes.get(dtype)
+
+
+def data_treater(df: pd.DataFrame, options: dict):
+    """Receive options dict and call the proper treater class for each
+    Deirokay data type.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Raw DataFrame to be treated.
+    options : dict
+        Deirokay options.
+
+    Raises
+    ------
+    NotImplementedError
+        Data type not valid or not implemented.
+    """
+    for col, option in options.items():
+        option: dict = option.copy()
+
+        dtype = option.pop('dtype', None)
+        rename_to = option.pop('rename', None)
+
+        if dtype is not None:
+            treater = get_dtype_treater(dtype)
+            if not treater:
+                raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
+                                          " implemented yet")
+            df[col] = treater(**option)(df[col])
+
+        if rename_to is not None:
+            df.rename(columns={col: rename_to}, inplace=True)

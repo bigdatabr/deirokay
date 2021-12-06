@@ -6,61 +6,49 @@ Deirokay data types.
 import numpy as np
 import pandas as pd
 
-from ..enums import DTypes
-from .validator import Validator
 
-
-def data_treater(df: pd.DataFrame, options: dict):
-    """Receive options dict and call the proper treater class for each
-    Deirokay data type.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Raw DataFrame to be treated.
-    options : dict
-        Deirokay options.
-
-    Raises
-    ------
-    NotImplementedError
-        Data type not valid or not implemented.
+class Validator:
+    """Base validation class for column data type validation.
     """
-    treat_dtypes = {
-        DTypes.INT64: IntegerTreater,
-        DTypes.DATETIME: DateTime64Treater,
-        DTypes.FLOAT64: FloatTreater,
-        DTypes.STRING: StringTreater,
-        DTypes.DATE: DateTreater,
-        DTypes.TIME: TimeTreater,
-        DTypes.BOOLEAN: BooleanTreater
-    }
-    for col, option in options.items():
-        option: dict = option.copy()
 
-        dtype = option.pop('dtype', None)
-        rename_to = option.pop('rename', None)
+    def __init__(self, *, unique=False, nullable=True):
+        self.unique = unique
+        self.nullable = nullable
 
-        if dtype is not None:
-            treater = treat_dtypes.get(dtype)
-            if not treater:
-                raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
-                                          " implemented yet")
-            df[col] = treater(**option)(df[col])
+    def __call__(self, listlike):
+        return self.treat(pd.Series(listlike))
 
-        if rename_to is not None:
-            df.rename(columns={col: rename_to}, inplace=True)
+    def treat(self, series):
+        if not self.nullable and any(series.isnull()):
+            null_indices = list(series[series.isnull()].index)
+            null_indices_limit = null_indices[:min(len(null_indices), 30)]
+            raise ValueError(f"The '{series.name}' column has"
+                             f" {len(null_indices)} null values,"
+                             " but it shouldn't.\n"
+                             "Here are the indices of some null values:\n"
+                             f"{null_indices_limit}...")
+
+        if self.unique and not series.is_unique:
+            duplicated = list(series[series.duplicated(keep='first')])
+            duplicated_limit = duplicated[:min(len(duplicated), 10)]
+
+            raise ValueError(f"The '{series.name}' column values"
+                             " are not unique, as requested.\n"
+                             f"There are {len(duplicated)} non unique values,"
+                             " and here are some of them:\n"
+                             f"{duplicated_limit}...")
 
 
 class NumericTreater(Validator):
     """Base class for numeric treaters"""
+
     def __init__(self, thousand_sep=None, **kwargs):
         super().__init__(**kwargs)
 
         self.thousand_sep = thousand_sep
 
-    def __call__(self, series):
-        super().__call__(series)
+    def treat(self, series):
+        super().treat(series)
 
         if self.thousand_sep is not None:
             try:
@@ -79,6 +67,7 @@ class NumericTreater(Validator):
 
 class BooleanTreater(Validator):
     """Treater for boolean-like variables"""
+
     def __init__(self,
                  truthies=['true', 'True'],
                  falsies=['false', 'False'],
@@ -120,24 +109,25 @@ class BooleanTreater(Validator):
                          f' ({value.__class__})\n'
                          f'Expected values: {self.truthies | self.falsies}')
 
-    def __call__(self, series):
-        super().__call__(series)
+    def treat(self, series):
+        super().treat(series)
         series = series.apply(self._evaluate).astype('boolean')
         # Validate again
-        super().__call__(series)
+        super().treat(series)
 
         return series
 
 
 class FloatTreater(NumericTreater):
     """Treater for float variables"""
+
     def __init__(self, decimal_sep=None, **kwargs):
         super().__init__(**kwargs)
 
         self.decimal_sep = decimal_sep
 
-    def __call__(self, series):
-        series = super().__call__(series)
+    def treat(self, series):
+        series = super().treat(series)
 
         if self.decimal_sep is not None:
             try:
@@ -156,50 +146,55 @@ class FloatTreater(NumericTreater):
 
 class IntegerTreater(NumericTreater):
     """Treater for integer variables"""
-    def __call__(self, series):
-        return super().__call__(series).astype(float).astype('Int64')
+
+    def treat(self, series):
+        return super().treat(series).astype(float).astype('Int64')
 
 
 class DateTime64Treater(Validator):
     """Treater for datetime variables"""
+
     def __init__(self, format='%Y-%m-%d %H:%M:%S', **kwargs):
         super().__init__(**kwargs)
 
         self.format = format
 
-    def __call__(self, series):
-        super().__call__(series)
+    def treat(self, series):
+        super().treat(series)
 
         return pd.to_datetime(series, format=self.format)
 
 
 class DateTreater(DateTime64Treater):
     """Treater for date-only variables"""
+
     def __init__(self, format='%Y-%m-%d', **kwargs):
         super().__init__(format, **kwargs)
 
-    def __call__(self, series):
-        return super().__call__(series).dt.date
+    def treat(self, series):
+        return super().treat(series).dt.date
 
 
 class TimeTreater(DateTime64Treater):
     """Treater for time-only variables"""
+
     def __init__(self, format='%H:%M:%S', **kwargs):
         super().__init__(format, **kwargs)
 
-    def __call__(self, series):
-        return super().__call__(series).dt.time
+    def treat(self, series):
+        return super().treat(series).dt.time
 
 
 class StringTreater(Validator):
     """Treater for string variables"""
+
     def __init__(self, treat_null_as=None, **kwargs):
         super().__init__(**kwargs)
 
         self.treat_null_as = treat_null_as
 
-    def __call__(self, series):
-        super().__call__(series)
+    def treat(self, series):
+        super().treat(series)
 
         if self.treat_null_as is not None:
             series = series.fillna(self.treat_null_as)
