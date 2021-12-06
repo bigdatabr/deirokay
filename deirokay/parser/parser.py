@@ -105,6 +105,27 @@ def get_dtype_treater(dtype: Union[DTypes, str]) -> treaters.Validator:
     return treat_dtypes.get(dtype)
 
 
+def get_treater_instance(option: dict):
+    """Create a treater instance from a Deirokay-style option.
+
+    Example
+    -------
+
+    option = {
+        'dtype': 'integer',
+        'thousand_sep': ','
+    }
+    """
+    option = option.copy()
+    dtype = option.pop('dtype')
+
+    cls = get_dtype_treater(dtype)
+    if not cls:
+        raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
+                                  " implemented yet")
+    return cls(**option)
+
+
 def data_treater(df: pd.DataFrame, options: dict):
     """Receive options dict and call the proper treater class for each
     Deirokay data type.
@@ -124,15 +145,11 @@ def data_treater(df: pd.DataFrame, options: dict):
     for col, option in options.items():
         option: dict = option.copy()
 
-        dtype = option.pop('dtype', None)
+        dtype = option.get('dtype', None)
         rename_to = option.pop('rename', None)
 
         if dtype is not None:
-            treater = get_dtype_treater(dtype)
-            if not treater:
-                raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
-                                          " implemented yet")
-            df[col] = treater(**option)(df[col])
+            df[col] = get_treater_instance(option)(df[col])
 
         if rename_to is not None:
             df.rename(columns={col: rename_to}, inplace=True)
