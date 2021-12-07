@@ -1,5 +1,5 @@
 verbose: 3
-exclude: ".*/tests/"
+exclude: .*/(tests|docs)
 skip_magic: True
 skip_init: True
 skip_file_doc: True
