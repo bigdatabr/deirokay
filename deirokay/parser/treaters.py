@@ -162,12 +162,12 @@ class BooleanTreater(Validator):
     # docstr-coverage:inherited
     @staticmethod
     def serialize(series):
-        def convert(item):
+        def _convert(item):
             if item is pd.NA:
                 return None
             return bool(item)
         return {
-            'values': [convert(item) for item in series],
+            'values': [_convert(item) for item in series],
             'parser': {
                 'dtype': 'boolean'
             }
@@ -203,12 +203,12 @@ class FloatTreater(NumericTreater):
     # docstr-coverage:inherited
     @staticmethod
     def serialize(series):
-        def convert(item):
+        def _convert(item):
             if item is pd.NA:
                 return None
             return float(item)
         return {
-            'values': [convert(item) for item in series],
+            'values': [_convert(item) for item in series],
             'parser': {
                 'dtype': 'float'
             }
@@ -225,12 +225,12 @@ class IntegerTreater(NumericTreater):
     # docstr-coverage:inherited
     @staticmethod
     def serialize(series):
-        def convert(item):
+        def _convert(item):
             if item is pd.NA:
                 return None
             return int(item)
         return {
-            'values': [convert(item) for item in series],
+            'values': [_convert(item) for item in series],
             'parser': {
                 'dtype': 'integer'
             }
@@ -254,12 +254,12 @@ class DateTime64Treater(Validator):
     # docstr-coverage:inherited
     @staticmethod
     def serialize(series):
-        def convert(item):
+        def _convert(item):
             if item is None or item is pd.NaT:
                 return None
             return str(item)
         return {
-            'values': [convert(item) for item in series],
+            'values': [_convert(item) for item in series],
             'parser': {
                 'dtype': 'datetime'
             }
@@ -279,12 +279,12 @@ class DateTreater(DateTime64Treater):
     # docstr-coverage:inherited
     @staticmethod
     def serialize(series):
-        def convert(item):
+        def _convert(item):
             if item is None or item is pd.NaT:
                 return None
             return str(item)
         return {
-            'values': [convert(item) for item in series],
+            'values': [_convert(item) for item in series],
             'parser': {
                 'dtype': 'date'
             }
@@ -304,12 +304,12 @@ class TimeTreater(DateTime64Treater):
     # docstr-coverage:inherited
     @staticmethod
     def serialize(series):
-        def convert(item):
+        def _convert(item):
             if item is None or item is pd.NaT:
                 return None
             return str(item)
         return {
-            'values': [convert(item) for item in series],
+            'values': [_convert(item) for item in series],
             'parser': {
                 'dtype': 'time'
             }
@@ -336,12 +336,12 @@ class StringTreater(Validator):
     # docstr-coverage:inherited
     @staticmethod
     def serialize(series):
-        def convert(item):
+        def _convert(item):
             if item is None:
                 return None
             return str(item)
         return {
-            'values': [convert(item) for item in series],
+            'values': [_convert(item) for item in series],
             'parser': {
                 'dtype': 'string'
             }
