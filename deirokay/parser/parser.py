@@ -2,6 +2,7 @@
 Functions to parse files into pandas DataFrames.
 """
 
+import datetime
 from os.path import splitext
 from typing import Union
 
@@ -93,12 +94,19 @@ def get_dtype_treater(dtype: Union[DTypes, str]) -> treaters.Validator:
     """Map a dtype to its Treater class."""
     treat_dtypes = {
         DTypes.INT64: treaters.IntegerTreater,
-        DTypes.DATETIME: treaters.DateTime64Treater,
+        int: treaters.IntegerTreater,
         DTypes.FLOAT64: treaters.FloatTreater,
+        float: treaters.FloatTreater,
         DTypes.STRING: treaters.StringTreater,
+        str: treaters.StringTreater,
+        DTypes.DATETIME: treaters.DateTime64Treater,
+        pd.Timestamp: treaters.DateTime64Treater,
         DTypes.DATE: treaters.DateTreater,
+        datetime.date: treaters.DateTreater,
         DTypes.TIME: treaters.TimeTreater,
-        DTypes.BOOLEAN: treaters.BooleanTreater
+        datetime.time: treaters.TimeTreater,
+        DTypes.BOOLEAN: treaters.BooleanTreater,
+        bool: treaters.BooleanTreater,
     }
     if isinstance(dtype, str):
         dtype = DTypes(dtype)

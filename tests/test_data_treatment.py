@@ -1,14 +1,18 @@
+import json
+
+import numpy as np
+import pandas as pd
 import pytest
 
 from deirokay.enums import DTypes
-from deirokay.parser import get_dtype_treater
+from deirokay.parser import get_dtype_treater, get_treater_instance
 
 
 @pytest.mark.parametrize('dtype, params, values', [
     (
         DTypes.INTEGER,
         {},
-        [45, None, 232, -12]
+        [45, None, 232, -12, np.nan]
     ),
     (
         'integer',
@@ -18,7 +22,7 @@ from deirokay.parser import get_dtype_treater
     (
         DTypes.FLOAT,
         {},
-        [-1.4, None, 4.2, 1.6]
+        [-1.4, None, 4.2, 1.6e2]
     ),
     (
         'float',
@@ -53,11 +57,23 @@ from deirokay.parser import get_dtype_treater
     (
         'boolean',
         {'truthies': ['on'], 'falsies': ['off']},
-        ['on', 'off', None, True]
+        ['on', 'off', None, True, False]
     )
 ])
 def test_dtype_parsing_for_Python_types(dtype, params, values):
     treater_cls = get_dtype_treater(dtype)
     treater_instance = treater_cls(**params)
-    result = treater_instance(values)
-    print(result)
+
+    # Use Deirokay to treat Python types
+    parsed = treater_instance(values)
+
+    # Serialize with Deirokay
+    serialized = json.dumps(treater_cls.serialize(parsed))
+    json_parse = json.loads(serialized)
+
+    # Test for replication
+    parsed_from_serialized = (
+        get_treater_instance(json_parse['parser'])(json_parse['values'])
+    )
+    print(serialized)
+    pd.testing.assert_series_equal(parsed, parsed_from_serialized)
