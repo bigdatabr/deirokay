@@ -1,7 +1,6 @@
-import pandas as pd
 import pytest
 
-from deirokay import validate
+from deirokay import data_reader, validate
 from deirokay.statements import Contain
 
 
@@ -13,8 +12,9 @@ from deirokay.statements import Contain
                           ('only', 'test_rule_2', 'pass'),
                           ('only', 'test_rule_3', 'pass')])
 def test_rules(rule, scope, result):
-    df = pd.read_csv('tests/statements/test_contain.csv', sep=';')
-    options = {
+    df = data_reader('tests/statements/test_contain.csv',
+                     options='tests/statements/test_contain_options.yaml')
+    assertions = {
         'name': 'all_test_rule',
         'items': [
             {
@@ -23,14 +23,15 @@ def test_rules(rule, scope, result):
                     {
                         'type': 'contain',
                         'rule': rule,
-                        'values': ['RJ', 'ES', 'SC', 'AC', 'SP']
+                        'values': ['RJ', 'ES', 'SC', 'AC', 'SP'],
+                        'parser': {'dtype': 'string'}
                     }
                 ]
             }
         ]
     }
     assert (
-        validate(df, against=options, raise_exception=False)
+        validate(df, against=assertions, raise_exception=False)
         ['items'][0]['statements'][0]['report']['result']
     ) == result
 
@@ -61,9 +62,10 @@ def test_max_min(occurrences, result):
     Tries it with the global `max/min_occurrences` parameters
     and the `occurrences_per_value` parameter also.
     """
-    df = pd.read_csv('tests/statements/test_contain.csv', sep=';')
+    df = data_reader('tests/statements/test_contain.csv',
+                     options='tests/statements/test_contain_options.yaml')
 
-    options = {
+    assertions = {
         'name': 'max_min_global_test',
         'items': [
             {
@@ -72,15 +74,15 @@ def test_max_min(occurrences, result):
                     dict({
                         'type': 'contain',
                         'rule': 'all_and_only',
-                        'values': ['RJ', 'SP', 'ES']
-                    },
-                        **occurrences)
+                        'values': ['RJ', 'SP', 'ES'],
+                        'parser': {'dtype': 'string'}
+                    }, **occurrences)
                 ]
             }
         ]
     }
     assert (
-        validate(df, against=options, raise_exception=False)
+        validate(df, against=assertions, raise_exception=False)
         ['items'][0]['statements'][0]['report']['result']
     ) == result
 
@@ -90,8 +92,9 @@ def test_rule_not_contain():
     Tests the extremal case of not containing some values, obtained
     by combining `rule = 'all'` and `max_occurrences = 0`
     """
-    df = pd.read_csv('tests/statements/test_contain.csv', sep=';')
-    options = {
+    df = data_reader('tests/statements/test_contain.csv',
+                     options='tests/statements/test_contain_options.yaml')
+    assertions = {
         'name': 'all_not_contain_test_rule',
         'items': [
             {
@@ -101,6 +104,7 @@ def test_rule_not_contain():
                         'type': 'contain',
                         'rule': 'all',
                         'values': ['AC', 'AM'],
+                        'parser': {'dtype': 'string'},
                         'max_occurrences': 0
                     }
                 ]
@@ -108,7 +112,7 @@ def test_rule_not_contain():
         ]
     }
     assert (
-        validate(df, against=options, raise_exception=False)
+        validate(df, against=assertions, raise_exception=False)
         ['items'][0]['statements'][0]['report']['result']
     ) == 'pass'
 
@@ -117,15 +121,29 @@ def test_profile():
     """
     Tests if `profile` method outputs the expected value
     """
-    df = pd.read_csv('tests/statements/test_contain.csv', sep=';')
+    df = data_reader('tests/statements/test_contain.csv',
+                     options='tests/statements/test_contain_options.yaml')
 
-    prof = Contain.profile(df[['test_maxmin']])
+    generated_prof = Contain.profile(df[['test_maxmin']])
 
     expected_profile = {
         'type': 'contain',
         'rule': 'all_and_only',
         'values': ['ES', 'RJ', 'SP'],
+        'parser': {'dtype': 'string'},
         'min_occurrences': 2,
         'max_occurrences': 5}
 
-    assert prof == expected_profile
+    assert generated_prof == expected_profile
+
+    assertions = {
+        'name': 'profiling',
+        'items': [{
+            'scope': 'test_maxmin',
+            'statements': [generated_prof]
+        }]
+    }
+    assert (
+        validate(df, against=assertions, raise_exception=False)
+        ['items'][0]['statements'][0]['report']['result']
+    ) == 'pass'

@@ -1,0 +1,12 @@
+sep: ;
+columns:
+  test_rule_1:
+    dtype: string
+  test_rule_2:
+    dtype: string
+  test_rule_3:
+    dtype: string
+  test_maxmin:
+    dtype: string
+  test_not_contain:
+    dtype: string
