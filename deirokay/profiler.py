@@ -9,10 +9,10 @@ import pandas as pd
 
 from .__version__ import __version__
 from .fs import fs_factory
-from .statements import NotNull, RowCount, Unique
+from .statements import Contain, NotNull, RowCount, Unique
 
 profiling_statement_classes = [
-    NotNull, RowCount, Unique
+    NotNull, RowCount, Unique, Contain
 ]
 
 
