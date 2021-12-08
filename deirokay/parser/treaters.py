@@ -95,13 +95,12 @@ class NumericTreater(Validator):
             try:
                 series = series.str.replace(self.thousand_sep, '', regex=False)
             except AttributeError as e:
-                print(*e.args)
                 raise AttributeError(
                     'Make sure you are not declaring a `thousand_sep` to'
                     ' read a non-text-like column. This may happen when'
                     ' reading numeric columns from a .parquet file,'
                     ' for instance.'
-                )
+                ) from e
 
         return series
 

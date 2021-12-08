@@ -157,7 +157,10 @@ def data_treater(df: pd.DataFrame, options: dict):
         rename_to = option.pop('rename', None)
 
         if dtype is not None:
-            df[col] = get_treater_instance(option)(df[col])
+            try:
+                df[col] = get_treater_instance(option)(df[col])
+            except Exception as e:
+                raise Exception(f'Error when parsing "{col}".') from e
 
         if rename_to is not None:
             df.rename(columns={col: rename_to}, inplace=True)
