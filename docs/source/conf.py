@@ -10,11 +10,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
+from os.path import dirname, join
 
-sys.path.insert(0, os.path.abspath('../..'))
-from deirokay.__version__ import __version__  # noqa E402
+with open(join(dirname(__file__), '../../deirokay/__version__.py')) as v:
+    __version__ = None
+    exec(v.read().strip())
 
 
 # -- Project information -----------------------------------------------------
