@@ -12,7 +12,7 @@ columns:
   NUM_TRANSACAO01:
     dtype: integer
     nullable: false
-    thousand_sep: .
+    thousand_sep: '.'
     unique: false
   HR_TRANSACAO01:
     dtype: time
@@ -51,3 +51,7 @@ columns:
     dtype: float
     nullable: false
     thousand_sep: .
+  ACTIVE:
+    dtype: boolean
+    truthies: ['active']
+    falsies: ['inactive']

@@ -1,7 +1,26 @@
 # Contributing
 
+## Test Driven Development
+
+In other words, create your test first, then code.
+Of course, this paradigm may be adapted for you to accomplish both
+tasks at the same time... but you cannot forget your tests!
+
+All unit tests are functions in `.py` files within `tests`. You can
+follow the existing tests to inspire yours, just be sure your test
+name starts with `test_` (that's a rule for `pytest` to find them).
+
+For now, there are some sample files you may use to test your code.
+They are all placed in `tests/` folder in `.csv` or `.parquet` formats.
+
+To run all tests, run `pytest` (or `python3 -m pytest`).
+
+## Git Hook
+
 Use this script as your pre-commit hook (`.git/hooks/pre-commit`) to
-auto-execute flake8 and isort checker:
+execute `flake8` (syntax checker) and `isort`
+('import' order checker) automatically before all commits you make. Make sure
+you make this file executable with `chmod +x .git/hooks/pre-commit`.
 
 ``` sh
 #!/bin/sh
