@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 
 from ..parser import get_dtype_treater, get_treater_instance
-
 from .base_statement import BaseStatement
 
 
