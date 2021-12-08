@@ -20,7 +20,7 @@ with open('requirements-s3.txt') as f:
 
 setup(
     name="deirokay",
-    packages=find_packages(include='deirokay*'),
+    packages=find_packages(include=['deirokay*']),
     version=__version__,
     author="Marcos Bressan",
     author_email="marcos.bressan@bigdata.com.br",
