@@ -34,7 +34,7 @@ class Contain(BaseStatement):
         self.min_occurrences = self.options.get('min_occurrences', None)
         self.max_occurrences = self.options.get('max_occurrences', None)
         self.occurrences_per_value = self.options.get(
-            'occurrences_per_value', {}
+            'occurrences_per_value', []
         )
         self.verbose = self.options.get('verbose', True)
 
@@ -65,23 +65,32 @@ class Contain(BaseStatement):
 
     # docstr-coverage:inherited
     def report(self, df):
+        # Concat all columns
         count_isin = (
             pd.concat(df[col] for col in df.columns).value_counts()
         )
         self.value_count = count_isin.to_dict()
 
-        keys = self.treater.serialize(self.value_count.keys())['values']
-        values = (int(freq) for freq in self.value_count.values())
-        report = {
-            'value_frequency': dict(zip(keys, values))
-        }
+        # Generate report
+        values = self.treater.serialize(self.value_count.keys())['values']
+        freqs = [int(freq) for freq in self.value_count.values()]
+
         if self.verbose:
+            # Include percentage in reports
             total = int(count_isin.sum())
-            values = (
-                int(freq)*100/total for freq in self.value_count.values()
-            )
-            report['value_rel_frequency_%'] = dict(zip(keys, values))
-        return report
+            rel_freqs = (freq*100/total for freq in freqs)
+            values_report = [
+                {'value': value, 'count': freq, 'perc': pfreq}
+                for value, freq, pfreq in zip(values, freqs, rel_freqs)
+            ]
+        else:
+            values_report = [
+                {'value': value, 'count': freq}
+                for value, freq in zip(values, freqs)
+            ]
+        return {
+            'values': values_report
+        }
 
     # docstr-coverage:inherited
     def result(self, report):
@@ -231,11 +240,13 @@ class Contain(BaseStatement):
         max_occurrences = int(value_frequency.max())
 
         # unique series
-        series = series.drop_duplicates()
+        series = series.drop_duplicates().dropna()
+        if len(series) > 20:
+            raise NotImplementedError("Won't generate too long statements!")
 
         statement_template = {
             'type': 'contain',
-            'rule': 'all_and_only'
+            'rule': 'all'
         }
         # Get most common type to infer treater
         try:
@@ -245,7 +256,7 @@ class Contain(BaseStatement):
             )
         except TypeError:
             raise NotImplementedError("Can't handle mixed types")
-        statement_template['values'].sort()
+        statement_template['values'].sort(key=lambda x: (x is None, x))
 
         if min_occurrences != 1:
             statement_template['min_occurrences'] = min_occurrences

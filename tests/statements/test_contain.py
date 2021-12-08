@@ -128,7 +128,7 @@ def test_profile():
 
     expected_profile = {
         'type': 'contain',
-        'rule': 'all_and_only',
+        'rule': 'all',
         'values': ['ES', 'RJ', 'SP'],
         'parser': {'dtype': 'string'},
         'min_occurrences': 2,
