@@ -19,12 +19,61 @@ cache:
     - .cache/pip-cache
 
 stages:
-  - ci setup
   - code quality
+  - ci setup
   - test
   - deploy
 
-image: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+syntax-checker:
+  stage: code quality
+  image: registry.bigdata/ci-images/syntax-checker
+  rules:
+    - if: '$CI_MERGE_REQUEST_IID'
+      allow_failure: false
+    - allow_failure: true
+  interruptible: true
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - |
+      if [[ -n "$CI_MERGE_REQUEST_IID" ]]; then
+        echo "Changed files (except deleted):"
+        git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+        PYTHON_TOUCHED_FILES=$(git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; })
+
+        if [[ -n "$PYTHON_TOUCHED_FILES" ]]; then
+          flake8 $PYTHON_TOUCHED_FILES --exclude=docs,htmlcov,venv,.cache,.coverage,.git
+          isort -c $PYTHON_TOUCHED_FILES
+        fi
+      else
+        flake8 --exclude=docs,htmlcov,venv,.cache,.coverage,.git
+        isort -c *
+      fi
+
+docstr-coverage:
+  stage: code quality
+  image: registry.bigdata/ci-images/docstr-coverage
+  allow_failure: true
+  interruptible: true
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - |
+      if [[ -n "$CI_MERGE_REQUEST_IID" ]]; then
+        echo "Since this is a Merge Request, only the following files will be checked:"
+        git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; }
+        PYTHON_TOUCHED_FILES=$(git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; })
+
+        if [[ -n "$PYTHON_TOUCHED_FILES" ]]; then
+          docstr-coverage $PYTHON_TOUCHED_FILES --config .docstr.yml
+        fi
+      else
+        docstr-coverage * --badge=badge.svg --config .docstr.yml
+      fi
+  artifacts:
+    paths:
+      - badge.svg
+    when: always
 
 Build and Push CI Docker Image:
   stage: ci setup
@@ -43,70 +92,20 @@ Build and Push CI Docker Image:
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY_IMAGE:latest
 
-syntax-checker:
-  stage: code quality
-  rules:
-    - if: '$CI_MERGE_REQUEST_IID'
-      allow_failure: false
-    - allow_failure: true
-  interruptible: true
-  before_script:
-    - python -V
-    - pip install flake8 isort
-  script:
-    - |
-      if [[ -n "$CI_MERGE_REQUEST_IID" ]]; then
-        echo "Changed files (except deleted):"
-        git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-        PYTHON_TOUCHED_FILES=$(git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; })
-
-        if [[ -n "$PYTHON_TOUCHED_FILES" ]]; then
-          flake8 $PYTHON_TOUCHED_FILES --exclude=docs,htmlcov,venv,.cache,.coverage,.git
-          isort -c $PYTHON_TOUCHED_FILES
-        fi
-      else
-        flake8 --exclude=docs,htmlcov,venv,.cache,.coverage,.git
-        isort -c *
-      fi
-
-docstring-checker:
-  stage: code quality
-  allow_failure: true
-  interruptible: true
-  before_script:
-    - python -V
-    - pip install docstr-coverage
-  script:
-    - |
-      if [[ -n "$CI_MERGE_REQUEST_IID" ]]; then
-        echo "Changed .py files (except deleted):"
-        git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; }
-        PYTHON_TOUCHED_FILES=$(git diff --diff-filter=d --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME | { grep -E '\.py$' || :; })
-
-        if [[ -n "$PYTHON_TOUCHED_FILES" ]]; then
-          docstr-coverage $PYTHON_TOUCHED_FILES --config .docstr.yml
-        fi
-      else
-        docstr-coverage * --badge=badge.svg --config .docstr.yml
-      fi
-  artifacts:
-    paths:
-      - badge.svg
-    when: always
-
 unit-test:
   stage: test
+  image: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
   interruptible: true
   before_script:
     - python -V
     - ls -al
-    - apt update && apt install -y git
     - pip install .[dev]
   script:
     - pytest --cov=. -vvv --disable-warnings
 
 pages:
   stage: deploy
+  image: registry.bigdata/ci-images/sphinx-rtd
   interruptible: true
   needs:
     - Build and Push CI Docker Image
