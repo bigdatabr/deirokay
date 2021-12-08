@@ -1,3 +1,10 @@
+# Release 0.4.3
+
+2021-12-08
+
+- Fix for setup install
+
+
 # Release 0.4.2
 
 2021-12-08
