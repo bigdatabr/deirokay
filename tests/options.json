@@ -66,6 +66,11 @@
             "nullable": false,
             "thousand_sep": ".",
             "decimal_sep": ","
+        },
+        "ACTIVE": {
+            "dtype": "boolean",
+            "truthies": ["active"],
+            "falsies": ["inactive"]
         }
     }
 }
