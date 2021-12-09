@@ -1,3 +1,10 @@
+# Release 0.5.1
+
+2021-12-09
+
+- Custom Jinja templates also in `DeirokayOperator`
+
+
 # Release 0.5.0
 
 2021-12-09
