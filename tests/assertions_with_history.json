@@ -11,7 +11,7 @@
             "statements": [
                 {
                     "type": "unique",
-                    "at_least_%": 40.0
+                    "at_least_%": "{{ forty }}"
                 },
                 {
                     "type": "not_null",
