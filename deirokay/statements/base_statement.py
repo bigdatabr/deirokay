@@ -1,11 +1,4 @@
-from typing import Optional
-
 import pandas as pd
-from jinja2 import BaseLoader
-from jinja2.nativetypes import NativeEnvironment
-
-from ..fs import FileSystem
-from ..history_template import get_series
 
 
 class BaseStatement:
@@ -15,10 +8,6 @@ class BaseStatement:
     ----------
     options : dict
         Statement parameters provided by user.
-    read_from : Optional[FileSystem], optional
-        Where read past validation logs from
-        (necessary for templated moving statistics).
-        By default None.
 
     Attributes
     ----------
@@ -30,21 +19,15 @@ class BaseStatement:
     table_only : bool
         Whether or not this statement in applicable only to the entire
         table, instead of scoped columns.
-    jinjaenv : NativeEnvironment
-        Jinja Environment to use when rendering templates. Only for
-        advanced users.
     """
 
     name = 'base_statement'
     expected_parameters = ['type', 'severity', 'location']
     table_only = False
-    jinjaenv = NativeEnvironment(loader=BaseLoader())
 
-    def __init__(self, options: dict, read_from: Optional[FileSystem] = None):
+    def __init__(self, options: dict):
         self._validate_options(options)
         self.options = options
-        self._read_from = read_from
-        self._parse_options()
 
     def _validate_options(self, options: dict):
         """Make sure all providded statement parameters are expected
@@ -61,18 +44,6 @@ class BaseStatement:
                 f'{unexpected_parameters}\n'
                 f'The valid parameters are: {cls.expected_parameters}'
             )
-
-    def _parse_options(self):
-        """Render Jinja templates in statement parameters."""
-        for key, value in self.options.items():
-            if isinstance(value, str):
-                rendered = (
-                    BaseStatement.jinjaenv.from_string(value)
-                    .render(
-                        series=lambda x, y: get_series(x, y, self._read_from)
-                    )
-                )
-                self.options[key] = rendered
 
     def __call__(self, df: pd.DataFrame):
         """Run statement instance."""
