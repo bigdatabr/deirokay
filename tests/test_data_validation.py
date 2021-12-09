@@ -22,6 +22,11 @@ def test_data_invalidation_from_dict():
                     {
                         'type': 'unique',
                         'at_least_%': 1.0,
+                    },
+                    {
+                    "type": "regex",
+                    "pattern": "\d{4}",
+                    "at_least_%": 80.0
                     }
                 ]
             }
