@@ -1,7 +1,7 @@
 import json
 
-from numpy import nan
 import pytest
+from numpy import nan
 from pandas.testing import assert_series_equal
 
 from deirokay.enums import DTypes
