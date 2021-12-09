@@ -12,17 +12,17 @@ from typing import Optional, Union
 
 import pandas
 
-import deirokay.statements as core_stmts
+import deirokay.statements
+from deirokay.enums import SeverityLevel
+from deirokay.exceptions import ValidationError
+from deirokay.fs import FileSystem, LocalFileSystem, fs_factory
 from deirokay.statements import BaseStatement
-
-from .enums import SeverityLevel
-from .exceptions import ValidationError
-from .fs import FileSystem, LocalFileSystem, fs_factory
+from deirokay.utils import _check_columns_in_df_columns
 
 # List all Core statement classes automatically
 core_statement_classes = {
     cls.name: cls
-    for _, cls in inspect.getmembers(core_stmts)
+    for _, cls in inspect.getmembers(deirokay.statements)
     if isinstance(cls, type) and
     issubclass(cls, BaseStatement) and
     cls is not BaseStatement
@@ -183,7 +183,10 @@ def validate(df: pandas.DataFrame, *,
 
     for item in validation_document.get('items'):
         scope = item.get('scope')
-        df_scope = df[scope] if isinstance(scope, list) else df[[scope]]
+        scope = [scope] if not isinstance(scope, list) else scope
+        _check_columns_in_df_columns(scope, df.columns)
+
+        df_scope = df[scope]
 
         for stmt in item.get('statements'):
             report = _process_stmt(stmt, read_from=save_to)(df_scope)
