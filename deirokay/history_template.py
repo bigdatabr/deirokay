@@ -6,7 +6,7 @@ logs from a given directory and assembling them as pandas Series.
 import warnings
 
 import jq
-import pandas as pd
+from pandas import Series
 
 from .fs import FileSystem
 
@@ -40,6 +40,7 @@ def series_from_fs(series_name: str, lookback: int, folder: FileSystem):
 
 class NullCallableNode():
     """Dummy node which returns nothing."""
+
     def __getattr__(self, name):
         return lambda: None
 
@@ -57,7 +58,7 @@ class StatementNode():
                 jq.compile(f'.[].report.detail["{att}"]')
                 .input(statements).all()
             )
-            setattr(self, att, pd.Series(child))
+            setattr(self, att, Series(child))
 
     def __getattr__(self, name):
         return NullCallableNode()

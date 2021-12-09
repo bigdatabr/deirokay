@@ -1,11 +1,4 @@
-from typing import Optional
-
-import pandas as pd
-from jinja2 import BaseLoader
-from jinja2.nativetypes import NativeEnvironment
-
-from ..fs import FileSystem
-from ..history_template import get_series
+from pandas import DataFrame
 
 
 class BaseStatement:
@@ -15,10 +8,6 @@ class BaseStatement:
     ----------
     options : dict
         Statement parameters provided by user.
-    read_from : Optional[FileSystem], optional
-        Where read past validation logs from
-        (necessary for templated moving statistics).
-        By default None.
 
     Attributes
     ----------
@@ -30,21 +19,15 @@ class BaseStatement:
     table_only : bool
         Whether or not this statement in applicable only to the entire
         table, instead of scoped columns.
-    jinjaenv : NativeEnvironment
-        Jinja Environment to use when rendering templates. Only for
-        advanced users.
     """
 
     name = 'base_statement'
     expected_parameters = ['type', 'severity', 'location']
     table_only = False
-    jinjaenv = NativeEnvironment(loader=BaseLoader())
 
-    def __init__(self, options: dict, read_from: Optional[FileSystem] = None):
+    def __init__(self, options: dict):
         self._validate_options(options)
         self.options = options
-        self._read_from = read_from
-        self._parse_options()
 
     def _validate_options(self, options: dict):
         """Make sure all providded statement parameters are expected
@@ -62,19 +45,7 @@ class BaseStatement:
                 f'The valid parameters are: {cls.expected_parameters}'
             )
 
-    def _parse_options(self):
-        """Render Jinja templates in statement parameters."""
-        for key, value in self.options.items():
-            if isinstance(value, str):
-                rendered = (
-                    BaseStatement.jinjaenv.from_string(value)
-                    .render(
-                        series=lambda x, y: get_series(x, y, self._read_from)
-                    )
-                )
-                self.options[key] = rendered
-
-    def __call__(self, df: pd.DataFrame):
+    def __call__(self, df: DataFrame):
         """Run statement instance."""
         internal_report = self.report(df)
         result = self.result(internal_report)
@@ -85,7 +56,7 @@ class BaseStatement:
         }
         return final_report
 
-    def report(self, df: pd.DataFrame) -> dict:
+    def report(self, df: DataFrame) -> dict:
         """Receive a DataFrame containing only columns on the scope of
         validation and returns a report of related metrics that can
         be used later to declare this Statement as fulfilled or
@@ -93,7 +64,7 @@ class BaseStatement:
 
         Parameters
         ----------
-        df : pd.DataFrame
+        df : DataFrame
             The scoped DataFrame columns to be analysed in this report
             by this statement.
 
@@ -123,13 +94,13 @@ class BaseStatement:
         return True
 
     @staticmethod
-    def profile(df: pd.DataFrame) -> dict:
+    def profile(df: DataFrame) -> dict:
         """Given a template data table, generate a statement dict
         from it.
 
         Parameters
         ----------
-        df : pd.DataFrame
+        df : DataFrame
             The DataFrame to be used as template.
 
         Returns

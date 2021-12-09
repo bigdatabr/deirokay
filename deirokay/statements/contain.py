@@ -1,5 +1,5 @@
-import numpy as np
-import pandas as pd
+from numpy import inf
+from pandas import concat
 
 from ..parser import get_dtype_treater, get_treater_instance
 from .base_statement import BaseStatement
@@ -47,9 +47,9 @@ class Contain(BaseStatement):
             'all_and_only': 1
         }
         max_occurrences_rule_default = {
-            'all': np.inf,
-            'only': np.inf,
-            'all_and_only': np.inf
+            'all': inf,
+            'only': inf,
+            'all_and_only': inf
         }
 
         if self.min_occurrences is None:
@@ -66,7 +66,7 @@ class Contain(BaseStatement):
     def report(self, df):
         # Concat all columns
         count_isin = (
-            pd.concat(df[col] for col in df.columns).value_counts()
+            concat(df[col] for col in df.columns).value_counts()
         )
         self.value_count = count_isin.to_dict()
 
@@ -232,7 +232,7 @@ class Contain(BaseStatement):
     # docstr-coverage:inherited
     @staticmethod
     def profile(df):
-        series = pd.concat(df[col] for col in df.columns)
+        series = concat(df[col] for col in df.columns)
 
         value_frequency = series.value_counts()
         min_occurrences = int(value_frequency.min())

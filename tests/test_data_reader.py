@@ -1,5 +1,5 @@
-import pandas as pd
 import pytest
+from pandas import read_csv
 
 from deirokay import data_reader
 from deirokay.enums import DTypes
@@ -89,8 +89,8 @@ def test_data_reader_parquet():
 
 
 def test_data_reader_from_dataframe():
-    df = pd.read_csv('tests/transactions_sample.csv', sep=';',
-                     thousands='.', decimal=',')
+    df = read_csv('tests/transactions_sample.csv', sep=';',
+                  thousands='.', decimal=',')
 
     options = {
         'encoding': 'iso-8859-1',
