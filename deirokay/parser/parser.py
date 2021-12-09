@@ -8,8 +8,10 @@ from typing import Union
 
 import pandas as pd
 
-from ..enums import DTypes
-from ..fs import fs_factory
+from deirokay.enums import DTypes
+from deirokay.fs import fs_factory
+from deirokay.utils import _check_columns_in_df_columns
+
 from . import treaters
 
 
@@ -150,6 +152,8 @@ def data_treater(df: pd.DataFrame, options: dict):
     NotImplementedError
         Data type not valid or not implemented.
     """
+    _check_columns_in_df_columns(options.keys(), df.columns)
+
     for col, option in options.items():
         option: dict = option.copy()
 
