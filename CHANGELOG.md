@@ -3,6 +3,7 @@
 2021-12-09
 
 - Custom Jinja templates in `Derokay.validate`
+- Improve exception error when there is a typo in column names
 
 
 # Release 0.4.3
