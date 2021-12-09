@@ -1,4 +1,4 @@
-import pandas as pd
+from pandas import DataFrame
 
 
 class BaseStatement:
@@ -45,7 +45,7 @@ class BaseStatement:
                 f'The valid parameters are: {cls.expected_parameters}'
             )
 
-    def __call__(self, df: pd.DataFrame):
+    def __call__(self, df: DataFrame):
         """Run statement instance."""
         internal_report = self.report(df)
         result = self.result(internal_report)
@@ -56,7 +56,7 @@ class BaseStatement:
         }
         return final_report
 
-    def report(self, df: pd.DataFrame) -> dict:
+    def report(self, df: DataFrame) -> dict:
         """Receive a DataFrame containing only columns on the scope of
         validation and returns a report of related metrics that can
         be used later to declare this Statement as fulfilled or
@@ -64,7 +64,7 @@ class BaseStatement:
 
         Parameters
         ----------
-        df : pd.DataFrame
+        df : DataFrame
             The scoped DataFrame columns to be analysed in this report
             by this statement.
 
@@ -94,13 +94,13 @@ class BaseStatement:
         return True
 
     @staticmethod
-    def profile(df: pd.DataFrame) -> dict:
+    def profile(df: DataFrame) -> dict:
         """Given a template data table, generate a statement dict
         from it.
 
         Parameters
         ----------
-        df : pd.DataFrame
+        df : DataFrame
             The DataFrame to be used as template.
 
         Returns
