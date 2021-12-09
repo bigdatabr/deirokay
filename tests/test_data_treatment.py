@@ -1,8 +1,8 @@
 import json
 
-import numpy as np
-import pandas as pd
+from numpy import nan
 import pytest
+from pandas.testing import assert_series_equal
 
 from deirokay.enums import DTypes
 from deirokay.parser import get_dtype_treater, get_treater_instance
@@ -12,7 +12,7 @@ from deirokay.parser import get_dtype_treater, get_treater_instance
     (
         DTypes.INTEGER,
         {},
-        [45, None, 232, -12, np.nan]
+        [45, None, 232, -12, nan]
     ),
     (
         'integer',
@@ -76,4 +76,4 @@ def test_dtype_parsing_for_Python_types(dtype, params, values):
         get_treater_instance(json_parse['parser'])(json_parse['values'])
     )
     print(serialized)
-    pd.testing.assert_series_equal(parsed, parsed_from_serialized)
+    assert_series_equal(parsed, parsed_from_serialized)

@@ -3,8 +3,8 @@ Classes and functions to treat column data types according to
 Deirokay data types.
 """
 
-import numpy as np
-import pandas as pd
+from numpy import nan
+from pandas import NA, NaT, Series, to_datetime
 
 
 class Validator:
@@ -16,15 +16,15 @@ class Validator:
         self.nullable = nullable
 
     def __call__(self, listlike):
-        return self.treat(pd.Series(listlike))
+        return self.treat(Series(listlike))
 
-    def treat(self, series: pd.Series):
+    def treat(self, series: Series):
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 
         Parameters
         ----------
-        series : pd.Series
+        series : Series
             Raw pandas Series to be treated.
 
         Raises
@@ -55,7 +55,7 @@ class Validator:
                              f"{duplicated_limit}...")
 
     @staticmethod
-    def serialize(series: pd.Series) -> dict:
+    def serialize(series: Series) -> dict:
         """Create a Deirokay-compatible serializable object that can
         be serialized (in JSON or YAML formats) and parsed back by
         Deirokay treaters.
@@ -68,7 +68,7 @@ class Validator:
 
         Parameters
         ----------
-        series : pd.Series
+        series : Series
             Pandas Series to be serialized.
 
         Returns
@@ -137,7 +137,7 @@ class BooleanTreater(Validator):
             return True
         if value is False:
             return False
-        if value is None or value is np.nan or value is pd.NA:
+        if value is None or value is nan or value is NA:
             return self.default_value
 
         _value = value.lower() if self.ignore_case else value
@@ -162,7 +162,7 @@ class BooleanTreater(Validator):
     @staticmethod
     def serialize(series):
         def _convert(item):
-            if item is pd.NA:
+            if item is NA:
                 return None
             return bool(item)
         return {
@@ -203,7 +203,7 @@ class FloatTreater(NumericTreater):
     @staticmethod
     def serialize(series):
         def _convert(item):
-            if item is pd.NA:
+            if item is NA:
                 return None
             return float(item)
         return {
@@ -225,7 +225,7 @@ class IntegerTreater(NumericTreater):
     @staticmethod
     def serialize(series):
         def _convert(item):
-            if item is pd.NA:
+            if item is NA:
                 return None
             return int(item)
         return {
@@ -248,13 +248,13 @@ class DateTime64Treater(Validator):
     def treat(self, series):
         super().treat(series)
 
-        return pd.to_datetime(series, format=self.format)
+        return to_datetime(series, format=self.format)
 
     # docstr-coverage:inherited
     @staticmethod
     def serialize(series):
         def _convert(item):
-            if item is None or item is pd.NaT:
+            if item is None or item is NaT:
                 return None
             return str(item)
         return {
@@ -279,7 +279,7 @@ class DateTreater(DateTime64Treater):
     @staticmethod
     def serialize(series):
         def _convert(item):
-            if item is None or item is pd.NaT:
+            if item is None or item is NaT:
                 return None
             return str(item)
         return {
@@ -304,7 +304,7 @@ class TimeTreater(DateTime64Treater):
     @staticmethod
     def serialize(series):
         def _convert(item):
-            if item is None or item is pd.NaT:
+            if item is None or item is NaT:
                 return None
             return str(item)
         return {

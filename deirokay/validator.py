@@ -11,18 +11,22 @@ from os.path import splitext
 from typing import Optional, Union
 
 import pandas
+from jinja2 import BaseLoader
+from jinja2 import StrictUndefined as strict
+from jinja2.nativetypes import NativeEnvironment
 
-import deirokay.statements as core_stmts
+import deirokay.statements
+from deirokay.enums import SeverityLevel
+from deirokay.exceptions import ValidationError
+from deirokay.fs import FileSystem, LocalFileSystem, fs_factory
+from deirokay.history_template import get_series
 from deirokay.statements import BaseStatement
-
-from .enums import SeverityLevel
-from .exceptions import ValidationError
-from .fs import FileSystem, LocalFileSystem, fs_factory
+from deirokay.utils import _check_columns_in_df_columns, _render_dict
 
 # List all Core statement classes automatically
 core_statement_classes = {
     cls.name: cls
-    for _, cls in inspect.getmembers(core_stmts)
+    for _, cls in inspect.getmembers(deirokay.statements)
     if isinstance(cls, type) and
     issubclass(cls, BaseStatement) and
     cls is not BaseStatement
@@ -49,8 +53,7 @@ def _load_custom_statement(location: str):
     return cls
 
 
-def _process_stmt(statement: dict,
-                  read_from: FileSystem = None) -> BaseStatement:
+def _process_stmt(statement: dict) -> BaseStatement:
     """Receive statement dict and call the proper statement class.
     The `name` attribute of the class is used to bind the statement
     type to its class.
@@ -60,10 +63,6 @@ def _process_stmt(statement: dict,
     statement : dict
         Dict from Validation Document representing statement and its
         parameters.
-    read_from : FileSystem, optional
-        FS object pointing to path to validation logs. It is used when
-        retrieving past statistics with templated arguments.
-        By default None.
 
     Returns
     -------
@@ -94,7 +93,7 @@ def _process_stmt(statement: dict,
             ' or `custom` for your own statements.'
         )
 
-    statement_instance = cls(statement, read_from)
+    statement_instance: BaseStatement = cls(statement)
 
     return statement_instance
 
@@ -105,7 +104,8 @@ def validate(df: pandas.DataFrame, *,
              save_format: str = None,
              current_date: Optional[datetime] = None,
              raise_exception: bool = True,
-             exception_level: SeverityLevel = SeverityLevel.CRITICAL) -> dict:
+             exception_level: SeverityLevel = SeverityLevel.CRITICAL,
+             template: Optional[dict] = None) -> dict:
     """Validate a Deirokay DataFrame against a well-defined Validation
     Document.
 
@@ -116,7 +116,7 @@ def validate(df: pandas.DataFrame, *,
     against : Union[str, dict]
         A `dict`-like Validation Document or a local/S3 path to a
         validation file in either YAML or JSON format.
-    save_to : Optional[str], optional
+    save_to : str, optional
         Path to folder where the validation result document will be
         saved to. An subfolder named the same as the validation
         document named will be created in this path, and the results
@@ -133,7 +133,7 @@ def validate(df: pandas.DataFrame, *,
         If None and `against` is a valid path to a YAML or JSON file,
         it will keep this format.
         By default None
-    current_date : Optional[datetime], optional
+    current_date : datetime, optional
         Python `datetime.datetime` to use in log file name when saving
         validation result.
         Only valid when `save_to` is not None.
@@ -150,6 +150,10 @@ def validate(df: pandas.DataFrame, *,
         statement validation fails.
         Only valid when `raise_exception` is True.
         By default SeverityLevel.CRITICAL (5).
+    template : dict, optional
+        Map of custom templates to be replaced in validation document
+        before evaluation of statements. For mapped values, if
+        callable, the returned value is used instead.
 
     Returns
     -------
@@ -181,12 +185,24 @@ def validate(df: pandas.DataFrame, *,
         f'Not a valid format {save_format}'
     )
 
+    # Render templates
+    template = dict(
+        series=lambda x, y: get_series(x, y, read_from=save_to),
+        **(template or {})
+    )
+    _render_dict(NativeEnvironment(loader=BaseLoader(), undefined=strict),
+                 dict_=validation_document,
+                 template=template)
+
     for item in validation_document.get('items'):
         scope = item.get('scope')
-        df_scope = df[scope] if isinstance(scope, list) else df[[scope]]
+        scope = [scope] if not isinstance(scope, list) else scope
+        _check_columns_in_df_columns(scope, df.columns)
+
+        df_scope = df[scope]
 
         for stmt in item.get('statements'):
-            report = _process_stmt(stmt, read_from=save_to)(df_scope)
+            report = _process_stmt(stmt)(df_scope)
             if report['result'] is True:
                 report['result'] = 'pass'
             else:
