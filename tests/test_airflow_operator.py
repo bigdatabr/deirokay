@@ -10,6 +10,7 @@ def test_deirokay_operator(prepare_history_folder):
         path_to_file='tests/transactions_sample.csv',
         options='tests/options.json',
         against='tests/assertions_with_history.json',
+        template={'forty': 40},
         save_to=prepare_history_folder
     )
 

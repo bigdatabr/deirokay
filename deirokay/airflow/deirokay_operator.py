@@ -29,6 +29,7 @@ class DeirokayOperator(BaseOperator):
         path_to_file: str,
         options: Union[dict, str],
         against: Union[dict, str],
+        template: Optional[dict] = None,
         save_to: Optional[str] = None,
         soft_fail_level: int = SeverityLevel.MINIMAL,
         hard_fail_level: int = SeverityLevel.CRITICAL,
@@ -45,7 +46,9 @@ class DeirokayOperator(BaseOperator):
         against : Union[dict, str]
             A dict or a local/S3 path to a YAML/JSON validation
             document file.
-        save_to : Optional[str], optional
+        template : dict, optional
+            Map of templates to be passed to Deirokay validation.
+        save_to : str, optional
             Where validation logs will be saved to.
             If None, no log is saved. By default None.
         soft_fail_level : int, optional
@@ -63,6 +66,7 @@ class DeirokayOperator(BaseOperator):
         self.path_to_file = path_to_file
         self.options = options
         self.against = against
+        self.template = template
         self.save_to = save_to
         self.soft_fail_level = soft_fail_level
         self.hard_fail_level = hard_fail_level
@@ -75,6 +79,7 @@ class DeirokayOperator(BaseOperator):
         validation_document = deirokay.validate(
             df,
             against=self.against,
+            template=self.template,
             save_to=self.save_to,
             current_date=current_date,
             raise_exception=False
