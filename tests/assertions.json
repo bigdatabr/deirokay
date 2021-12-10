@@ -20,6 +20,11 @@
                     "type": "row_count",
                     "min": 18,
                     "max": 22
+                },
+                {
+                    "type": "regex",
+                    "pattern": "\\d+",
+                    "at_least_%": 80.0
                 }
             ]
         }
