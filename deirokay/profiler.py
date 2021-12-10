@@ -5,14 +5,14 @@ Documents.
 
 from typing import Optional
 
-import pandas as pd
+from pandas import DataFrame
 
 from .__version__ import __version__
 from .fs import fs_factory
-from .statements import NotNull, RowCount, Unique
+from .statements import Contain, NotNull, RowCount, Unique
 
 profiling_statement_classes = [
-    NotNull, RowCount, Unique
+    NotNull, RowCount, Unique, Contain
 ]
 
 
@@ -41,7 +41,7 @@ def _generate_items(df):
     return items
 
 
-def profile(df: pd.DataFrame,
+def profile(df: DataFrame,
             document_name: str,
             save_to: Optional[str] = None) -> dict:
     """Generate a validation document from a given template DataFrame
@@ -57,7 +57,7 @@ def profile(df: pd.DataFrame,
 
     Parameters
     ----------
-    df : pd.DataFrame
+    df : DataFrame
         The DataFrame to use as template, ideally parsed with Deirokay
         `data_reader`.
     document_name : str

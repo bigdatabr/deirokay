@@ -1,11 +1,11 @@
-import pandas as pd
 import pytest
+from pandas import read_csv
 
 from deirokay import data_reader
 from deirokay.enums import DTypes
 
 
-def test_data_reader_from_json():
+def test_data_reader_with_json_options():
 
     df = data_reader(
         'tests/transactions_sample.csv',
@@ -17,7 +17,7 @@ def test_data_reader_from_json():
     print(df.dtypes)
 
 
-def test_data_reader_from_yaml():
+def test_data_reader_with_yaml_options():
 
     df = data_reader(
         'tests/transactions_sample.csv',
@@ -29,7 +29,7 @@ def test_data_reader_from_yaml():
     print(df.dtypes)
 
 
-def test_data_reader_from_dict():
+def test_data_reader_with_dict_options():
 
     options = {
         'encoding': 'iso-8859-1',
@@ -56,6 +56,8 @@ def test_data_reader_from_dict():
                                'thousand_sep': '.', 'decimal_sep': ','},
             'VLR_LIQUIDO02': {'dtype': DTypes.FLOAT64, 'nullable': False,
                               'thousand_sep': '.', 'decimal_sep': ','},
+            'ACTIVE': {'dtype': DTypes.BOOL, 'truthies': ['active'],
+                       'falsies': ['inactive']},
         }
     }
 
@@ -69,20 +71,10 @@ def test_data_reader_from_dict():
     print(df.dtypes)
 
 
-def test_data_reader_with_bools():
-    df = data_reader(
-        'tests/sample_with_bools.csv',
-        options='tests/sample_with_bools.json'
-    )
-
-    print(df)
-    print(df.dtypes)
-
-
 def test_data_reader_without_options_exception():
     with pytest.raises(TypeError):
         data_reader(
-            'tests/sample_with_bools.csv'
+            'tests/transactions_sample.csv'
         )
 
 
@@ -96,21 +88,36 @@ def test_data_reader_parquet():
     print(df.dtypes)
 
 
-def test_data_reader_with_invalid_boolean():
-    with pytest.raises(ValueError):
-        data_reader(
-            'tests/sample_with_invalid_bool.csv',
-            options='tests/sample_with_bools.json'
-        )
-
-
 def test_data_reader_from_dataframe():
-    df = pd.DataFrame({
-        'name': ['jorge', 'maria', 'barros'],
-        'age': [54, None, 64],
-        'married': [True, False, None]
-    })
-    df = data_reader(df, options='tests/sample_with_bools.json')
+    df = read_csv('tests/transactions_sample.csv', sep=';',
+                  thousands='.', decimal=',')
+
+    options = {
+        'encoding': 'iso-8859-1',
+        'sep': ';',
+        'columns': {
+            'WERKS01': {'dtype': DTypes.INT64, 'nullable': False,
+                        'unique': False},
+            'DT_OPERACAO01': {'dtype': DTypes.DATETIME, 'format': '%Y%m%d'},
+            'NUM_TRANSACAO01': {'dtype': DTypes.INT64, 'nullable': False,
+                                'unique': False},
+            'HR_TRANSACAO01': {'dtype': DTypes.TIME, 'format': '%H:%M:%S'},
+            'TIPO_PDV': {'dtype': DTypes.STR},
+            'PROD_VENDA': {'dtype': DTypes.INT64},
+            'COD_MERC_SERV02': {'dtype': DTypes.INT64},
+            'COD_SETVENDAS':  {'dtype': DTypes.INT64},
+            'NUMERO_PDV_ORIGIN': {'dtype': DTypes.INT64},
+            'TIPO_PDV_ORIGIN': {'dtype': DTypes.STR},
+            'TIPO_PDV_ORIGIN_GRP': {'dtype': DTypes.STR},
+            'QTD_VENDIDA02': {'dtype': DTypes.INT64, 'nullable': False},
+            'VLR_TOT_VD_ITM02': {'dtype': DTypes.FLOAT64, 'nullable': False},
+            'VLR_DESCONTO02': {'dtype': DTypes.FLOAT64, 'nullable': False},
+            'VLR_LIQUIDO02': {'dtype': DTypes.FLOAT64, 'nullable': False},
+            'ACTIVE': {'dtype': DTypes.BOOL, 'truthies': ['active'],
+                       'falsies': ['inactive']},
+        }
+    }
+    df = data_reader(df, options=options)
 
     print(df)
     print(df.dtypes)

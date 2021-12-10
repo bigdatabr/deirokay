@@ -3,82 +3,111 @@ Classes and functions to treat column data types according to
 Deirokay data types.
 """
 
-import numpy as np
-import pandas as pd
-
-from ..enums import DTypes
-from .validator import Validator
+from numpy import nan
+from pandas import NA, NaT, Series, to_datetime
 
 
-def data_treater(df: pd.DataFrame, options: dict):
-    """Receive options dict and call the proper treater class for each
-    Deirokay data type.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Raw DataFrame to be treated.
-    options : dict
-        Deirokay options.
-
-    Raises
-    ------
-    NotImplementedError
-        Data type not valid or not implemented.
+class Validator:
+    """Base validation class for column data type validation.
     """
-    treat_dtypes = {
-        DTypes.INT64: IntegerTreater,
-        DTypes.DATETIME: DateTime64Treater,
-        DTypes.FLOAT64: FloatTreater,
-        DTypes.STRING: StringTreater,
-        DTypes.DATE: DateTreater,
-        DTypes.TIME: TimeTreater,
-        DTypes.BOOLEAN: BooleanTreater
-    }
-    for col, option in options.items():
-        option: dict = option.copy()
 
-        dtype = option.pop('dtype', None)
-        rename_to = option.pop('rename', None)
+    def __init__(self, *, unique=False, nullable=True):
+        self.unique = unique
+        self.nullable = nullable
 
-        if dtype is not None:
-            treater = treat_dtypes.get(dtype)
-            if not treater:
-                raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
-                                          " implemented yet")
-            df[col] = treater(**option)(df[col])
+    def __call__(self, listlike):
+        return self.treat(Series(listlike))
 
-        if rename_to is not None:
-            df.rename(columns={col: rename_to}, inplace=True)
+    def treat(self, series: Series):
+        """Treat a raw Series to match data expectations for parsing
+        and formatting.
+
+        Parameters
+        ----------
+        series : Series
+            Raw pandas Series to be treated.
+
+        Raises
+        ------
+        ValueError
+            Column has null values when not_null constraint was
+            requested or
+            column has duplicate values when unique constraint was
+            requested.
+        """
+        if not self.nullable and any(series.isnull()):
+            null_indices = list(series[series.isnull()].index)
+            null_indices_limit = null_indices[:min(len(null_indices), 30)]
+            raise ValueError(f"The '{series.name}' column has"
+                             f" {len(null_indices)} null values,"
+                             " but it shouldn't.\n"
+                             "Here are the indices of some null values:\n"
+                             f"{null_indices_limit}...")
+
+        if self.unique and not series.is_unique:
+            duplicated = list(series[series.duplicated(keep='first')])
+            duplicated_limit = duplicated[:min(len(duplicated), 10)]
+
+            raise ValueError(f"The '{series.name}' column values"
+                             " are not unique, as requested.\n"
+                             f"There are {len(duplicated)} non unique values,"
+                             " and here are some of them:\n"
+                             f"{duplicated_limit}...")
+
+    @staticmethod
+    def serialize(series: Series) -> dict:
+        """Create a Deirokay-compatible serializable object that can
+        be serialized (in JSON or YAML formats) and parsed back by
+        Deirokay treaters.
+        This method is useful when generating validation documents
+        that embed Deirokay-compatible user data.
+        The output format is a Python dict containing two keys:
+        - `values`: list of values as Python object.
+        - `parser`: Deirokay options to parse the data.
+        (See more: `deirokay.parser.get_treater_instance`).
+
+        Parameters
+        ----------
+        series : Series
+            Pandas Series to be serialized.
+
+        Returns
+        -------
+        dict
+            A Python dict containing the keys `values` and `parser`.
+        """
+        raise NotImplementedError('No serializer for this treater.')
 
 
 class NumericTreater(Validator):
     """Base class for numeric treaters"""
+
     def __init__(self, thousand_sep=None, **kwargs):
         super().__init__(**kwargs)
 
         self.thousand_sep = thousand_sep
 
-    def __call__(self, series):
-        super().__call__(series)
+    # docstr-coverage:inherited
+    def treat(self, series):
+        super().treat(series)
 
         if self.thousand_sep is not None:
             try:
                 series = series.str.replace(self.thousand_sep, '', regex=False)
             except AttributeError as e:
-                print(*e.args)
                 raise AttributeError(
                     'Make sure you are not declaring a `thousand_sep` to'
                     ' read a non-text-like column. This may happen when'
                     ' reading numeric columns from a .parquet file,'
                     ' for instance.'
-                )
+                ) from e
 
         return series
 
 
 class BooleanTreater(Validator):
     """Treater for boolean-like variables"""
+
     def __init__(self,
                  truthies=['true', 'True'],
                  falsies=['false', 'False'],
@@ -108,7 +137,7 @@ class BooleanTreater(Validator):
             return True
         if value is False:
             return False
-        if value is None or value is np.nan or value is pd.NA:
+        if value is None or value is nan or value is NA:
             return self.default_value
 
         _value = value.lower() if self.ignore_case else value
@@ -120,24 +149,41 @@ class BooleanTreater(Validator):
                          f' ({value.__class__})\n'
                          f'Expected values: {self.truthies | self.falsies}')
 
-    def __call__(self, series):
-        super().__call__(series)
+    # docstr-coverage:inherited
+    def treat(self, series):
+        super().treat(series)
         series = series.apply(self._evaluate).astype('boolean')
         # Validate again
-        super().__call__(series)
+        super().treat(series)
 
         return series
+
+    # docstr-coverage:inherited
+    @staticmethod
+    def serialize(series):
+        def _convert(item):
+            if item is NA:
+                return None
+            return bool(item)
+        return {
+            'values': [_convert(item) for item in series],
+            'parser': {
+                'dtype': 'boolean'
+            }
+        }
 
 
 class FloatTreater(NumericTreater):
     """Treater for float variables"""
+
     def __init__(self, decimal_sep=None, **kwargs):
         super().__init__(**kwargs)
 
         self.decimal_sep = decimal_sep
 
-    def __call__(self, series):
-        series = super().__call__(series)
+    # docstr-coverage:inherited
+    def treat(self, series):
+        series = super().treat(series)
 
         if self.decimal_sep is not None:
             try:
@@ -153,55 +199,149 @@ class FloatTreater(NumericTreater):
 
         return series.astype(float).astype('Float64')
 
+    # docstr-coverage:inherited
+    @staticmethod
+    def serialize(series):
+        def _convert(item):
+            if item is NA:
+                return None
+            return float(item)
+        return {
+            'values': [_convert(item) for item in series],
+            'parser': {
+                'dtype': 'float'
+            }
+        }
+
 
 class IntegerTreater(NumericTreater):
     """Treater for integer variables"""
-    def __call__(self, series):
-        return super().__call__(series).astype(float).astype('Int64')
+
+    # docstr-coverage:inherited
+    def treat(self, series):
+        return super().treat(series).astype(float).astype('Int64')
+
+    # docstr-coverage:inherited
+    @staticmethod
+    def serialize(series):
+        def _convert(item):
+            if item is NA:
+                return None
+            return int(item)
+        return {
+            'values': [_convert(item) for item in series],
+            'parser': {
+                'dtype': 'integer'
+            }
+        }
 
 
 class DateTime64Treater(Validator):
     """Treater for datetime variables"""
+
     def __init__(self, format='%Y-%m-%d %H:%M:%S', **kwargs):
         super().__init__(**kwargs)
 
         self.format = format
 
-    def __call__(self, series):
-        super().__call__(series)
+    # docstr-coverage:inherited
+    def treat(self, series):
+        super().treat(series)
 
-        return pd.to_datetime(series, format=self.format)
+        return to_datetime(series, format=self.format)
+
+    # docstr-coverage:inherited
+    @staticmethod
+    def serialize(series):
+        def _convert(item):
+            if item is None or item is NaT:
+                return None
+            return str(item)
+        return {
+            'values': [_convert(item) for item in series],
+            'parser': {
+                'dtype': 'datetime'
+            }
+        }
 
 
 class DateTreater(DateTime64Treater):
     """Treater for date-only variables"""
+
     def __init__(self, format='%Y-%m-%d', **kwargs):
         super().__init__(format, **kwargs)
 
-    def __call__(self, series):
-        return super().__call__(series).dt.date
+    # docstr-coverage:inherited
+    def treat(self, series):
+        return super().treat(series).dt.date
+
+    # docstr-coverage:inherited
+    @staticmethod
+    def serialize(series):
+        def _convert(item):
+            if item is None or item is NaT:
+                return None
+            return str(item)
+        return {
+            'values': [_convert(item) for item in series],
+            'parser': {
+                'dtype': 'date'
+            }
+        }
 
 
 class TimeTreater(DateTime64Treater):
     """Treater for time-only variables"""
+
     def __init__(self, format='%H:%M:%S', **kwargs):
         super().__init__(format, **kwargs)
 
-    def __call__(self, series):
-        return super().__call__(series).dt.time
+    # docstr-coverage:inherited
+    def treat(self, series):
+        return super().treat(series).dt.time
+
+    # docstr-coverage:inherited
+    @staticmethod
+    def serialize(series):
+        def _convert(item):
+            if item is None or item is NaT:
+                return None
+            return str(item)
+        return {
+            'values': [_convert(item) for item in series],
+            'parser': {
+                'dtype': 'time'
+            }
+        }
 
 
 class StringTreater(Validator):
     """Treater for string variables"""
+
     def __init__(self, treat_null_as=None, **kwargs):
         super().__init__(**kwargs)
 
         self.treat_null_as = treat_null_as
 
-    def __call__(self, series):
-        super().__call__(series)
+    # docstr-coverage:inherited
+    def treat(self, series):
+        super().treat(series)
 
         if self.treat_null_as is not None:
             series = series.fillna(self.treat_null_as)
 
         return series
+
+    # docstr-coverage:inherited
+    @staticmethod
+    def serialize(series):
+        def _convert(item):
+            if item is None:
+                return None
+            return str(item)
+        return {
+            'values': [_convert(item) for item in series],
+            'parser': {
+                'dtype': 'string'
+            }
+        }

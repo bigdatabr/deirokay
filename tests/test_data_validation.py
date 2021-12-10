@@ -57,39 +57,6 @@ def test_data_validation_from_json():
     validate(df, against='tests/assertions.json')
 
 
-def test_not_null_statement():
-    df = data_reader(
-        'tests/transactions_sample.csv',
-        options='tests/options.json'
-    )
-
-    assertions = {
-        'items': [
-            {
-                'scope': 'NUM_TRANSACAO01',
-                'statements': [
-                    {
-                        'type': 'not_null',
-                        'at_least_%': 90,
-                    }
-                ]
-            },
-            {
-                'scope': ['WERKS01', 'HR_TRANSACAO01'],
-                'statements': [
-                    {
-                        'type': 'not_null',
-                        'at_least_%': 90.0,
-                        'multicolumn_logic': 'any'
-                    }
-                ]
-            },
-        ]
-    }
-
-    validate(df, against=assertions)
-
-
 def test_custom_statement():
     df = data_reader(
         'tests/transactions_sample.csv',
@@ -173,13 +140,22 @@ def test_data_validation_with_jinja():
                 'statements': [
                     {'type': 'unique', 'at_least_%': '{{ 40.0 }}'},
                     {'type': 'not_null', 'at_least_%': 95.0},
-                    {'type': 'row_count', 'min': '{{ 18 }}', 'max': 22}
+                    {'type': 'row_count', 'min': '{{ 18 }}', 'max': 22},
+                ]
+            },
+            {
+                'scope': 'DT_OPERACAO01',
+                'statements': [
+                    {'type': 'contain',
+                     'rule': 'all_and_only',
+                     'values': ['{{ today }}'],
+                     'parser': {'dtype': 'datetime', 'format': '%Y%m%d'}}
                 ]
             }
         ]
     }
 
-    validate(df, against=assertions)
+    validate(df, against=assertions, template={'today': '20210816'})
 
 
 def test_data_validation_with_levels():
