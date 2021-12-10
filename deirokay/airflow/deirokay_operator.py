@@ -20,7 +20,13 @@ class DeirokayOperator(BaseOperator):
     "soft failure" (`skipped` state) or "normal failure" (`failed`
     state)."""
 
-    template_fields = ['path_to_file', 'options', 'against', 'save_to']
+    template_fields = [
+        'path_to_file',
+        'options',
+        'against',
+        'template',
+        'save_to'
+    ]
     template_fields_renderers = {'options': 'json', 'against': 'json'}
     ui_color = '#59f75e'
 
