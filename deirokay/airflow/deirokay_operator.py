@@ -18,9 +18,40 @@ class DeirokayOperator(BaseOperator):
     validate against a Deirokay Validation Document.
     You may choose different severity levels to trigger a task
     "soft failure" (`skipped` state) or "normal failure" (`failed`
-    state)."""
+    state).
 
-    template_fields = ['path_to_file', 'options', 'against', 'save_to']
+    Parameters
+    ----------
+    path_to_file : str
+        File to be parsed into Deirokay.
+    options : Union[dict, str]
+        A dict or a local/S3 path to a YAML/JSON options file.
+    against : Union[dict, str]
+        A dict or a local/S3 path to a YAML/JSON validation
+        document file.
+    template : dict, optional
+        Map of templates to be passed to Deirokay validation.
+    save_to : str, optional
+        Where validation logs will be saved to.
+        If None, no log is saved. By default None.
+    soft_fail_level : int, optional
+        Minimum Deirokay severity level to trigger a
+        "soft failure".
+        Any statement with lower severity level will only raise a
+        warning.
+        By default SeverityLevel.MINIMAL (1).
+    hard_fail_level : int, optional
+        Minimum Deirokay severity level to trigger a task failure.
+        By default SeverityLevel.CRITICAL (5).
+    """
+
+    template_fields = [
+        'path_to_file',
+        'options',
+        'against',
+        'template',
+        'save_to'
+    ]
     template_fields_renderers = {'options': 'json', 'against': 'json'}
     ui_color = '#59f75e'
 
@@ -35,32 +66,6 @@ class DeirokayOperator(BaseOperator):
         hard_fail_level: int = SeverityLevel.CRITICAL,
         **kwargs
     ):
-        """Create an Airflow Deirokay Operator for data validation.
-
-        Parameters
-        ----------
-        path_to_file : str
-            File to be parsed into Deirokay.
-        options : Union[dict, str]
-            A dict or a local/S3 path to a YAML/JSON options file.
-        against : Union[dict, str]
-            A dict or a local/S3 path to a YAML/JSON validation
-            document file.
-        template : dict, optional
-            Map of templates to be passed to Deirokay validation.
-        save_to : str, optional
-            Where validation logs will be saved to.
-            If None, no log is saved. By default None.
-        soft_fail_level : int, optional
-            Minimum Deirokay severity level to trigger a
-            "soft failure".
-            Any statement with lower severity level will only raise a
-            warning.
-            By default SeverityLevel.MINIMAL (1).
-        hard_fail_level : int, optional
-            Minimum Deirokay severity level to trigger a task failure.
-            By default SeverityLevel.CRITICAL (5).
-        """
         super().__init__(**kwargs)
 
         self.path_to_file = path_to_file

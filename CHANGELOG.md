@@ -1,3 +1,10 @@
+# Release 0.5.2
+
+2021-12-09
+
+- Fix jinja templating for `DeirokayOperator`
+
+
 # Release 0.5.1
 
 2021-12-09
