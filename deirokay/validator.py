@@ -240,20 +240,24 @@ def raise_validation(validation_result_document: dict,
     """
     highest_level = None
     for item in validation_result_document.get('items'):
+        scope = item['scope']
         for stmt in item.get('statements'):
             severity = stmt.get('severity', SeverityLevel.CRITICAL)
             result = stmt.get('report').get('result')
 
-            if result != 'pass':
+            if result == 'fail':
                 if severity >= exception_level:
                     if highest_level is None or severity > highest_level:
                         highest_level = severity
-                print('Validation failed:')
+                print(f'Statement failed for scope {scope}:')
                 print(json.dumps(stmt, indent=4))
 
     if highest_level is not None:
-        raise ValidationError(highest_level, 'Validation failed with severity'
-                                             f' level {highest_level}')
+        print(f'Severity level threshold was {exception_level}.')
+        raise ValidationError(
+            highest_level,
+            f'Validation failed with severity level {highest_level}.'
+        )
 
 
 def _save_validation_document(document: dict,
