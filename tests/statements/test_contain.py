@@ -131,8 +131,8 @@ def test_profile():
         'rule': 'all',
         'values': ['ES', 'RJ', 'SP'],
         'parser': {'dtype': 'string'},
-        'min_occurrences': 2,
-        'max_occurrences': 5}
+        'min_occurrences': 2
+    }
 
     assert generated_prof == expected_profile
 
