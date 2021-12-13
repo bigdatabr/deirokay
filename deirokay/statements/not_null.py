@@ -46,9 +46,11 @@ class NotNull(BaseStatement):
         not_nulls = ~df.isnull().all(axis=1)
 
         statement = {
-            'type': 'not_null',
-            'multicolumn_logic': 'any',
-            'at_least_%': float(100.0*not_nulls.sum()/len(not_nulls)),
-            'at_most_%': float(100.0*not_nulls.sum()/len(not_nulls))
+            'type': 'not_null'
         }
+
+        at_least_perc = float(100.0*not_nulls.sum()/len(not_nulls))
+        if at_least_perc != 100.0:
+            statement['at_least_%'] = at_least_perc
+
         return statement

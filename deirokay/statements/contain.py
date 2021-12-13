@@ -236,7 +236,6 @@ class Contain(BaseStatement):
 
         value_frequency = series.value_counts()
         min_occurrences = int(value_frequency.min())
-        max_occurrences = int(value_frequency.max())
 
         # unique series
         series = series.drop_duplicates().dropna()
@@ -259,6 +258,5 @@ class Contain(BaseStatement):
 
         if min_occurrences != 1:
             statement_template['min_occurrences'] = min_occurrences
-        statement_template['max_occurrences'] = max_occurrences
 
         return statement_template

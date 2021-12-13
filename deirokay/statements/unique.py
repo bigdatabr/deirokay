@@ -33,6 +33,10 @@ class Unique(BaseStatement):
 
         statement = {
             'type': 'unique',
-            'at_least_%': float(100.0*unique.sum()/len(unique)),
         }
+
+        at_leat_perc = float(100.0*unique.sum()/len(unique))
+        if at_leat_perc != 100.0:
+            statement['at_least_%'] = at_leat_perc
+
         return statement
