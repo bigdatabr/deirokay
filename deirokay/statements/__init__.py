@@ -7,6 +7,7 @@ from .contain import Contain
 from .not_null import NotNull
 from .row_count import RowCount
 from .unique import Unique
+from .regex import Regex
 
 __all__ = (
     'BaseStatement',
@@ -14,4 +15,5 @@ __all__ = (
     'NotNull',
     'RowCount',
     'Unique',
+    'Regex',
 )
