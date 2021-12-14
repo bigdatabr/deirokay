@@ -62,10 +62,11 @@
             "decimal_sep": ","
         },
         "VLR_LIQUIDO02": {
-            "dtype": "float",
-            "nullable": false,
+            "dtype": "decimal",
+            "nullable": true,
             "thousand_sep": ".",
-            "decimal_sep": ","
+            "decimal_sep": ",",
+            "decimal_places": 2
         },
         "ACTIVE": {
             "dtype": "boolean",

@@ -19,6 +19,7 @@ class DTypes(str, Enum):
     TIME = 'time'
     BOOLEAN = 'boolean'
     BOOL = BOOLEAN
+    DECIMAL = 'decimal'
 
 
 class SeverityLevel(int, Enum):

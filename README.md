@@ -157,6 +157,9 @@ All DTypes | -                 | rename              | None                | Ren
 INTEGER    | 'integer'         | thousand_sep        | None                | Thousand separator (e.g., "1,988")
 FLOAT      | 'float'           | thousand_sep        | None                | Thousand separator (e.g., "1,988")
 FLOAT      | 'float'           | decimal_sep         | '.'                 | Decimal separator (e.g., "3.14")
+DECIMAL    | 'decimal'         | decimal_sep         | '.'                 | Decimal separator (e.g., "3.14")
+DECIMAL    | 'decimal'         | thousand_sep        | None                | Thousand separator (e.g., "1,988")
+DECIMAL    | 'decimal'         | decimal_places      | None                | Decimal places (e.g., 2 for "1.25")
 BOOLEAN    | 'boolean'         | truthies            | ['true', 'True']    | Values taken as True
 BOOLEAN    | 'boolean'         | falsies             | ['false', 'False']  | Values taken as False
 BOOLEAN    | 'boolean'         | ignore_case         | False               | Ignore case when evaluating True/False

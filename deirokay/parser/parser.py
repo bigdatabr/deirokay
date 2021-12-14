@@ -3,6 +3,7 @@ Functions to parse files into pandas DataFrames.
 """
 
 import datetime
+import decimal
 from os.path import splitext
 from typing import Union
 
@@ -110,6 +111,8 @@ def get_dtype_treater(dtype: Union[DTypes, str]) -> treaters.Validator:
         datetime.time: treaters.TimeTreater,
         DTypes.BOOLEAN: treaters.BooleanTreater,
         bool: treaters.BooleanTreater,
+        DTypes.DECIMAL: treaters.DecimalTreater,
+        decimal.Decimal: treaters.DecimalTreater,
     }
     if isinstance(dtype, str):
         dtype = DTypes(dtype)
