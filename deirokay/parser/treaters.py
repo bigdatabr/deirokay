@@ -3,6 +3,8 @@ Classes and functions to treat column data types according to
 Deirokay data types.
 """
 
+from decimal import Decimal
+
 from numpy import nan
 from pandas import NA, NaT, Series, to_datetime
 
@@ -90,7 +92,11 @@ class NumericTreater(Validator):
     # docstr-coverage:inherited
     def treat(self, series):
         super().treat(series)
+        series = self._treat_thousand_sep(series)
 
+        return series
+
+    def _treat_thousand_sep(self, series):
         if self.thousand_sep is not None:
             try:
                 series = series.str.replace(self.thousand_sep, '', regex=False)
@@ -101,7 +107,6 @@ class NumericTreater(Validator):
                     ' reading numeric columns from a .parquet file,'
                     ' for instance.'
                 ) from e
-
         return series
 
 
@@ -184,8 +189,12 @@ class FloatTreater(NumericTreater):
     # docstr-coverage:inherited
     def treat(self, series):
         series = super().treat(series)
+        series = self._treat_decimal_sep(series)
 
-        if self.decimal_sep is not None:
+        return series.astype(float).astype('Float64')
+
+    def _treat_decimal_sep(self, series):
+        if self.decimal_sep is not None and self.decimal_sep != '.':
             try:
                 series = series.str.replace(self.decimal_sep, '.', regex=False)
             except AttributeError as e:
@@ -196,8 +205,7 @@ class FloatTreater(NumericTreater):
                     ' reading numeric columns from a .parquet file,'
                     ' for instance.'
                 )
-
-        return series.astype(float).astype('Float64')
+        return series
 
     # docstr-coverage:inherited
     @staticmethod
@@ -210,6 +218,46 @@ class FloatTreater(NumericTreater):
             'values': [_convert(item) for item in series],
             'parser': {
                 'dtype': 'float'
+            }
+        }
+
+
+class DecimalTreater(FloatTreater):
+    """Treater for decimal variables"""
+
+    def __init__(self, decimal_places=None, **kwargs):
+        super().__init__(**kwargs)
+
+        self.decimal_places = decimal_places
+
+    # docstr-coverage:inherited
+    def treat(self, series):
+        series = NumericTreater.treat(self, series)
+        series = self._treat_decimal_sep(series)
+        series = series.map(lambda x: Decimal(x) if x is not None else None)
+        series = self._treat_decimal_places(series)
+
+        return series
+
+    def _treat_decimal_places(self, series):
+        if self.decimal_places is not None:
+            q = Decimal(10) ** -self.decimal_places
+            series = series.apply(
+                lambda x: x.quantize(q) if x is not None else None
+            )
+        return series
+
+    # docstr-coverage:inherited
+    @staticmethod
+    def serialize(series):
+        def _convert(item):
+            if item is None or item is NA:
+                return None
+            return str(item)
+        return {
+            'values': [_convert(item) for item in series],
+            'parser': {
+                'dtype': 'decimal'
             }
         }
 

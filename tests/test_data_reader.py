@@ -54,7 +54,7 @@ def test_data_reader_with_dict_options():
                                  'thousand_sep': '.', 'decimal_sep': ','},
             'VLR_DESCONTO02': {'dtype': DTypes.FLOAT64, 'nullable': False,
                                'thousand_sep': '.', 'decimal_sep': ','},
-            'VLR_LIQUIDO02': {'dtype': DTypes.FLOAT64, 'nullable': False,
+            'VLR_LIQUIDO02': {'dtype': DTypes.DECIMAL, 'nullable': True,
                               'thousand_sep': '.', 'decimal_sep': ','},
             'ACTIVE': {'dtype': DTypes.BOOL, 'truthies': ['active'],
                        'falsies': ['inactive']},
@@ -112,7 +112,7 @@ def test_data_reader_from_dataframe():
             'QTD_VENDIDA02': {'dtype': DTypes.INT64, 'nullable': False},
             'VLR_TOT_VD_ITM02': {'dtype': DTypes.FLOAT64, 'nullable': False},
             'VLR_DESCONTO02': {'dtype': DTypes.FLOAT64, 'nullable': False},
-            'VLR_LIQUIDO02': {'dtype': DTypes.FLOAT64, 'nullable': False},
+            'VLR_LIQUIDO02': {'dtype': DTypes.DECIMAL, 'nullable': True},
             'ACTIVE': {'dtype': DTypes.BOOL, 'truthies': ['active'],
                        'falsies': ['inactive']},
         }
