@@ -6,44 +6,56 @@ class RowCount(BaseStatement):
     range."""
 
     name = 'row_count'
-    expected_parameters = ['min', 'max']
-    table_only = True
+    expected_parameters = ['min', 'max', 'distinct']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.min = self.options.get('min', None)
         self.max = self.options.get('max', None)
+        self.distinct = self.options.get('distinct', False)
 
     # docstr-coverage:inherited
     def report(self, df):
         row_count = len(df)
+        distinct_count = len(df.drop_duplicates())
 
         report = {
             'rows': row_count,
+            'distinct_rows': distinct_count,
         }
         return report
 
     # docstr-coverage:inherited
     def result(self, report):
-        row_count = report['rows']
+        if self.distinct:
+            count = report['distinct_rows']
+        else:
+            count = report['rows']
 
         if self.min is not None:
-            if not row_count >= self.min:
+            if not count >= self.min:
                 return False
         if self.max is not None:
-            if not row_count <= self.max:
+            if not count <= self.max:
                 return False
         return True
 
     # docstr-coverage:inherited
     @staticmethod
     def profile(df):
-        row_count = len(df)
-
-        statement = {
-            'type': 'row_count',
-            'min': row_count,
-            'max': row_count,
-        }
-        return statement
+        if len(df.columns) > 1:
+            count = len(df)
+            return {
+                'type': 'row_count',
+                'min': count,
+                'max': count
+            }
+        else:
+            count = len(df.drop_duplicates())
+            return {
+                'type': 'row_count',
+                'distinct': True,
+                'min': count,
+                'max': count
+            }
