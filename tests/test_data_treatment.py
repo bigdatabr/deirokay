@@ -30,6 +30,16 @@ from deirokay.parser import get_dtype_treater, get_treater_instance
         ['-51,121.4', None, '12,654.2', '12,221.6']
     ),
     (
+        DTypes.DECIMAL,
+        {},
+        ['-1.4', None, '4.2', '1.6e2']
+    ),
+    (
+        'decimal',
+        {'thousand_sep': ',', 'decimal_sep': '.', 'decimal_places': 2},
+        ['-51,121.', None, '12,654.2', '12,221.69']
+    ),
+    (
         DTypes.STRING,
         {},
         ['Apple', '', None, 'Noice']

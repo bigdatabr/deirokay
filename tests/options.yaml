@@ -37,19 +37,20 @@ columns:
     nullable: false
     thousand_sep: .
   VLR_TOT_VD_ITM02:
-    decimal_sep: ','
     dtype: float
+    decimal_sep: ','
     nullable: false
     thousand_sep: .
   VLR_DESCONTO02:
-    decimal_sep: ','
     dtype: float
+    decimal_sep: ','
     nullable: false
     thousand_sep: .
   VLR_LIQUIDO02:
+    dtype: decimal
     decimal_sep: ','
-    dtype: float
-    nullable: false
+    decimal_places: 2
+    nullable: true
     thousand_sep: .
   ACTIVE:
     dtype: boolean
