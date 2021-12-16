@@ -1,4 +1,5 @@
 import pytest
+
 from deirokay import data_reader, validate
 
 
