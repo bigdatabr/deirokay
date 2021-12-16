@@ -6,7 +6,7 @@ import re
 
 import numpy
 import pandas
-from pandas import Series, Float64Dtype, Int64Dtype
+from pandas import Float64Dtype, Int64Dtype, Series
 
 from .base_statement import BaseStatement
 
