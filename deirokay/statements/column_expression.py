@@ -42,12 +42,13 @@ class ColumnExpression(BaseStatement):
     # docstr-coverage:inherited
     def report(self, df):
         report = {}
-        df = self._fix_df_dtypes(df)
+        df_copy = df.copy()
+        df_copy = self._fix_df_dtypes(df_copy)
         for expr in self.expressions:
             if '=~' not in expr:
-                row_count = df.eval(expr)
+                row_count = df_copy.eval(expr)
             else:
-                row_count = self._isclose_eval(df, expr)
+                row_count = self._isclose_eval(df_copy, expr)
             report[expr] = {
                 'valid_rows': int((row_count).sum()),
                 'valid_rows_%': float(
