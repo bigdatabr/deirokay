@@ -92,7 +92,9 @@ class DeirokayOperator(BaseOperator):
         try:
             raise_validation(validation_document, SeverityLevel.MINIMAL)
         except ValidationError as e:
-            if e.level >= self.hard_fail_level:
+            if (self.hard_fail_level is not None and
+               e.level >= self.hard_fail_level):
                 raise AirflowFailException from e
-            if e.level >= self.soft_fail_level:
+            if (self.soft_fail_level is not None and
+               e.level >= self.soft_fail_level):
                 raise AirflowSkipException from e

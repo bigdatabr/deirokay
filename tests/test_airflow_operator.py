@@ -56,3 +56,16 @@ def test_deirokay_operator_with_severity(prepare_history_folder):
 
     with pytest.raises(AirflowSkipException):
         operator.execute({'ts_nodash': '20001231T101010'})
+
+
+def test_deirokay_operator_when_hard_fail_level_none(prepare_history_folder):
+    operator = DeirokayOperator(
+        task_id='deirokay_validate',
+        path_to_file='tests/transactions_sample.csv',
+        options='tests/options.json',
+        against='tests/assertions_with_history.json',
+        save_to=prepare_history_folder,
+        hard_fail_level=None
+    )
+
+    operator.execute({'ts_nodash': '20001231T101010'})
