@@ -71,6 +71,27 @@ def test_data_reader_with_dict_options():
     print(df.dtypes)
 
 
+def test_data_reader_with_dict_options_only_a_few_columns():
+
+    options = {
+        'encoding': 'iso-8859-1',
+        'sep': ';',
+        'columns': {
+            'WERKS01': {'dtype': DTypes.INT64, 'nullable': False,
+                        'thousand_sep': '.', 'unique': False},
+            'DT_OPERACAO01': {'dtype': DTypes.DATETIME, 'format': '%Y%m%d'}
+        }
+    }
+
+    df = data_reader(
+        'tests/transactions_sample.csv',
+        options=options
+    )
+    assert len(df) == 20
+    assert len(df.columns) == 2
+    assert all(col in ('WERKS01', 'DT_OPERACAO01') for col in df.columns)
+
+
 def test_data_reader_without_options_exception():
     with pytest.raises(TypeError):
         data_reader(
