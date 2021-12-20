@@ -41,15 +41,15 @@ def data_reader(data: Union[str, DataFrame],
     columns = options.pop('columns')
 
     if isinstance(data, str):
-        df = pandas_read(data, **options)
+        df = pandas_read(data, columns=list(columns), **options)
     else:
-        df = data.copy()
+        df = data.copy()[list(columns)]
     data_treater(df, columns)
 
     return df
 
 
-def pandas_read(file_path: str, **kwargs) -> DataFrame:
+def pandas_read(file_path: str, columns: list, **kwargs) -> DataFrame:
     """Infer the file type by its extension and call the proper
     `pandas` method to parse it.
 
@@ -57,6 +57,8 @@ def pandas_read(file_path: str, **kwargs) -> DataFrame:
     ----------
     file_path : str
         Path to file.
+    columns : list
+        List of columns to be parsed.
 
     Returns
     -------
@@ -75,6 +77,10 @@ def pandas_read(file_path: str, **kwargs) -> DataFrame:
         'csv': {
             'dtype': str,
             'skipinitialspace': True,
+            'usecols': columns
+        },
+        'parquet': {
+            'columns': columns
         }
     }
     pandas_kwargs.update(default_args_by_extension.get(file_extension, {}))
