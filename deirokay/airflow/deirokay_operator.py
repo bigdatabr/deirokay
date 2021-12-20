@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from typing import Optional, Union
 
-from airflow.exceptions import AirflowFailException, AirflowSkipException
+from airflow.exceptions import AirflowSkipException
 from airflow.models.baseoperator import BaseOperator
 
 import deirokay
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class DeirokayOperator(BaseOperator):
     """Parse a DataFrame from a file using Deirokay options and
     validate against a Deirokay Validation Document.
-    You may choose different severity levels to trigger a task
+    You may choose different severity levels to mark a task as
     "soft failure" (`skipped` state) or "normal failure" (`failed`
     state).
 
@@ -38,10 +38,11 @@ class DeirokayOperator(BaseOperator):
         Minimum Deirokay severity level to trigger a
         "soft failure".
         Any statement with lower severity level will only raise a
-        warning.
+        warning. Set to `None` to never trigger.
         By default SeverityLevel.MINIMAL (1).
     hard_fail_level : int, optional
         Minimum Deirokay severity level to trigger a task failure.
+        Set to `None` to never trigger.
         By default SeverityLevel.CRITICAL (5).
     """
 
@@ -92,7 +93,13 @@ class DeirokayOperator(BaseOperator):
         try:
             raise_validation(validation_document, SeverityLevel.MINIMAL)
         except ValidationError as e:
-            if e.level >= self.hard_fail_level:
-                raise AirflowFailException from e
-            if e.level >= self.soft_fail_level:
+            if (
+                self.hard_fail_level is not None and
+                e.level >= self.hard_fail_level
+            ):
+                raise e
+            if (
+                self.soft_fail_level is not None and
+                e.level >= self.soft_fail_level
+            ):
                 raise AirflowSkipException from e
