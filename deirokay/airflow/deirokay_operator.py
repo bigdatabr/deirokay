@@ -1,4 +1,5 @@
 import logging
+import warnings
 from datetime import datetime
 from typing import Optional, Union
 
@@ -47,7 +48,7 @@ class DeirokayOperator(BaseOperator):
     """
 
     template_fields = [
-        'path_to_file',
+        'data',
         'options',
         'against',
         'template',
@@ -60,9 +61,10 @@ class DeirokayOperator(BaseOperator):
 
     def __init__(
         self,
-        path_to_file: str,
-        options: Union[dict, str],
-        against: Union[dict, str],
+        data: str = None,
+        path_to_file: str = None,
+        options: Union[dict, str] = None,
+        against: Union[dict, str] = None,
         template: Optional[dict] = None,
         save_to: Optional[str] = None,
         soft_fail_level: int = SeverityLevel.MINIMAL,
@@ -73,7 +75,18 @@ class DeirokayOperator(BaseOperator):
     ):
         super().__init__(**kwargs)
 
-        self.path_to_file = path_to_file
+        assert bool(data) is not bool(path_to_file), (
+            'Declare either `data` or `path_to_file`, but not both.'
+        )
+        if path_to_file:
+            warnings.warn(
+                'The argument `path_to_file` is deprecated and will be'
+                ' removed in next major release. Use `data` instead.',
+                DeprecationWarning
+            )
+        assert options
+        assert against
+        self.data = data or path_to_file
         self.options = options
         self.against = against
         self.template = template
@@ -87,7 +100,7 @@ class DeirokayOperator(BaseOperator):
     def execute(self, context: dict):
         current_date = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S')
         df = deirokay.data_reader(
-            self.path_to_file,
+            self.data,
             options=self.options,
             **self.reader_kwargs
         )
