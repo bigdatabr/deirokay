@@ -51,7 +51,9 @@ class DeirokayOperator(BaseOperator):
         'options',
         'against',
         'template',
-        'save_to'
+        'save_to',
+        'reader_kwargs',
+        'validator_kwargs'
     ]
     template_fields_renderers = {'options': 'json', 'against': 'json'}
     ui_color = '#59f75e'
@@ -65,6 +67,8 @@ class DeirokayOperator(BaseOperator):
         save_to: Optional[str] = None,
         soft_fail_level: int = SeverityLevel.MINIMAL,
         hard_fail_level: int = SeverityLevel.CRITICAL,
+        reader_kwargs: Optional[dict] = None,
+        validator_kwargs: Optional[dict] = None,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -76,11 +80,17 @@ class DeirokayOperator(BaseOperator):
         self.save_to = save_to
         self.soft_fail_level = soft_fail_level
         self.hard_fail_level = hard_fail_level
+        self.reader_kwargs = reader_kwargs or {}
+        self.validator_kwargs = validator_kwargs or {}
 
     # docstr-coverage:inherited
     def execute(self, context: dict):
         current_date = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S')
-        df = deirokay.data_reader(self.path_to_file, options=self.options)
+        df = deirokay.data_reader(
+            self.path_to_file,
+            options=self.options,
+            **self.reader_kwargs
+        )
 
         validation_document = deirokay.validate(
             df,
@@ -88,7 +98,8 @@ class DeirokayOperator(BaseOperator):
             template=self.template,
             save_to=self.save_to,
             current_date=current_date,
-            raise_exception=False
+            raise_exception=False,
+            **self.validator_kwargs
         )
         try:
             raise_validation(validation_document, SeverityLevel.MINIMAL)
