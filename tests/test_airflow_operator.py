@@ -7,7 +7,7 @@ from deirokay.airflow import DeirokayOperator
 def test_deirokay_operator(prepare_history_folder):
     operator = DeirokayOperator(
         task_id='deirokay_validate',
-        path_to_file='tests/transactions_sample.csv',
+        data='tests/transactions_sample.csv',
         options='tests/options.json',
         against='tests/assertions_with_history.json',
         template={'forty': 40},
@@ -48,7 +48,7 @@ def test_deirokay_operator_with_severity(prepare_history_folder):
 
     operator = DeirokayOperator(
         task_id='deirokay_validate',
-        path_to_file='tests/transactions_sample.csv',
+        data='tests/transactions_sample.csv',
         options='tests/options.json',
         against=assertions,
         save_to=prepare_history_folder
