@@ -14,3 +14,7 @@ columns:
     dtype: string
   c7:
     dtype: float
+  c8:
+    dtype: decimal
+  c9:
+    dtype: decimal

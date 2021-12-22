@@ -13,7 +13,8 @@ from .base_statement import BaseStatement
 
 class ColumnExpression(BaseStatement):
     """
-    Evaluates an expression involving the scope columns, using `numpy.eval()`
+    Evaluates an expression involving the scope columns, using
+    `numpy.eval()`
     """
 
     name = 'column_expression'
@@ -63,7 +64,8 @@ class ColumnExpression(BaseStatement):
         Fixes DataFrame dtypes. If Int64Dtype() or Float64Dtype(),
         converts to traditional int64 and float64 dtypes.
 
-        When a pandas version corrects this bug, we can delete this method.
+        When a pandas version corrects this bug, we can delete this
+        method.
         """
         pandas_dtypes_int = [Int64Dtype(), pandas.Int32Dtype()]
         pandas_dtypes_float = [Float64Dtype(), pandas.Float32Dtype()]
@@ -83,8 +85,9 @@ class ColumnExpression(BaseStatement):
 
     def _isclose_eval(self, df, expr):
         """
-        Accomplishes the paper of `pandas.eval` when we have the =~ comparison
-        to evaluate. That implementation is done by using `numpy.eval`.
+        Accomplishes the paper of `pandas.eval` when we have the
+        =~ comparison to evaluate. That implementation is done by
+        using `numpy.eval`.
         """
         expr_calculus = re.split('|'.join(self.valid_expressions), expr)
         expr_comparison = re.findall('|'.join(self.valid_expressions), expr)

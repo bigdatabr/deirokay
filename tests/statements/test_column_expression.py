@@ -24,7 +24,10 @@ from deirokay import data_reader, validate
             100,
             100,
             'pass'
-        )
+        ),
+        (['c1', 'c8'], 'c1 + 0.1 == c8', 100, 100, 'pass'),
+        (['c1', 'c9'], 'c1 + 0.1 == c9', 60, 100, 'pass'),
+        (['c1', 'c9'], 'c1 + 0.1 == c9', 61, 100, 'fail')
     ])
 def test_column_expression(scope, expressions, at_least, at_most, result):
     df = data_reader(
@@ -64,6 +67,8 @@ def test_column_expression(scope, expressions, at_least, at_most, result):
         (['c1', 'c2', 'c3'], 'c1 =~ c3 <= 6', 100, 100, 'pass'),
         (['c1', 'c7'], 'c1 =~ c7', 80, 100, 'pass'),
         (['c1', 'c7'], 'c1 =~ c7', 81, 100, 'fail'),
+        (['c1', 'c8'], 'c1 =~ c8', 100, 100, 'pass'),
+        (['c1', 'c9'], 'c1 =~ c9', 60, 100, 'pass')
     ])
 def test_isclose_expression(scope, expressions, at_least, at_most, result):
     df = data_reader(
