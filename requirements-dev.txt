@@ -1,6 +1,7 @@
 pytest
 pytest-cov
 pytest-postgresql
+psycopg
 boto3
 s3fs
 fastparquet
