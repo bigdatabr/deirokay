@@ -52,43 +52,42 @@ def data_reader(data: Union[str, DataFrame],
     return df
 
 
-def pandas_read(file_path: str, columns: list, sql=False,
+def pandas_read(data: str, columns: list, sql: bool = False,
                 **kwargs) -> DataFrame:
     """Infer the file type by its extension and call the proper
     `pandas` method to parse it.
 
     Parameters
     ----------
-    file_path : str
-        Path to file.
+    data : str
+        Path to file or SQL query.
     columns : list
         List of columns to be parsed.
+    sql : bool, optional
+        Whether or not `data` should be interpreted as a path to a file
+        or a SQL query.
+
 
     Returns
     -------
     DataFrame
         The pandas DataFrame.
-
-    Raises
-    ------
-    TypeError
-        File extension/type not supported.
     """
     if sql:
         default_kwargs = {
             'columns': columns
         }
         default_kwargs.update(kwargs)
-        return read_sql(file_path, **default_kwargs)
+        return read_sql(data, **default_kwargs)
 
-    file_extension = splitext(file_path)[1].lstrip('.')
+    file_extension = splitext(data)[1].lstrip('.')
 
     if file_extension == 'sql':
         default_kwargs = {
             'columns': columns
         }
         default_kwargs.update(kwargs)
-        query = fs_factory(file_path).read()
+        query = fs_factory(data).read()
         return read_sql(query, **default_kwargs)
 
     elif file_extension == 'csv':
@@ -98,25 +97,25 @@ def pandas_read(file_path: str, columns: list, sql=False,
             'usecols': columns
         }
         default_kwargs.update(kwargs)
-        return read_csv(file_path, **default_kwargs)
+        return read_csv(data, **default_kwargs)
 
     elif file_extension == 'parquet':
         default_kwargs = {
             'columns': columns
         }
         default_kwargs.update(kwargs)
-        return read_parquet(file_path, **default_kwargs)
+        return read_parquet(data, **default_kwargs)
 
     elif file_extension in ('xls', 'xlsx'):
         default_kwargs = {
             'usecols': columns
         }
-        return read_excel(file_path, **kwargs)
+        return read_excel(data, **kwargs)
     else:
         read_ = getattr(pandas, f'read_{file_extension}', None)
         if read_ is None:
             raise TypeError(f'File type "{file_extension}" not supported')
-        return read_(file_path, **kwargs)[columns]
+        return read_(data, **kwargs)[columns]
 
 
 def get_dtype_treater(dtype: Union[DTypes, str]) -> treaters.Validator:
