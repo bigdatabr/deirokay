@@ -23,7 +23,7 @@ class DeirokayOperator(BaseOperator):
 
     Parameters
     ----------
-    path_to_file : str
+    data / path_to_file (deprecated) : str
         File to be parsed into Deirokay.
     options : Union[dict, str]
         A dict or a local/S3 path to a YAML/JSON options file.
@@ -45,6 +45,10 @@ class DeirokayOperator(BaseOperator):
         Minimum Deirokay severity level to trigger a task failure.
         Set to `None` to never trigger.
         By default SeverityLevel.CRITICAL (5).
+    reader_kwargs : dict, optional
+        Additional keyword arguments for `Deirokay.data_reader` method.
+    validator_kwargs : dict, optional
+        Additional keyword arguments for `Deirokay.validate` method.
     """
 
     template_fields = [
