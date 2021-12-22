@@ -8,7 +8,8 @@ from os.path import splitext
 from typing import Union
 
 import pandas
-from pandas import DataFrame, Timestamp, read_excel
+from pandas import (DataFrame, Timestamp, read_csv, read_excel, read_parquet,
+                    read_sql)
 
 from deirokay.enums import DTypes
 from deirokay.fs import fs_factory
@@ -18,7 +19,8 @@ from . import treaters
 
 
 def data_reader(data: Union[str, DataFrame],
-                options: Union[dict, str]) -> DataFrame:
+                options: Union[dict, str],
+                **kwargs) -> DataFrame:
     """Create a DataFrame from a file or an existing DataFrame and
     apply Deirokay treatments to correctly parse it and pre-validate
     its content.
@@ -37,6 +39,7 @@ def data_reader(data: Union[str, DataFrame],
     """
     if isinstance(options, str):
         options = fs_factory(options).read_dict()
+    options.update(kwargs)
 
     columns = options.pop('columns')
 
@@ -49,7 +52,8 @@ def data_reader(data: Union[str, DataFrame],
     return df
 
 
-def pandas_read(file_path: str, columns: list, **kwargs) -> DataFrame:
+def pandas_read(file_path: str, columns: list, sql=False,
+                **kwargs) -> DataFrame:
     """Infer the file type by its extension and call the proper
     `pandas` method to parse it.
 
@@ -70,34 +74,49 @@ def pandas_read(file_path: str, columns: list, **kwargs) -> DataFrame:
     TypeError
         File extension/type not supported.
     """
+    if sql:
+        default_kwargs = {
+            'columns': columns
+        }
+        default_kwargs.update(kwargs)
+        return read_sql(file_path, **default_kwargs)
+
     file_extension = splitext(file_path)[1].lstrip('.')
 
-    pandas_kwargs = {}
-    default_args_by_extension = {
-        'csv': {
+    if file_extension == 'sql':
+        default_kwargs = {
+            'columns': columns
+        }
+        default_kwargs.update(kwargs)
+        query = fs_factory(file_path).read()
+        return read_sql(query, **default_kwargs)
+
+    elif file_extension == 'csv':
+        default_kwargs = {
             'dtype': str,
             'skipinitialspace': True,
             'usecols': columns
-        },
-        'parquet': {
+        }
+        default_kwargs.update(kwargs)
+        return read_csv(file_path, **default_kwargs)
+
+    elif file_extension == 'parquet':
+        default_kwargs = {
             'columns': columns
         }
-    }
-    pandas_kwargs.update(default_args_by_extension.get(file_extension, {}))
-    pandas_kwargs.update(kwargs)
+        default_kwargs.update(kwargs)
+        return read_parquet(file_path, **default_kwargs)
 
-    pd_read_func = getattr(pandas, f'read_{file_extension}', None)
-    if pd_read_func is None:
-        other_readers = {
-            'xls': read_excel,
-            'xlsx': read_excel
+    elif file_extension in ('xls', 'xlsx'):
+        default_kwargs = {
+            'usecols': columns
         }
-        try:
-            pd_read_func = other_readers[file_extension]
-        except KeyError:
-            raise TypeError('File type not supported')
-
-    return pd_read_func(file_path, **pandas_kwargs)
+        return read_excel(file_path, **kwargs)
+    else:
+        read_ = getattr(pandas, f'read_{file_extension}', None)
+        if read_ is None:
+            raise TypeError(f'File type "{file_extension}" not supported')
+        return read_(file_path, **kwargs)[columns]
 
 
 def get_dtype_treater(dtype: Union[DTypes, str]) -> treaters.Validator:
