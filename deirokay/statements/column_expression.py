@@ -42,13 +42,10 @@ class ColumnExpression(BaseStatement):
     # docstr-coverage:inherited
     def report(self, df):
         report = {}
-        df_copy = df.copy()
-        df_copy = self._fix_df_dtypes(df_copy)
+        df = df.copy()
+        df = self._fix_df_dtypes(df)
         for expr in self.expressions:
-            if '=~' not in expr:
-                row_count = df_copy.eval(expr)
-            else:
-                row_count = self._isclose_eval(df_copy, expr)
+            row_count = self._eval(df, expr)
             report[expr] = {
                 'valid_rows': int((row_count).sum()),
                 'valid_rows_%': float(
@@ -77,6 +74,13 @@ class ColumnExpression(BaseStatement):
                 df[[col]] = df[[col]].astype(float)
         return df
 
+    def _eval(self, df, expr):
+        if '=~' not in expr:
+            row_count = df.eval(expr)
+        else:
+            row_count = self._isclose_eval(df, expr)
+        return row_count
+
     def _isclose_eval(self, df, expr):
         """
         Accomplishes the paper of `pandas.eval` when we have the =~ comparison
@@ -92,13 +96,13 @@ class ColumnExpression(BaseStatement):
                 comparison operands"""
             )
 
-        eval_bool = Series([True for f in range(len(df))])
+        eval_bool = Series(len(df) * [True])
 
         for i in range(len(expr_calculus) - 1):
-            comparison_to_eval =\
-                expr_calculus[i]\
-                + expr_comparison[i]\
-                + expr_calculus[i+1]
+            comparison_to_eval = (
+                expr_calculus[i] + expr_comparison[i] + expr_calculus[i+1]
+            )
+
             if expr_comparison[i] != '=~':
                 eval_bool = df.eval(comparison_to_eval) & eval_bool
             else:
