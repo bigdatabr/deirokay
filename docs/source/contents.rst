@@ -5,9 +5,9 @@
 
    home/index
    installation/index
-   statements/index
-   concepts/index
    tutorial/index
+   concepts/index
+   statements/index
    cookbook/index
    fag/index
    api-reference/index
