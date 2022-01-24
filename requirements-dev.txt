@@ -7,7 +7,3 @@ s3fs
 pyarrow
 SQLAlchemy~=1.4
 apache-airflow==2.*
-apache-airflow-providers-ftp==2.*
-apache-airflow-providers-http==2.*
-apache-airflow-providers-imap==2.*
-apache-airflow-providers-sqlite==2.*
