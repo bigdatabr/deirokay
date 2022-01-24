@@ -4,7 +4,7 @@ pytest-postgresql
 psycopg
 boto3
 s3fs
-fastparquet
+pyarrow
 apache-airflow==2.*
 apache-airflow-providers-ftp==2.*
 apache-airflow-providers-http==2.*
