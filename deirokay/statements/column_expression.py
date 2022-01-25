@@ -6,6 +6,7 @@ import re
 
 import numpy
 import pandas
+from decimal import Decimal
 from pandas import Float64Dtype, Int64Dtype, Series
 
 from .base_statement import BaseStatement
@@ -62,18 +63,31 @@ class ColumnExpression(BaseStatement):
     def _fix_df_dtypes(self, df):
         """
         Fixes DataFrame dtypes. If Int64Dtype() or Float64Dtype(),
-        converts to traditional int64 and float64 dtypes.
+        converts to traditional int64 and float64 dtypes. If object
+        dtype, we apply a more accurate check on the column type,
+        verifying the dtype of all its cells.
 
         When a pandas version corrects this bug, we can delete this
         method.
         """
         pandas_dtypes_int = [Int64Dtype(), pandas.Int32Dtype()]
         pandas_dtypes_float = [Float64Dtype(), pandas.Float32Dtype()]
+        pandas_dtypes_decimal = [Decimal]
         for col in df.columns:
             if df[[col]].dtypes.isin(pandas_dtypes_int)[0]:
                 df[[col]] = df[[col]].astype(int)
             elif df[[col]].dtypes.isin(pandas_dtypes_float)[0]:
                 df[[col]] = df[[col]].astype(float)
+            elif df[[col]].dtypes[0] == object:
+                col_dtype = list(
+                    dict.fromkeys(
+                        [type(x) for x in df[col].to_numpy()]
+                    )
+                )
+                if len(col_dtype) > 1:
+                    raise Exception('Mixed types in column')
+                if col_dtype[0] in pandas_dtypes_decimal:
+                    df[[col]] = df[[col]].astype(float)
         return df
 
     def _eval(self, df, expr):
