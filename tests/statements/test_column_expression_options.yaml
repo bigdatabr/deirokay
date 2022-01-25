@@ -1,0 +1,20 @@
+sep: ;
+columns:
+  c1:
+    dtype: integer
+  c2:
+    dtype: integer
+  c3:
+    dtype: float
+  c4:
+    dtype: string
+  c5:
+    dtype: string
+  c6:
+    dtype: string
+  c7:
+    dtype: float
+  c8:
+    dtype: decimal
+  c9:
+    dtype: decimal
