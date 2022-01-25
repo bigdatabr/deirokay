@@ -3,10 +3,10 @@ Module for BaseStatement and builtin Deirokay statements.
 """
 
 import re
+from decimal import Decimal
 
 import numpy
 import pandas
-from decimal import Decimal
 from pandas import Float64Dtype, Int64Dtype, Series
 
 from .base_statement import BaseStatement
