@@ -3,6 +3,10 @@
    :maxdepth: 2
    :caption: Project Documentation
 
-   statements/index
-   api-reference/index
+   home/Welcome
+   installation/installation
+   tutorial/Getting started
+   concepts/Concepts
+   statements/Statements
+   api-reference/API Reference
 
