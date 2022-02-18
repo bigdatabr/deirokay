@@ -1,4 +1,5 @@
 import logging
+import warnings
 from datetime import datetime
 from typing import Optional, Union
 
@@ -22,7 +23,7 @@ class DeirokayOperator(BaseOperator):
 
     Parameters
     ----------
-    path_to_file : str
+    data / path_to_file (deprecated) : str
         File to be parsed into Deirokay.
     options : Union[dict, str]
         A dict or a local/S3 path to a YAML/JSON options file.
@@ -44,43 +45,69 @@ class DeirokayOperator(BaseOperator):
         Minimum Deirokay severity level to trigger a task failure.
         Set to `None` to never trigger.
         By default SeverityLevel.CRITICAL (5).
+    reader_kwargs : dict, optional
+        Additional keyword arguments for `Deirokay.data_reader` method.
+    validator_kwargs : dict, optional
+        Additional keyword arguments for `Deirokay.validate` method.
     """
 
     template_fields = [
-        'path_to_file',
+        'data',
         'options',
         'against',
         'template',
-        'save_to'
+        'save_to',
+        'reader_kwargs',
+        'validator_kwargs'
     ]
     template_fields_renderers = {'options': 'json', 'against': 'json'}
     ui_color = '#59f75e'
 
     def __init__(
         self,
-        path_to_file: str,
-        options: Union[dict, str],
-        against: Union[dict, str],
+        data: str = None,
+        path_to_file: str = None,
+        options: Union[dict, str] = None,
+        against: Union[dict, str] = None,
         template: Optional[dict] = None,
         save_to: Optional[str] = None,
         soft_fail_level: int = SeverityLevel.MINIMAL,
         hard_fail_level: int = SeverityLevel.CRITICAL,
+        reader_kwargs: Optional[dict] = None,
+        validator_kwargs: Optional[dict] = None,
         **kwargs
     ):
         super().__init__(**kwargs)
 
-        self.path_to_file = path_to_file
+        assert bool(data) is not bool(path_to_file), (
+            'Declare either `data` or `path_to_file`, but not both.'
+        )
+        if path_to_file:
+            warnings.warn(
+                'The argument `path_to_file` is deprecated and will be'
+                ' removed in next major release. Use `data` instead.',
+                DeprecationWarning
+            )
+        assert options
+        assert against
+        self.data = data or path_to_file
         self.options = options
         self.against = against
         self.template = template
         self.save_to = save_to
         self.soft_fail_level = soft_fail_level
         self.hard_fail_level = hard_fail_level
+        self.reader_kwargs = reader_kwargs or {}
+        self.validator_kwargs = validator_kwargs or {}
 
     # docstr-coverage:inherited
     def execute(self, context: dict):
         current_date = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S')
-        df = deirokay.data_reader(self.path_to_file, options=self.options)
+        df = deirokay.data_reader(
+            self.data,
+            options=self.options,
+            **self.reader_kwargs
+        )
 
         validation_document = deirokay.validate(
             df,
@@ -88,7 +115,8 @@ class DeirokayOperator(BaseOperator):
             template=self.template,
             save_to=self.save_to,
             current_date=current_date,
-            raise_exception=False
+            raise_exception=False,
+            **self.validator_kwargs
         )
         try:
             raise_validation(validation_document, SeverityLevel.MINIMAL)

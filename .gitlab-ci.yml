@@ -101,7 +101,7 @@ unit-test:
     - ls -al
     - pip install .[dev]
   script:
-    - pytest --cov=. -vvv --disable-warnings
+    - su postgres -c "pytest --cov=. -vvv --disable-warnings"
 
 pages:
   stage: deploy
