@@ -1,9 +1,9 @@
 pytest
 pytest-cov
 pytest-postgresql
-psycopg
+psycopg2-binary
 boto3
 s3fs
 pyarrow
-SQLAlchemy~=1.4
-apache-airflow==2.*
+SQLAlchemy
+apache-airflow
