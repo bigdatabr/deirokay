@@ -5,5 +5,5 @@ psycopg
 boto3
 s3fs
 pyarrow
-SQLAlchemy~=1.4
+SQLAlchemy==1.4.0
 apache-airflow==2.*
