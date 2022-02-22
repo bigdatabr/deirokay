@@ -1,3 +1,4 @@
+import psycopg2
 import pytest
 from pandas import read_csv
 
@@ -139,6 +140,83 @@ def test_data_reader_from_dataframe():
         }
     }
     df = data_reader(df, options=options)
+
+    print(df)
+    print(df.dtypes)
+
+
+@pytest.fixture(scope='module')
+def create_db(postgresql_proc):
+    db_credentials = {
+        'dbname': 'postgres',
+        'user': postgresql_proc.user,
+        'password': postgresql_proc.password,
+        'host': postgresql_proc.host,
+        'port': postgresql_proc.port,
+        'options': postgresql_proc.options
+    }
+
+    with psycopg2.connect(**db_credentials) as db_connection:
+        with db_connection.cursor() as cursor:
+            cursor.execute('''
+                CREATE SCHEMA deirokay;
+                CREATE TABLE deirokay.test (
+                    column1 varchar NULL,
+                    column2 int4 NULL,
+                    column3 timestamp NULL,
+                    column4 float8 NULL,
+                    column5 bool NULL
+                );
+                INSERT INTO deirokay.test
+                VALUES
+                    ('hey',123,'2021-12-12 20:21:20.000',21.5456,true),
+                    ('deirokay',NULL,'2021-12-12 20:21:20.000',21.5456,true),
+                    (NULL,8123,'2021-12-12 20:21:20.000',NULL,false),
+                    ('ho',1851,'2021-12-04 00:21:20.000',2949.454,NULL);
+            ''')
+        db_connection.commit()
+
+    yield db_credentials
+
+    with psycopg2.connect(**db_credentials) as db_connection:
+        with db_connection.cursor() as cursor:
+            cursor.execute('DROP SCHEMA deirokay CASCADE;')
+        db_connection.commit()
+
+
+def test_data_reader_from_sql_file(create_db):
+    db_credentials = create_db
+    options = {
+        'columns': {
+            'column1': {'dtype': 'string'},
+            'column2': {'dtype': 'integer'},
+            'column3': {'dtype': 'datetime', 'format': '%Y-%m-%d %H:%M:%S'},
+            'column4': {'dtype': 'float'},
+            'column5': {'dtype': 'boolean'},
+        }
+    }
+    with psycopg2.connect(**db_credentials) as con:
+        df = data_reader('tests/data_reader_from_sql_file.sql', options,
+                         con=con)
+
+    print(df)
+    print(df.dtypes)
+
+
+def test_data_reader_from_sql_query(create_db):
+    db_credentials = create_db
+    options = {
+        'columns': {
+            'column1': {'dtype': 'string'},
+            'column2': {'dtype': 'integer'},
+            'column3': {'dtype': 'datetime', 'format': '%Y-%m-%d %H:%M:%S'},
+            'column4': {'dtype': 'float'},
+            'column5': {'dtype': 'boolean'},
+        }
+    }
+    with psycopg2.connect(**db_credentials) as con:
+        df = data_reader('select * from deirokay.test;', options,
+                         sql=True, con=con)
 
     print(df)
     print(df.dtypes)
