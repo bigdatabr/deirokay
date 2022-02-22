@@ -1,3 +1,10 @@
+# Release 0.7.1
+
+2022-02-22
+
+- Fix bugs when profiling entirely null columns
+
+
 # Release 0.7.0
 
 2022-02-22
