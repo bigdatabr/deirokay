@@ -72,6 +72,9 @@
             "dtype": "boolean",
             "truthies": ["active"],
             "falsies": ["inactive"]
+        },
+        "EMPTY": {
+            "dtype": "integer"
         }
     }
 }
