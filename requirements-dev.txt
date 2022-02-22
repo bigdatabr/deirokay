@@ -1,10 +1,9 @@
 pytest
 pytest-cov
+pytest-postgresql
+psycopg2-binary
 boto3
 s3fs
-fastparquet
-apache-airflow==2.*
-apache-airflow-providers-ftp==2.*
-apache-airflow-providers-http==2.*
-apache-airflow-providers-imap==2.*
-apache-airflow-providers-sqlite==2.*
+pyarrow
+SQLAlchemy
+apache-airflow

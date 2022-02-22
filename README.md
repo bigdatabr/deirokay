@@ -572,7 +572,7 @@ dag = DAG(dag_id='data-validation',
           })
 
 operator = DeirokayOperator(task_id='deirokay-validate',
-                            path_to_file='tests/transactions_sample.csv',
+                            data='tests/transactions_sample.csv',
                             options='tests/options.json',
                             against='tests/assertions.json',
                             dag=dag)
