@@ -232,15 +232,19 @@ class Contain(BaseStatement):
     # docstr-coverage:inherited
     @staticmethod
     def profile(df):
+        if any(dtype != df.dtypes for dtype in df.dtypes):
+            raise NotImplementedError(
+                "Refusing to mix up different types of columns"
+            )
+
         series = concat(df[col] for col in df.columns)
+
+        unique_series = series.drop_duplicates().dropna()
+        if len(unique_series) > 20:
+            raise NotImplementedError("Won't generate too long statements!")
 
         value_frequency = series.value_counts()
         min_occurrences = int(value_frequency.min())
-
-        # unique series
-        series = series.drop_duplicates().dropna()
-        if len(series) > 20:
-            raise NotImplementedError("Won't generate too long statements!")
 
         statement_template = {
             'type': 'contain',
@@ -249,8 +253,8 @@ class Contain(BaseStatement):
         # Get most common type to infer treater
         try:
             statement_template.update(
-                get_dtype_treater(series.map(type).mode()[0])
-                .serialize(series)
+                get_dtype_treater(unique_series.map(type).mode()[0])
+                .serialize(unique_series)
             )
         except TypeError:
             raise NotImplementedError("Can't handle mixed types")
