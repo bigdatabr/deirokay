@@ -51,6 +51,8 @@ Please, [read the docs](https://deirokay.readthedocs.io/).
 
 ## Getting started
 
+> Tutorial: https://colab.research.google.com/github/bigdatabr/deirokay/blob/tutorial/docs/notebooks/tutorial.ipynb
+
 Suppose the following CSV file:
 
 name | age | is_married
