@@ -259,7 +259,7 @@ class LocalFileSystem(FileSystem):
     # docstr-coverage:inherited
     def read_yaml(self) -> dict:
         with self.open() as fp:
-            return yaml.load(fp, Loader=yaml.CLoader)
+            return yaml.safe_load(fp)
 
     # docstr-coverage:inherited
     def write_yaml(self, doc: dict, **kwargs) -> None:
@@ -339,7 +339,7 @@ class S3FileSystem(FileSystem):
 
     # docstr-coverage:inherited
     def read_yaml(self) -> dict:
-        return yaml.load(self.open(), Loader=yaml.CLoader)
+        return yaml.safe_load(self.open())
 
     # docstr-coverage:inherited
     def write_yaml(self, doc: dict, **kwargs) -> None:

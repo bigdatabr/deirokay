@@ -1,7 +1,10 @@
 verbose: 3
-exclude: .*/(tests|docs)
+paths: deirokay
 skip_magic: True
 skip_init: True
 skip_file_doc: True
 skip_private: True
+skip_class_def: False
 accept_empty: True
+follow_links: True
+percentage_only: False
