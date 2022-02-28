@@ -1,0 +1,20 @@
+repos:
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 4.0.1
+    hooks:
+    - id: flake8
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        name: isort (python)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+  - repo: https://github.com/HunterMcGushion/docstr_coverage
+    rev: v2.1.1
+    hooks:
+      - id: docstr-coverage
+        args: ["--verbose", "2"]

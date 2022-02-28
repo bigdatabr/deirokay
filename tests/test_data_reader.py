@@ -1,4 +1,4 @@
-import psycopg2
+import psycopg
 import pytest
 from pandas import read_csv
 
@@ -156,7 +156,7 @@ def create_db(postgresql_proc):
         'options': postgresql_proc.options
     }
 
-    with psycopg2.connect(**db_credentials) as db_connection:
+    with psycopg.connect(**db_credentials) as db_connection:
         with db_connection.cursor() as cursor:
             cursor.execute('''
                 CREATE SCHEMA deirokay;
@@ -178,7 +178,7 @@ def create_db(postgresql_proc):
 
     yield db_credentials
 
-    with psycopg2.connect(**db_credentials) as db_connection:
+    with psycopg.connect(**db_credentials) as db_connection:
         with db_connection.cursor() as cursor:
             cursor.execute('DROP SCHEMA deirokay CASCADE;')
         db_connection.commit()
@@ -195,7 +195,7 @@ def test_data_reader_from_sql_file(create_db):
             'column5': {'dtype': 'boolean'},
         }
     }
-    with psycopg2.connect(**db_credentials) as con:
+    with psycopg.connect(**db_credentials) as con:
         df = data_reader('tests/data_reader_from_sql_file.sql', options,
                          con=con)
 
@@ -214,7 +214,7 @@ def test_data_reader_from_sql_query(create_db):
             'column5': {'dtype': 'boolean'},
         }
     }
-    with psycopg2.connect(**db_credentials) as con:
+    with psycopg.connect(**db_credentials) as con:
         df = data_reader('select * from deirokay.test;', options,
                          sql=True, con=con)
 

@@ -6,6 +6,7 @@
 
 # -- Path setup --------------------------------------------------------------
 
+from datetime import datetime
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -20,7 +21,7 @@ with open(join(dirname(__file__), '../../deirokay/__version__.py')) as v:
 # -- Project information -----------------------------------------------------
 
 project = 'Deirokay'
-copyright = '2021, Big Data'
+copyright = f'{datetime.now().year}, Big Data'
 author = 'Marcos Bressan'
 
 # The full version, including alpha/beta/rc tags

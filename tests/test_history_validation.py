@@ -21,8 +21,8 @@ def test_data_validation_with_jinja(prepare_history_folder):
                 'alias': 'werks_prod',
                 'statements': [
                     {'type': 'row_count',
-                     'min': '{{ 0.95 * (series("VENDAS", 3).werks_prod.row_count.rows.mean()|default(19.5, true)) }}',  # noqa: E501
-                     'max': '{{ 1.05 * (series("VENDAS", 3).werks_prod.row_count.rows.mean()|default(19.6, true)) }}'}  # noqa: E501
+                     'min': '{{ 0.95 * (series("VENDAS", 3).werks_prod.row_count.rows.mean()|default(19.5, true))|float }}',  # noqa: E501
+                     'max': '{{ 1.05 * (series("VENDAS", 3).werks_prod.row_count.rows.mean()|default(19.6, true))|float }}'}  # noqa: E501
                 ]
             }
         ]
@@ -80,8 +80,8 @@ def test_data_validation_with_jinja_using_s3(prepare_history_s3):
                 'alias': 'werks_prod',
                 'statements': [
                     {'type': 'row_count',
-                     'min': '{{ 0.95 * (series("VENDAS", 3).werks_prod.row_count.rows.mean()|default(19.5, true)) }}',  # noqa: E501
-                     'max': '{{ 1.05 * (series("VENDAS", 3).werks_prod.row_count.rows.mean()|default(19.6, true)) }}'}  # noqa: E501
+                     'min': '{{ 0.95 * (series("VENDAS", 3).werks_prod.row_count.rows.mean()|default(19.5, true))|float }}',  # noqa: E501
+                     'max': '{{ 1.05 * (series("VENDAS", 3).werks_prod.row_count.rows.mean()|default(19.6, true))|float }}'}  # noqa: E501
                 ]
             }
         ]
