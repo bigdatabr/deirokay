@@ -1,5 +1,5 @@
 # Deirokay
-[![build](https://img.shields.io/github/workflow/status/bigdatabr/deirokay/Python%20package)](https://github.com/bigdatabr/deirokay/actions/workflows/python-package.yml)
+[![build](https://img.shields.io/github/workflow/status/bigdatabr/deirokay/Test)](https://github.com/bigdatabr/deirokay/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/bigdatabr/deirokay/branch/master/graph/badge.svg?token=Fee3QNLC2s)](https://codecov.io/gh/bigdatabr/deirokay)
 [![docstr_coverage](https://img.shields.io/endpoint?url=https://jsonbin.org/bressanmarcos/deirokay/badges/docstr-cov)](https://github.com/HunterMcGushion/docstr_coverage)
 [![license: MIT](https://img.shields.io/github/license/bigdatabr/deirokay)](https://github.com/bigdatabr/deirokay/blob/master/LICENSE)
