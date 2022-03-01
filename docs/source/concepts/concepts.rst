@@ -115,14 +115,3 @@ validation document name and the path where wil save it( like local or
 S3). At the end, auto-generated validation document as Python `dict`.
 returns an. If no path are passed, no document will be save by default.
 
-
-Series
-======
-
-
-DeirokayOperator for Airflow
-============================
-
-
-Suport for Jinja2 Templating
-============================

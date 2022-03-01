@@ -70,7 +70,7 @@ statement is easer, just create a .py to works as a function.
 
 
 
-
+..include:: contents.rst
 
 
 
