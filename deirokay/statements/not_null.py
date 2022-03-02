@@ -50,6 +50,12 @@ class NotNull(BaseStatement):
         }
 
         at_least_perc = float(100.0*not_nulls.sum()/len(not_nulls))
+
+        if at_least_perc == 0.0:
+            raise NotImplementedError(
+                'Statement is useless when all rows are null.'
+            )
+
         if at_least_perc != 100.0:
             statement['at_least_%'] = at_least_perc
 
