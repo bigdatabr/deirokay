@@ -2,7 +2,84 @@ from .base_statement import BaseStatement
 
 
 class NotNull(BaseStatement):
-    """Check if the rows of a scoped DataFrame are not null."""
+    """Check if the rows of a scoped DataFrame are not null, possibly
+    setting boundaries for the minimum and maximum percentage of
+    not-null rows.
+
+    The available options are:
+    - `at_least_%`: The minimum percentage of not-null rows.
+    Default: 100.0.
+    - `at_most_%`: The maximum percentage of not-null rows.
+    Default: 100.0.
+    - `multicolumn_logic`: The logic to use when checking for not-null
+    values in multicolumn scopes (either 'any' or 'all').
+    Default: 'any'.
+
+    Be careful When using multicolumn scopes: the `any` logic considers
+    a row as null only if all columns are null.
+    The `all` logic considers a row as null when any of its columns is
+    null.
+
+    Examples
+    --------
+    - You want to ensure that less than 1% of the values in a column
+    `foo` are null. You can declare the following validation item:
+
+    ``` json
+    {
+        "scope": "foo",
+        "statements": [
+            {
+                "name": "not_null",
+                "at_least_%": 99.0
+            }
+        ]
+    }
+    ```
+
+    You noticed that you imposed a unrealistic value for `at_least_%`,
+    and maybe less than 10% should be a reasonable percentage of null
+    values.
+    Still, you don't want to lose track of that ideal <= 1% checks,
+    since you intend to improve your data quality in the near future.
+    You may take advantage of `severity` to set different exception
+    levels for different values of `at_least_%`:
+
+    ``` json
+    {
+        "scope": "foo",
+        "statements": [
+            {
+                "name": "not_null",
+                "at_least_%": 99.0,
+                "severity": 3
+            }
+            {
+                "name": "not_null",
+                "at_least_%": 90.0,
+                "severity": 5
+            }
+        ]
+    }
+    ```
+    This way, values between 90% and 99% will only raise a warning,
+    while values below 90% will raise a validation exception (by
+    default).
+
+    - You don't tolerate any null values in a list of columns:
+
+    ``` json
+    {
+        "scope": ["foo", "bar", "baz", "qux"],
+        "statements": [
+            {
+                "name": "not_null",
+                "multicolumn_logic": "all"
+            }
+        ]
+    }
+    ```
+    """
 
     name = 'not_null'
     expected_parameters = ['at_least_%', 'at_most_%', 'multicolumn_logic']
