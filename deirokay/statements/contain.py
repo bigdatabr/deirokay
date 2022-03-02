@@ -7,18 +7,183 @@ from .base_statement import BaseStatement
 
 class Contain(BaseStatement):
     """
-    Checks if a given column contains specific values. We can also
-    check the number of their occurrences, specifying a minimum and
+    Checks if the given scope contains specific values. We can also
+    check the number of their occurrences by specifying a minimum and
     maximum value of frequency.
+
+    The available parameters for this statement are:
+    - `rule` (required): One of `all`, `only` or `all_and_only`.
+    - `values` (required): A list of values to which the rule applies.
+    - `parser` (required): The parser to be used to parse the `values`.
+    Correspond to the `parser` parameter of the `treater` function (see
+    `deirokay.data_reader` method).
+    - `min_occurrences`: a global minimum number of occurrences for
+    each of the `values`. Default: 1 for `all` and `all_and_only`
+    rules, 0 for `only`.
+    - `max_occurrences`: a global maximum number of occurrences for
+    each of the `values`. Default: `inf` (unbounded).
+    - `occurrences_per_value`: a list of dictionaries overriding the
+    global boundaries. Each dictionary may have the following keys:
+        - `values` (required): a value (or a list) to which the
+        occurrence bounds below must apply to.
+        - `min_occurrences`: a minimum number of occurrences for these
+        values. Default: global `min_occurrences` parameter.
+        - `max_occurrences`: a maximum number of occurrences for these
+        values. Default: global `max_occurrences` parameter.
+
+    Global parameters apply to values not present in any of the
+    dictionaries in `occurrences_per_value`.
+
+    - `verbose`: if `True`, the report will include the percentage of
+    occurrences for each value. Default: `True`.
+
+    The `all` rule checks if all the `values` declared are present in
+    the scope (possibly tolerating other values not declared in
+    `values`).
+    Use it when you want to be sure that your data contains at least
+    all the values you declare, also setting `min_occurrences` and
+    `max_occurrences` when necessary.
+    You may also check for "zero" occurrences of a set of values by
+    setting `max_occurrences` to 0.
+
+    The `only` rule ensures that the `values` are the only possible
+    values in the scope (possibly not containing them at all).
+    Use it when you want to enumerate the admitted values for the
+    scope, as in an enumeration.
+
+    The `all_and_only` rule checks both if all the `values` declared
+    are present in the scope and if only they are present (not
+    tolerating values not declared).
+    Use it when you know all the possible values for the scope and you
+    are sure that they will be always present.
+
+    The `min_occurrences` and `max_occurrences` parameters are applied
+    applied to all the `values` declared, and only these. It means you
+    cannot (yet) specify boundaries for values you did't declare.
+
+    You may also notice that, by tweaking the expected number of
+    occurrences, you may end up having the very same behaviour
+    regardless the `rule` you choose.
+    In this case, you should go for the rule that semantically matches
+    best your intents, so that your final validation document looks
+    more readable and easy to understand.
+
+    Examples
+    --------
+    - You have a table of users containg a column `handedness`
+    only admitting the values:
+    `right-handed`, `left-handed` and `ambidextrous`.
+    You know that some of these values may not appear in the data, but
+    you don't want other values to be present.
+
+    ``` json
+    {
+        "scope": "handedness",
+        "statements": [
+            {
+                "type": "contain",
+                "rule": "only",
+                "values": ["right-handed", "left-handed", "ambidextrous"],
+                "parser": {"dtype": "string"}
+            }
+        ]
+    }
+    ```
+
+    - You have a table of servers containg a column `role` which may
+    contain the values `master` and `slave`.
+    You want to be sure that there is always one and only one master
+    server in the data.
+
+    ``` json
+    {
+        "scope": "role",
+        "statements": [
+            {
+                "type": "contain",
+                "rule": "all",
+                "values": ["master"],
+                "parser": {"dtype": "string"},
+                "min_occurrences": 1,
+                "max_occurrences": 1
+            }
+        ]
+    }
+    ```
+
+    You may also extend the previous example by making some adjustments
+    to ensure that there is no other value than `master` and `role`
+    in the data. Make notice that although the `rule` below is changed
+    to `only`, the statement above is still contemplated by the
+    `occurrences_per_value` parameter in the following validation item:
+
+    ``` json
+    {
+        "scope": "role",
+        "statements": [
+            {
+                "type": "contain",
+                "rule": "only",
+                "values": ["master", "slave"],
+                "parser": {"dtype": "string"},
+                "occurrences_per_value": [
+                    {
+                        "values": ["master"],
+                        "min_occurrences": 1,
+                        "max_occurrences": 1
+                    }
+                ]
+            }
+        ]
+    }
+    ```
+
+    - You have a table of transactions containing details about
+    transactions in all the branches of a company. You expect that
+    there should always be at least one transaction per branch.
+
+    ``` json
+    {
+        "scope": ["branch_name"],
+        "statements": [
+            {
+                "type": "contain",
+                "rule": "all_and_only",
+                "values": [
+                    "Albany", "Utica", "Scranton", "Akron",
+                    "Nashua", "Buffalo", "Rochester"
+                ],
+                "parser": {"dtype": "string"}
+            }
+        ]
+    }
+    ```
+
+    - You have a table for the logs of user accesses to a website which
+    contains an `IP` column. You want to be sure that blacklisted
+    IPs are not present in the data. The following validation item in
+    YAML format checks for the absense of blacklisted IPs:
+
+    ``` yaml
+    scope: IP
+    statements:
+      - type: contain
+        rule: all
+        max_occurrences: 0
+        values: # blacklisted IPs
+          - 3.48.48.135
+          - 3.48.48.136
+        parser: {dtype: string}
+    ```
     """
     name = 'contain'
     expected_parameters = [
         'rule',
         'values',
         'parser',
-        'occurrences_per_value',
         'min_occurrences',
         'max_occurrences',
+        'occurrences_per_value',
         'verbose'
     ]
     table_only = False
