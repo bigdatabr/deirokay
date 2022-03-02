@@ -5,6 +5,7 @@
 [![license: MIT](https://img.shields.io/github/license/bigdatabr/deirokay)](https://github.com/bigdatabr/deirokay/blob/master/LICENSE)
 [![code style: flake8](https://img.shields.io/badge/code%20style-flake8-000000.svg)](https://flake8.pycqa.org/en/latest/internal/writing-code.html)
 [![imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+[![semantic-release: conventionalcommits](https://img.shields.io/badge/semantic--release-conventionalcommits-e10079?logo=semantic-release)](https://www.conventionalcommits.org/)
 
 
 Deirokay (*dejɾo'kaj*) is a tool for data profiling and data validation.
