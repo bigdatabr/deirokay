@@ -5,8 +5,8 @@
 
    home/index
    installation/index
-   tutorial/index
    concepts/index
+   tutorial/index
    statements/index
    api-reference/index
 

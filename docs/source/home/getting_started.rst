@@ -1,6 +1,30 @@
-==========
+===============
 Getting started
-==========
+===============
+
+In this getting started, you will pass through some of the basic cases where
+Deirokay can make your life easer when you are looking for a data quality tool.
+Data validation 
+
+Data validation is crucial to ensuring that the data you process in your pipelines 
+is correct and free of any data quality issues that might occur due to errors such 
+as incorrect inputs or transformation bugs.
+
+At the end you will be familiar with the most features that comes with Deirokay, and
+if you want more, you can find at the How to module that contains jupyter notebooks
+to show the way in some specific jobs. 
+
+Começa falando de um exemplo de dado cagado
+    - Aponta algumas validações (em alto nível) que poderiam ser feitas
+    - Lembra que antes da validação, é preciso ter um controle dos tipos de dados que serão validados (Data Reader) - contraexemplo do readme (CSV, coluna int virando float) que o dado é lido errado
+    - E aí então insere validation documents para expressar as validações high level levantadas
+    - Chama Validate
+
+# Starts talking about some crap data 
+
+# Shows off som hight validations that could be done
+
+# Before the validation
 
 Suppose the following CSV file:
 
@@ -148,7 +172,7 @@ passed to `pandas.read_*` methods when opening the file.
 
 
 Making Statements about your data
-==============================
+=================================
 
 The main entity in Deirokay is called Statement. A Statement is
 a form of test that is executed against your data to determine
@@ -261,3 +285,5 @@ Statement Type | Available Arguments
 'custom' | 'location' | Location of the custom statement (e.g., "/home/file.py::MyStatement")
 
 The following section illustrates how to create and use `custom` type
+
+.. include:: installation/index.rst
