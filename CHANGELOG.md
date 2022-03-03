@@ -1,3 +1,20 @@
+# Release 0.7.1
+
+2022-02-22
+
+- Fix bugs when profiling entirely null columns
+
+
+# Release 0.7.0
+
+2022-02-22
+
+- New `ColumnExpression` (`column_expression`) statement to evaluate an expression involving the columns from a scope.
+- `data_reader` can now get table from SQL query or file
+  - Add `reader_kwargs` and `validator_kwargs` arguments in `DeirokayOperator` (to support feature above)
+  - Deprecation warning for `path_to_file` argument in `DeirokayOperator` in favor of `data` (to make API consistent with feature above)
+
+
 # Release 0.6.0
 
 2021-12-15
@@ -10,7 +27,6 @@ builtin statements.
 - Better logs (stdout) for `deirokay.validate` failed statements.
 Now it also prints the scope the statements are applied to and the
 provided severity threshold level.
-
 
 
 # Release 0.5.2

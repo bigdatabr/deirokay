@@ -6,21 +6,21 @@
 
 # -- Path setup --------------------------------------------------------------
 
+import os
+from datetime import datetime
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-from os.path import dirname, join
+os.sys.path.insert(0, os.path.abspath('../../'))
 
-with open(join(dirname(__file__), '../../deirokay/__version__.py')) as v:
-    __version__ = None
-    exec(v.read().strip())
-
+from deirokay.__version__ import __version__  # noqa E501
 
 # -- Project information -----------------------------------------------------
 
 project = 'Deirokay'
-copyright = '2021, Big Data'
+copyright = f'{datetime.now().year}, Big Data'
 author = 'Marcos Bressan'
 
 # The full version, including alpha/beta/rc tags

@@ -35,8 +35,14 @@ class Unique(BaseStatement):
             'type': 'unique',
         }
 
-        at_leat_perc = float(100.0*unique.sum()/len(unique))
-        if at_leat_perc != 100.0:
-            statement['at_least_%'] = at_leat_perc
+        at_least_perc = float(100.0*unique.sum()/len(unique))
+
+        if at_least_perc == 0.0:
+            raise NotImplementedError(
+                'Statement is useless when all rows are not unique.'
+            )
+
+        if at_least_perc != 100.0:
+            statement['at_least_%'] = at_least_perc
 
         return statement

@@ -1,0 +1,29 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    # Skip running release workflow on forks
+    if: github.repository_owner == 'bigdatabr'
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+    - name: Build package
+      run: python setup.py sdist bdist_wheel
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@v1.5.0
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}

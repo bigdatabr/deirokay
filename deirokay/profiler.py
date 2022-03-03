@@ -3,8 +3,8 @@ Functions for data profiling and auto-generation of Deirokay Validation
 Documents.
 """
 
+import warnings
 from typing import Optional
-
 from pandas import DataFrame
 
 from .__version__ import __version__
@@ -37,6 +37,14 @@ def _generate_items(df):
                     statements.append(statement)
                 except NotImplementedError:
                     pass
+                except Exception as e:
+                    warnings.warn(
+                        f'Unexpected error when profiling scope {scope}'
+                        f' using {stmt_cls.__name__} statement: {e}\n\n'
+                        'Please, consider reporting this issue to the '
+                        'developers.',
+                        RuntimeWarning
+                    )
 
     return items
 

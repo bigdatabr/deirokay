@@ -201,6 +201,14 @@ class FileSystem():
         """Import file as a Python module."""
         raise NotImplementedError
 
+    def open(self, *args, **kwargs):
+        """Open file."""
+        raise NotImplementedError
+
+    def read(self, *args, **kwargs) -> str:
+        """Read a file as text."""
+        return self.open(*args, **kwargs).read()
+
     def __truediv__(self, rest: str) -> 'FileSystem':
         """Create another FileSystem object by '/'-joining a FileSystem
         object with a string.
@@ -250,22 +258,22 @@ class LocalFileSystem(FileSystem):
 
     # docstr-coverage:inherited
     def read_yaml(self) -> dict:
-        with open(self.path) as fp:
-            return yaml.load(fp, Loader=yaml.CLoader)
+        with self.open() as fp:
+            return yaml.safe_load(fp)
 
     # docstr-coverage:inherited
     def write_yaml(self, doc: dict, **kwargs) -> None:
-        with open(self.path, 'w') as fp:
+        with self.open('w') as fp:
             yaml.dump(doc, fp, sort_keys=False, **kwargs)
 
     # docstr-coverage:inherited
     def read_json(self) -> dict:
-        with open(self.path) as fp:
+        with self.open() as fp:
             return json.load(fp)
 
     # docstr-coverage:inherited
     def write_json(self, doc: dict, **kwargs) -> None:
-        with open(self.path, 'w') as fp:
+        with self.open('w') as fp:
             json.dump(doc, fp, **kwargs)
 
     # docstr-coverage:inherited
@@ -280,6 +288,10 @@ class LocalFileSystem(FileSystem):
     # docstr-coverage:inherited
     def mkdir(self, *args, **kwargs):
         return Path(self.path).mkdir(*args, **kwargs)
+
+    # docstr-coverage:inherited
+    def open(self, *args, **kwargs):
+        return open(self.path, *args, **kwargs)
 
 
 class S3FileSystem(FileSystem):
@@ -327,8 +339,7 @@ class S3FileSystem(FileSystem):
 
     # docstr-coverage:inherited
     def read_yaml(self) -> dict:
-        o = self.client.get_object(Bucket=self.bucket, Key=self.prefix_or_key)
-        return yaml.load(o['Body'], Loader=yaml.CLoader)
+        return yaml.safe_load(self.open())
 
     # docstr-coverage:inherited
     def write_yaml(self, doc: dict, **kwargs) -> None:
@@ -340,8 +351,7 @@ class S3FileSystem(FileSystem):
 
     # docstr-coverage:inherited
     def read_json(self) -> dict:
-        o = self.client.get_object(Bucket=self.bucket, Key=self.prefix_or_key)
-        return json.load(o['Body'])
+        return json.load(self.open())
 
     # docstr-coverage:inherited
     def write_json(self, doc: dict, **kwargs):
@@ -360,6 +370,15 @@ class S3FileSystem(FileSystem):
                                       tmp_fp.name)
             module = _import_file_as_python_module(tmp_fp.name)
             return module
+
+    # docstr-coverage:inherited
+    def open(self):
+        o = self.client.get_object(Bucket=self.bucket, Key=self.prefix_or_key)
+        return o['Body']
+
+    # docstr-coverage:inherited
+    def read(self, *args, **kwargs):
+        return super().read(*args, **kwargs).decode('utf-8')
 
 
 def fs_factory(path: str):
