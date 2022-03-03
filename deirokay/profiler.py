@@ -5,6 +5,7 @@ Documents.
 
 import warnings
 from typing import Optional
+
 from pandas import DataFrame
 
 from .__version__ import __version__
