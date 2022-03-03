@@ -11,22 +11,16 @@ class BaseStatement:
     ----------
     options : dict
         Statement parameters provided by user.
-
-    Attributes
-    ----------
-    name : str
-        Statement name when referred in Validation Documents (only
-        valid for non-custom statements).
-    expected_parameters : List[str]
-        Parameters expected for this statement.
-    table_only : bool
-        Whether or not this statement in applicable only to the entire
-        table, instead of scoped columns.
     """
 
     name = 'base_statement'
+    """str: Statement name when referred in Validation Documents
+    (only valid for Deirokay built-in statements)."""
     expected_parameters = ['type', 'severity', 'location']
+    """List[str]: Parameters expected for this statement."""
     table_only = False
+    """bool: Whether or not this statement in applicable only to the
+    entire table, instead of scoped columns."""
 
     def __init__(self, options: dict):
         self._validate_options(options)
