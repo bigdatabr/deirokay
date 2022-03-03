@@ -14,7 +14,7 @@ concept. So when you are using DataReader or Data validation, there is
 some data types that you can use to work, and here it is with there 
 alias: 
 
-.. list-table:: DTypes
+.. list-table:: 
    :header-rows: 1
 
    * - DTypes
@@ -200,7 +200,7 @@ that are composed by the validation statements and validation scope.
 The last one defines which columns will be analysed and you can pass 
 one or more groups of columns. Within the scope you can pass an alias 
 to the statement. To get dive into it, you can find more at 
-.._Statements. Last but not least, the validation statements are need 
+.. _Statements. Last but not least, the validation statements are need 
 to you specifies what parameters you need, like the 'type', 'distinct', 
 'min', 'severity', 'at_least', 'max', when you work through the 
 columns of your dataset.
@@ -350,3 +350,4 @@ validation document name and the path where wil save it( like local or
 S3). At the end, auto-generated validation document as Python 'dict'.
 returns an. If no path are passed, no document will be save by default.
 
+.. include:: contents.rst

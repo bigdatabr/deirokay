@@ -51,19 +51,19 @@ Let's consider that you already have download the example.csv and you are workin
 code with pandas. A known issue when dealing with `pandas` is that some of the
 data types can be misrepresented as another dtypes as it 's show below:
 
-.. code-block:: console
+.. code-block:: python
 
-    >>>import pandas
-    >>>pandas.read_csv('example.csv')
+    >>> import pandas
+    >>> pandas.read_csv('example.csv')
     >>>    name    age     is_married
-    >>>0   john    55.0    True
-    >>>1   mariah  44.0    NaN
-    >>>2   carl    NaN     False
-    >>>pandas.read_csv('example.csv').dtypes
-    >>>name           object
-    >>>age           float64
-    >>>is_married     object
-    >>>dtype: object
+    >>> 0   john    55.0    True
+    >>> 1   mariah  44.0    NaN
+    >>> 2   carl    NaN     False
+    >>> pandas.read_csv('example.csv').dtypes
+    >>> name           object
+    >>> age           float64
+    >>> is_married     object
+    >>> dtype: object
 
 Even though that strings are correctly parsed, just look how it goes to integer column that become float column
 just because have in it an null cell. If you ever write the file back to your hard disk, you'll get
@@ -107,7 +107,7 @@ Below you see an option document:
 .. code-block:: json
 
     {
-        “sep”: “|”,
+        “sep”: “|” ,
         “encryption”: “iso-8859-1”,
         “columns”: [
             "name": {
@@ -131,25 +131,134 @@ Below you see an option document:
 To be able to use this option document you just need to import from Deirokay the DataReader, and will get a
 pandas dataframe that doesn't have the initial problems:
 
-.. code-block:: console
+.. code-block:: python
 
-    >>> from deirokay import data_reader
-    >>> data_reader('example.csv', options='options.json')
-    >>>     name   age  is_married
-    >>>0    john    55        True
-    >>>1    mariah  44        <NA>
-    >>>2    carl    <NA>      False
-    >>>pandas.read_csv('example.csv').dtypes
-    >>>name           object
-    >>>age           float64
-    >>>is_married     object
-    >>>dtype: object
+  >>> from deirokay import data_reader
+  >>> data_reader('example.csv', options='options.json')
+  >>>     name   age  is_married
+  >>>0    john    55        True
+  >>>1    mariah  44        <NA>
+  >>>2    carl    <NA>      False
+  >>>pandas.read_csv('example.csv').dtypes
+  >>>name           object
+  >>>age           float64
+  >>>is_married     object
+  >>>dtype: object
 
+It is good to point out that the `options` argument also accepts `dict` objects directly.
+When parsing your file, you may also provide a set of different arguments, which varies in function
+of the data types. When passing Deirokay file options as `dict`, you may optionally import the 
+available data types from the `deirokay.enums.DTypes` enumeration class.
 
-Making the validation process work
-==================================
-    - E aí então insere validation documents para expressar as validações high level levantadas
-    - Chama Validate
+Making the validation process to work
+=====================================
 
-The next step, after you use DataReader is to use the validation document to apply
+The next step, after you use DataReader is to use the validation document to apply some of the 
+statements you want against your data to determine whether it proves to be Right/True or Wrong/False. A Statement is
+always evaluated against a scope, i.e., a column or a set of columns. Below you can see the 'assertions.json', 
+an example of validation document:
+
+.. code-block:: json
+
+  {
+    "name": "example",
+    "descripiton": "just a statement test",
+    "items": {
+      "scope":"name",
+         "statements":[
+            {
+               "type":"row_count",
+               "distinct":true,
+               "min":1000
+            },
+            {
+               "type":"unique"
+            }
+         ]
+      },
+      {
+         "scope": "age",
+         "statements":[
+            {
+               "type":"not_null"
+            }
+         ]
+      },
+      {
+        "scope": "is_married",
+        "statements": [
+          {
+            "type": "contain",
+            "severity": 1,
+            "True"
+          }
+        ]
+      }
+    }
+  }
+
+Finale to test your dataset against the validation document, you must import the feature validate
+and apply over
+
+.. code-block:: python
+
+  >>> from deirokay import data_reader, validate
+  >>> data_reader('example.csv', options='options.json')
+  >>>     name   age  is_married
+  >>> 0    john    55        True
+  >>> 1    mariah  44        <NA>
+  >>> 2    carl    <NA>      False
+  >>> validation_result_document = validate(df,
+                                      against='assertions.json',
+                                      raise_exception=False)
+
+The resulting validation document will present the reports for each
+statement, as well as its final result: `pass` or `fail`. You may
+probably want to save your validation result document by passing a path
+to a folder (local or in S3) as `save_to` argument to `validate`. 
+By default, the validation result document will be saved in the same file
+format as the original validation document (you may specify another
+format -- either `json` or `yaml` -- in the `save_format` argument).
+
+Here is an example of validation result document:
+
+``` JSON
+{
+  "name": "validate_example",
+  "description": "An optional field to provide further textual information",
+  "items": [
+    {
+      "scope": [
+        "name"
+      ],
+      "statements": [
+        {
+          "type": "unique",
+          "at_least_%": 90,
+          "report": {
+            "detail": {
+              "unique_rows": 1500,
+              "unique_rows_%": 99
+            },
+            "result": "pass"
+          }
+        },
+        {
+          "type": "not_null",
+          "at_least_%": 95,
+          "report": {
+            "detail": {
+              "null_rows": 0,
+              "null_rows_%": 0,
+              "not_null_rows": 1500,
+              "not_null_rows_%": 100
+            },
+            "result": "pass"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
 
