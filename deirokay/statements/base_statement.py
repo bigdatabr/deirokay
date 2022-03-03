@@ -1,13 +1,15 @@
 """
 The base statement that all other statements inherit from.
 """
+from abc import ABC, abstractmethod
+
 from pandas import DataFrame
 
 
-class BaseStatement:
+class BaseStatement(ABC):
     """Base abstract statement class for all Deirokay statements.
 
-    Parameters
+    Attributes
     ----------
     options : dict
         Statement parameters provided by user.
@@ -27,7 +29,7 @@ class BaseStatement:
         self.options = options
 
     def _validate_options(self, options: dict):
-        """Make sure all providded statement parameters are expected
+        """Make sure all provided statement parameters are expected
         by statement classes"""
         cls = type(self)
         unexpected_parameters = [
@@ -53,6 +55,7 @@ class BaseStatement:
         }
         return final_report
 
+    @abstractmethod
     def report(self, df: DataFrame) -> dict:
         """Receive a DataFrame containing only columns on the scope of
         validation and returns a report of related metrics that can
@@ -70,8 +73,8 @@ class BaseStatement:
         dict
             A dictionary of useful statistics about the target columns.
         """
-        return {}
 
+    @abstractmethod
     def result(self, report: dict) -> bool:
         """Receive the report previously generated and declare this
         statement as either fulfilled (True) or failed (False).
@@ -88,7 +91,6 @@ class BaseStatement:
         bool
             Whether or not this statement passed.
         """
-        return True
 
     @staticmethod
     def profile(df: DataFrame) -> dict:
@@ -104,5 +106,12 @@ class BaseStatement:
         -------
         dict
             Statement dict.
+
+        Raises
+        ------
+        NotImplementedError
+            If this method is not implemented by the subclass or the
+            profile generation for this statement was intentionally
+            skipped.
         """
         raise NotImplementedError
