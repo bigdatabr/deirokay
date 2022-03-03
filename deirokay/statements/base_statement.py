@@ -1,3 +1,6 @@
+"""
+The base statement that all other statements inherit from.
+"""
 from pandas import DataFrame
 
 

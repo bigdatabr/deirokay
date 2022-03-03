@@ -1,3 +1,6 @@
+"""
+Statement to check the presence (or absence) of values in a scope.
+"""
 from numpy import inf
 from pandas import concat
 

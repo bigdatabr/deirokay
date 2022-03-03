@@ -1,3 +1,7 @@
+"""
+Statement to evaluate mathematical expressions againt a set of
+columns from a given scope.
+"""
 import re
 from decimal import Decimal
 

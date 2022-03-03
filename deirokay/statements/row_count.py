@@ -1,3 +1,6 @@
+"""
+Statement to check the number of rows in a scope.
+"""
 from .base_statement import BaseStatement
 
 
