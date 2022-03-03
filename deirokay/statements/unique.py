@@ -6,13 +6,14 @@ from .base_statement import BaseStatement
 
 class Unique(BaseStatement):
     """Checks for the unicity of rows in a scope.
-    
+
     The only available option is:
-    - `at_least_%`: The minimum percentage of unique rows.
+
+    * `at_least_%`: The minimum percentage of unique rows.
 
     Examples
     --------
-    - In a table containing information about cities of your country,
+    In a table containing information about cities of your country,
     you expect the pair of columns `state` and `city` to be unique
     across all rows. It means that, although some values of `state`
     can be repeated, as well as `city` names, the combination of
@@ -20,16 +21,16 @@ class Unique(BaseStatement):
     You can declare the following validation item to represent this
     rule:
 
-    ``` json
-    {
-        "scope": ["state", "city"],
-        "statements": [
-            {
-                "name": "unique"
-            }
-        ]
-    }
-    ```
+    .. code-block:: json
+
+        {
+            "scope": ["state", "city"],
+            "statements": [
+                {
+                    "name": "unique"
+                }
+            ]
+        }
     """
 
     name = 'unique'

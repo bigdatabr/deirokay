@@ -22,15 +22,17 @@ class ColumnExpression(BaseStatement):
     `string`, `integer`, `float` and `decimal`.
 
     The available parameters for this statement are:
-    - `expressions` (required): an expression (or a `list` of
-    expressions) to be evaluated.
-    The valid operators are: `==`, `!=`, `=~`, `>=`, `<=`, `>` and `<`.
-    - `at_least_%`: the minimum percentage of valid rows. Default: 100.
-    - `at_most_%`: the maximum percentage of valid rows. Default: 100.
-    - `rtol`: the relative tolerance for float evaluations (when
-    using the `=~` operator). Default: 1e-5.
-    - `atol`: the absolute tolerance for float evaluations (when
-    using the `=~` operator). Default: 1e-8.
+
+    * `expressions` (required): an expression (or a `list` of
+      expressions) to be evaluated.
+      The valid operators are: `==`, `!=`, `=~`, `>=`, `<=`, `>` and
+      `<`.
+    * `at_least_%`: the minimum percentage of valid rows. Default: 100.
+    * `at_most_%`: the maximum percentage of valid rows. Default: 100.
+    * `rtol`: the relative tolerance for float evaluations (when
+      using the `=~` operator). Default: 1e-5.
+    * `atol`: the absolute tolerance for float evaluations (when
+      using the `=~` operator). Default: 1e-8.
 
     Examples
     --------
@@ -38,36 +40,39 @@ class ColumnExpression(BaseStatement):
     values of the `a` column are equal to the values of the `b` column.
     Similarly, we test whether or not the values of the `b` column are
     greater than the values of the `c` column:
-    ``` json
-    {
-        "scope": ["a", "b", "c"],
-        "statements": [
-            {
-                "type": "column_expression",
-                "expressions": ["a == b", "a < c"],
-                "at_least_%": 50.0
-            }
-        ]
-    }
-    ```
+
+    .. code-block:: json
+
+        {
+            "scope": ["a", "b", "c"],
+            "statements": [
+                {
+                    "type": "column_expression",
+                    "expressions": ["a == b", "a < c"],
+                    "at_least_%": 50.0
+                }
+            ]
+        }
 
     For float comparisons, you may prefer using the `rtol` or `atol`
     parameters, in addition to the `=~` operator. For example, if you
     want to test whether or not the values of the `a` column are equal
     to the values of the `b` column with a relative tolerance of 1e-3,
     you can use the following JSON:
-    ``` json
-    {
-        "scope": ["a", "b"],
-        "statements": [
-            {
-                "type": "column_expression",
-                "expressions": "a =~ b",
-                "rtol": 1e-3
-            }
-        ]
-    }
-    ```
+
+    .. code-block:: json
+
+        {
+            "scope": ["a", "b"],
+            "statements": [
+                {
+                    "type": "column_expression",
+                    "expressions": "a =~ b",
+                    "rtol": 1e-3
+                }
+            ]
+        }
+
     """
 
     name = 'column_expression'

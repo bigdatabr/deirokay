@@ -155,7 +155,6 @@ def get_treater_instance(option: dict):
             'dtype': 'integer',
             'thousand_sep': ','
         }
-
     """
     option = option.copy()
     dtype = option.pop('dtype')
