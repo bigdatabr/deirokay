@@ -11,7 +11,7 @@ from os.path import splitext
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from types import ModuleType
-from typing import List, Optional
+from typing import IO, List, Optional
 
 import yaml
 
@@ -90,7 +90,8 @@ class FileSystem():
     def __init__(self, path: str):
         self.path = path
 
-    def ls(self, recursive=False, files_only=False) -> List['FileSystem']:
+    def ls(self, recursive: bool = False,
+           files_only: bool = False) -> List['FileSystem']:
         """List files in a prefix or folder.
 
         Parameters
@@ -120,7 +121,7 @@ class FileSystem():
             return self.read_yaml(*args, **kwargs)
         raise NotImplementedError(f'No parser for file type: {extension}')
 
-    def write_dict(self, *args, **kwargs):
+    def write_dict(self, *args, **kwargs) -> None:
         """Serialize and write a Python `dict` to either YAML or JSON
         file."""
         extension = splitext(self.path)[1].lower()
@@ -140,7 +141,7 @@ class FileSystem():
         """
         raise NotImplementedError
 
-    def write_yaml(self, doc: dict, **kwargs):
+    def write_yaml(self, doc: dict, **kwargs) -> None:
         """Serialize and write a Python `dict` to a YAML file.
 
         Parameters
@@ -161,7 +162,7 @@ class FileSystem():
         """
         raise NotImplementedError
 
-    def write_json(self, doc: dict, **kwargs):
+    def write_json(self, doc: dict, **kwargs) -> None:
         """Serialize and write a Python `dict` to a JSON file.
 
         Parameters
@@ -233,11 +234,11 @@ class FileSystem():
             return cls(os.path.join(self.path, rest))
         raise TypeError()
 
-    def __lt__(self, other: 'FileSystem'):
+    def __lt__(self, other: 'FileSystem') -> bool:
         assert isinstance(self, type(other))
         return self.path.__lt__(other.path)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.path
 
 
@@ -245,7 +246,8 @@ class LocalFileSystem(FileSystem):
     """FileSystem wrapper for local files and folders."""
 
     # docstr-coverage:inherited
-    def ls(self, recursive=False, files_only=False) -> List['LocalFileSystem']:
+    def ls(self, recursive: bool = False,
+           files_only: bool = False) -> List['LocalFileSystem']:
         if recursive is False:
             raise NotImplementedError
 
@@ -277,20 +279,20 @@ class LocalFileSystem(FileSystem):
             json.dump(doc, fp, **kwargs)
 
     # docstr-coverage:inherited
-    def import_as_python_module(self):
+    def import_as_python_module(self) -> ModuleType:
         module = _import_file_as_python_module(self.path)
         return module
 
     # docstr-coverage:inherited
-    def isdir(self):
+    def isdir(self) -> bool:
         return os.path.isdir(self.path)
 
     # docstr-coverage:inherited
-    def mkdir(self, *args, **kwargs):
+    def mkdir(self, *args, **kwargs) -> None:
         return Path(self.path).mkdir(*args, **kwargs)
 
     # docstr-coverage:inherited
-    def open(self, *args, **kwargs):
+    def open(self, *args, **kwargs) -> IO:
         return open(self.path, *args, **kwargs)
 
 
@@ -300,7 +302,7 @@ class S3FileSystem(FileSystem):
     def __init__(self, path: Optional[str] = None,
                  bucket: Optional[str] = None,
                  prefix_or_key: Optional[str] = None,
-                 client=None):
+                 client: Optional['boto3.client'] = None):
 
         if boto3 is None:
             raise ImportError('S3-backend requires `boto3` module to be'
@@ -323,7 +325,8 @@ class S3FileSystem(FileSystem):
         self.prefix_or_key = prefix_or_key
 
     # docstr-coverage:inherited
-    def ls(self, recursive=False, files_only=False) -> List['S3FileSystem']:
+    def ls(self, recursive: bool = False,
+           files_only: bool = False) -> List['S3FileSystem']:
         if recursive is False:
             raise NotImplementedError
 
@@ -354,7 +357,7 @@ class S3FileSystem(FileSystem):
         return json.load(self.open())
 
     # docstr-coverage:inherited
-    def write_json(self, doc: dict, **kwargs):
+    def write_json(self, doc: dict, **kwargs) -> None:
         return self.client.put_object(
             Body=json.dumps(doc, **kwargs),
             Bucket=self.bucket,
@@ -362,7 +365,7 @@ class S3FileSystem(FileSystem):
         )
 
     # docstr-coverage:inherited
-    def import_as_python_module(self):
+    def import_as_python_module(self) -> ModuleType:
         extension = os.path.splitext(self.path)[1]
         with NamedTemporaryFile(suffix=extension) as tmp_fp:
             self.client.download_file(self.bucket,
@@ -372,16 +375,16 @@ class S3FileSystem(FileSystem):
             return module
 
     # docstr-coverage:inherited
-    def open(self):
+    def open(self) -> IO:
         o = self.client.get_object(Bucket=self.bucket, Key=self.prefix_or_key)
         return o['Body']
 
     # docstr-coverage:inherited
-    def read(self, *args, **kwargs):
+    def read(self, *args, **kwargs) -> str:
         return super().read(*args, **kwargs).decode('utf-8')
 
 
-def fs_factory(path: str):
+def fs_factory(path: str) -> FileSystem:
     """Factory for FileSystem objects.
 
     Parameters

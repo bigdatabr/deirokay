@@ -4,7 +4,7 @@ Documents.
 """
 
 import warnings
-from typing import Optional
+from typing import List, Optional
 
 from pandas import DataFrame
 
@@ -17,7 +17,7 @@ profiling_statement_classes = [
 ]
 
 
-def _generate_items(df):
+def _generate_items(df: DataFrame) -> List[dict]:
     items = []
 
     df_columns = list(df.columns)

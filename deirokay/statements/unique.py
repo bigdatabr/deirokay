@@ -1,6 +1,8 @@
 """
 Statement to check the number unique rows in a scope.
 """
+from pandas import DataFrame
+
 from .base_statement import BaseStatement
 
 
@@ -36,13 +38,13 @@ class Unique(BaseStatement):
     name = 'unique'
     expected_parameters = ['at_least_%']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.at_least_perc = self.options.get('at_least_%', 100.0)
 
     # docstr-coverage:inherited
-    def report(self, df):
+    def report(self, df: DataFrame) -> dict:
         unique = ~df.duplicated(keep=False)
 
         report = {
@@ -52,12 +54,12 @@ class Unique(BaseStatement):
         return report
 
     # docstr-coverage:inherited
-    def result(self, report):
+    def result(self, report: dict) -> bool:
         return report.get('unique_rows_%') >= self.at_least_perc
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df):
+    def profile(df: DataFrame) -> dict:
         unique = ~df.duplicated(keep=False)
 
         statement = {

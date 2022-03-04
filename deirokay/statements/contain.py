@@ -2,7 +2,7 @@
 Statement to check the presence (or absence) of values in a scope.
 """
 from numpy import inf
-from pandas import concat
+from pandas import DataFrame, concat
 
 from ..parser import get_dtype_treater, get_treater_instance
 from .base_statement import BaseStatement
@@ -195,7 +195,7 @@ class Contain(BaseStatement):
     ]
     table_only = False
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.rule = self.options['rule']
@@ -212,7 +212,7 @@ class Contain(BaseStatement):
         self._set_default_minmax_occurrences()
         self._assert_parameters()
 
-    def _set_default_minmax_occurrences(self):
+    def _set_default_minmax_occurrences(self) -> None:
         min_occurrences_rule_default = {
             'all': 1,
             'only': 0,
@@ -229,13 +229,13 @@ class Contain(BaseStatement):
         if self.max_occurrences is None:
             self.max_occurrences = max_occurrences_rule_default[self.rule]
 
-    def _assert_parameters(self):
+    def _assert_parameters(self) -> None:
         assert self.rule in ('all', 'only', 'all_and_only')
         assert self.min_occurrences >= 0
         assert self.max_occurrences >= 0
 
     # docstr-coverage:inherited
-    def report(self, df):
+    def report(self, df: DataFrame) -> dict:
         # Concat all columns
         count_isin = (
             concat(df[col] for col in df.columns).value_counts()
@@ -264,8 +264,8 @@ class Contain(BaseStatement):
         }
 
     # docstr-coverage:inherited
-    def result(self, report):
-        self._set_min_max_boundaries(self.value_count)
+    def result(self, report: dict) -> bool:
+        self._set_min_max_boundaries()
         self._set_values_scope()
 
         if not self._check_interval(self.value_count):
@@ -274,7 +274,7 @@ class Contain(BaseStatement):
             return False
         return True
 
-    def _set_min_max_boundaries(self, value_count):
+    def _set_min_max_boundaries(self) -> None:
         # Global boundaries
         min_max_boundaries = {}
         for value in self.values:
@@ -321,7 +321,7 @@ class Contain(BaseStatement):
         ]
         self.values_scope_filter = values_col
 
-    def _check_interval(self, value_count):
+    def _check_interval(self, value_count: dict) -> bool:
         """
         Check if each value is inside an interval of min and max
         number of occurrencies. These values are set globally in
@@ -346,7 +346,7 @@ class Contain(BaseStatement):
                     return False
         return True
 
-    def _check_rule(self, value_count):
+    def _check_rule(self, value_count: dict) -> bool:
         """
         Checks if given columns attend the given requirements
         of presence or absence of values, according to a criteria
@@ -381,7 +381,7 @@ class Contain(BaseStatement):
             is_check_only = self._check_only(value_count)
             return is_check_all and is_check_only
 
-    def _check_all(self, value_count):
+    def _check_all(self, value_count: dict) -> bool:
         """
         Checks if values in df contains all the expected values
         """
@@ -391,7 +391,7 @@ class Contain(BaseStatement):
             return False
         return True
 
-    def _check_only(self, value_count):
+    def _check_only(self, value_count: dict) -> bool:
         """
         Checks if all values in df are inside the expected values
         """
@@ -403,7 +403,7 @@ class Contain(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df):
+    def profile(df: DataFrame) -> dict:
         if any(dtype != df.dtypes for dtype in df.dtypes):
             raise NotImplementedError(
                 "Refusing to mix up different types of columns"

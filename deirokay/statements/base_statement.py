@@ -24,11 +24,11 @@ class BaseStatement(ABC):
     """bool: Whether or not this statement in applicable only to the
     entire table, instead of scoped columns."""
 
-    def __init__(self, options: dict):
+    def __init__(self, options: dict) -> None:
         self._validate_options(options)
         self.options = options
 
-    def _validate_options(self, options: dict):
+    def _validate_options(self, options: dict) -> None:
         """Make sure all provided statement parameters are expected
         by statement classes"""
         cls = type(self)
@@ -44,7 +44,7 @@ class BaseStatement(ABC):
                 f'The valid parameters are: {cls.expected_parameters}'
             )
 
-    def __call__(self, df: DataFrame):
+    def __call__(self, df: DataFrame) -> dict:
         """Run statement instance."""
         internal_report = self.report(df)
         result = self.result(internal_report)

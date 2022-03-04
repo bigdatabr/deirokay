@@ -23,32 +23,37 @@ class DeirokayOperator(BaseOperator):
 
     Parameters
     ----------
-    data / path_to_file (deprecated) : str
+    data : Optional[str]
         File to be parsed into Deirokay.
+    path_to_file : Optional[str]
+        (Deprecated) File to be parsed into Deirokay.
+        Use `data` instead.
     options : Union[dict, str]
         A dict or a local/S3 path to a YAML/JSON options file.
     against : Union[dict, str]
         A dict or a local/S3 path to a YAML/JSON validation
         document file.
-    template : dict, optional
+    template : Optional[dict]
         Map of templates to be passed to Deirokay validation.
-    save_to : str, optional
+    save_to : Optional[str], optional
         Where validation logs will be saved to.
         If None, no log is saved. By default None.
-    soft_fail_level : int, optional
+    soft_fail_level : Union[SeverityLevel, int]
         Minimum Deirokay severity level to trigger a
         "soft failure".
         Any statement with lower severity level will only raise a
         warning. Set to `None` to never trigger.
         By default SeverityLevel.MINIMAL (1).
-    hard_fail_level : int, optional
+    hard_fail_level : Union[SeverityLevel, int]
         Minimum Deirokay severity level to trigger a task failure.
         Set to `None` to never trigger.
         By default SeverityLevel.CRITICAL (5).
-    reader_kwargs : dict, optional
+    reader_kwargs : Optional[dict]
         Additional keyword arguments for `Deirokay.data_reader` method.
-    validator_kwargs : dict, optional
+    validator_kwargs : Optional[dict]
         Additional keyword arguments for `Deirokay.validate` method.
+    **kwargs : Optional[dict]
+        Additional keyword arguments for `BaseOperator`.
     """
 
     template_fields = [
@@ -65,14 +70,15 @@ class DeirokayOperator(BaseOperator):
 
     def __init__(
         self,
-        data: str = None,
-        path_to_file: str = None,
-        options: Union[dict, str] = None,
-        against: Union[dict, str] = None,
+        *,
+        data: Optional[str] = None,
+        path_to_file: Optional[str] = None,  # Deprecated
+        options: Union[dict, str],
+        against: Union[dict, str],
         template: Optional[dict] = None,
         save_to: Optional[str] = None,
-        soft_fail_level: int = SeverityLevel.MINIMAL,
-        hard_fail_level: int = SeverityLevel.CRITICAL,
+        soft_fail_level: Union[SeverityLevel, int] = SeverityLevel.MINIMAL,
+        hard_fail_level: Union[SeverityLevel, int] = SeverityLevel.CRITICAL,
         reader_kwargs: Optional[dict] = None,
         validator_kwargs: Optional[dict] = None,
         **kwargs

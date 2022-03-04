@@ -1,6 +1,8 @@
 """
 Statement to check the number of not-null rows in a scope.
 """
+from pandas import DataFrame
+
 from .base_statement import BaseStatement
 
 
@@ -90,7 +92,7 @@ class NotNull(BaseStatement):
     name = 'not_null'
     expected_parameters = ['at_least_%', 'at_most_%', 'multicolumn_logic']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.at_least_perc = self.options.get('at_least_%', 100.0)
@@ -100,7 +102,7 @@ class NotNull(BaseStatement):
         assert self.multicolumn_logic in ('any', 'all')
 
     # docstr-coverage:inherited
-    def report(self, df):
+    def report(self, df: DataFrame) -> dict:
         if self.multicolumn_logic == 'all':
             #  REMINDER: ~all == any
             not_nulls = ~df.isnull().any(axis=1)
@@ -116,7 +118,7 @@ class NotNull(BaseStatement):
         return report
 
     # docstr-coverage:inherited
-    def result(self, report):
+    def result(self, report: dict) -> bool:
         if not report.get('not_null_rows_%') >= self.at_least_perc:
             return False
         if not report.get('not_null_rows_%') <= self.at_most_perc:
@@ -125,7 +127,7 @@ class NotNull(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df):
+    def profile(df: DataFrame) -> dict:
         not_nulls = ~df.isnull().all(axis=1)
 
         statement = {

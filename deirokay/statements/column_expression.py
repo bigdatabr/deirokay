@@ -6,7 +6,8 @@ import re
 from decimal import Decimal
 
 import numpy
-from pandas import Float32Dtype, Float64Dtype, Int32Dtype, Int64Dtype, Series
+from pandas import (DataFrame, Float32Dtype, Float64Dtype, Int32Dtype,
+                    Int64Dtype, Series)
 
 from .base_statement import BaseStatement
 
@@ -81,7 +82,7 @@ class ColumnExpression(BaseStatement):
     ]
     table_only = False
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.expressions = self.options['expressions']
@@ -99,7 +100,7 @@ class ColumnExpression(BaseStatement):
                 raise SyntaxError('Expression comparison operand not found')
 
     # docstr-coverage:inherited
-    def report(self, df):
+    def report(self, df: DataFrame) -> dict:
         report = {}
         df = df.copy()
         df = self._fix_df_dtypes(df)
@@ -117,7 +118,7 @@ class ColumnExpression(BaseStatement):
             }
         return report
 
-    def _fix_df_dtypes(self, df):
+    def _fix_df_dtypes(self, df: DataFrame) -> DataFrame:
         """
         Fixes DataFrame dtypes. If Int64Dtype() or Float64Dtype(),
         converts to traditional int64 and float64 dtypes. If object
@@ -147,14 +148,14 @@ class ColumnExpression(BaseStatement):
                     df[[col]] = df[[col]].astype(float)
         return df
 
-    def _eval(self, df, expr):
+    def _eval(self, df: DataFrame, expr: str) -> Series:
         if '=~' not in expr:
             row_count = df.eval(expr)
         else:
             row_count = self._isclose_eval(df, expr)
         return row_count
 
-    def _isclose_eval(self, df, expr):
+    def _isclose_eval(self, df: DataFrame, expr: str) -> Series:
         """
         Accomplishes the paper of `pandas.eval` when we have the
         `=~` comparison to evaluate. That implementation is done by
@@ -191,7 +192,7 @@ class ColumnExpression(BaseStatement):
         return eval_bool
 
     # docstr-coverage:inherited
-    def result(self, report):
+    def result(self, report: dict) -> bool:
         for expr in report.keys():
             if not report[expr].get('valid_rows_%') >= self.at_least_perc:
                 return False

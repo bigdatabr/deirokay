@@ -5,15 +5,15 @@ Functions to parse files into pandas DataFrames.
 import datetime
 import decimal
 from os.path import splitext
-from typing import Union
+from typing import Dict, List, Union
 
 import pandas
-from pandas import (DataFrame, Timestamp, read_csv, read_excel, read_parquet,
-                    read_sql)
-
 from deirokay.enums import DTypes
 from deirokay.fs import fs_factory
+from deirokay.parser.treaters import Validator
 from deirokay.utils import _check_columns_in_df_columns
+from pandas import (DataFrame, Timestamp, read_csv, read_excel, read_parquet,
+                    read_sql)
 
 from . import treaters
 
@@ -52,7 +52,7 @@ def data_reader(data: Union[str, DataFrame],
     return df
 
 
-def pandas_read(data: str, columns: list, sql: bool = False,
+def pandas_read(data: str, columns: List[str], sql: bool = False,
                 **kwargs) -> DataFrame:
     """Infer the file type by its extension and call the proper
     `pandas` method to parse it.
@@ -61,7 +61,7 @@ def pandas_read(data: str, columns: list, sql: bool = False,
     ----------
     data : str
         Path to file or SQL query.
-    columns : list
+    columns : List[str]
         List of columns to be parsed.
     sql : bool, optional
         Whether or not `data` should be interpreted as a path to a file
@@ -118,9 +118,9 @@ def pandas_read(data: str, columns: list, sql: bool = False,
         return read_(data, **kwargs)[columns]
 
 
-def get_dtype_treater(dtype: Union[DTypes, str]) -> treaters.Validator:
+def get_dtype_treater(dtype: type) -> treaters.Validator:
     """Map a dtype to its Treater class."""
-    treat_dtypes = {
+    treat_dtypes: Dict[type, treaters.Validator] = {
         DTypes.INT64: treaters.IntegerTreater,
         int: treaters.IntegerTreater,
         DTypes.FLOAT64: treaters.FloatTreater,
@@ -140,10 +140,15 @@ def get_dtype_treater(dtype: Union[DTypes, str]) -> treaters.Validator:
     }
     if isinstance(dtype, str):
         dtype = DTypes(dtype)
-    return treat_dtypes.get(dtype)
+
+    try:
+        return treat_dtypes[dtype]
+    except KeyError:
+        raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
+                                  " implemented yet")
 
 
-def get_treater_instance(option: dict):
+def get_treater_instance(option: dict) -> Validator:
     """Create a treater instance from a Deirokay-style option.
 
     Example
@@ -160,13 +165,10 @@ def get_treater_instance(option: dict):
     dtype = option.pop('dtype')
 
     cls = get_dtype_treater(dtype)
-    if not cls:
-        raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
-                                  " implemented yet")
     return cls(**option)
 
 
-def data_treater(df: DataFrame, options: dict):
+def data_treater(df: DataFrame, options: dict) -> None:
     """Receive options dict and call the proper treater class for each
     Deirokay data type.
 

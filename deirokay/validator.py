@@ -220,7 +220,7 @@ def validate(df: pandas.DataFrame, *,
 
 
 def raise_validation(validation_result_document: dict,
-                     exception_level: SeverityLevel):
+                     exception_level: SeverityLevel) -> None:
     """Check for a validation result `dict` and raise a
     `ValidationError` exception whenever a statement whose severity
     level is greater or equal to `exception_level` fails.
@@ -239,7 +239,7 @@ def raise_validation(validation_result_document: dict,
         greater or equal to `exception_level`.
     """
     highest_level = None
-    for item in validation_result_document.get('items'):
+    for item in validation_result_document['items']:
         scope = item['scope']
         for stmt in item.get('statements'):
             severity = stmt.get('severity', SeverityLevel.CRITICAL)
@@ -263,7 +263,7 @@ def raise_validation(validation_result_document: dict,
 def _save_validation_document(document: dict,
                               save_to: FileSystem,
                               save_format: Optional[str] = None,
-                              current_date: Optional[datetime] = None):
+                              current_date: Optional[datetime] = None) -> None:
     if current_date is None:
         warnings.warn(
             'Document is being saved using the current date returned by the'

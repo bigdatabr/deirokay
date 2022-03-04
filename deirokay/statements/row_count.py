@@ -1,6 +1,8 @@
 """
 Statement to check the number of rows in a scope.
 """
+from pandas import DataFrame
+
 from .base_statement import BaseStatement
 
 
@@ -38,7 +40,7 @@ class RowCount(BaseStatement):
       rule:
 
     .. code-block:: json
-    
+
         {
             "scope": ["foo", "bar"],
             "statements": [
@@ -110,7 +112,7 @@ class RowCount(BaseStatement):
     name = 'row_count'
     expected_parameters = ['min', 'max', 'distinct']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.min = self.options.get('min', None)
@@ -118,7 +120,7 @@ class RowCount(BaseStatement):
         self.distinct = self.options.get('distinct', False)
 
     # docstr-coverage:inherited
-    def report(self, df):
+    def report(self, df: DataFrame) -> dict:
         row_count = len(df)
         distinct_count = len(df.drop_duplicates())
 
@@ -129,7 +131,7 @@ class RowCount(BaseStatement):
         return report
 
     # docstr-coverage:inherited
-    def result(self, report):
+    def result(self, report: dict) -> bool:
         if self.distinct:
             count = report['distinct_rows']
         else:
@@ -145,7 +147,7 @@ class RowCount(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df):
+    def profile(df: DataFrame) -> dict:
         if len(df.columns) > 1:
             count = len(df)
             return {
