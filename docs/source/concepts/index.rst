@@ -6,126 +6,52 @@ Here you can find the description about key concepts that you will see
 when you are using Deirokay.
 
 
-DTypes and Threaders
+DTypes and Treaters
 ====================
 
-For Deirokay, like in any other application, data types are important 
-concept. So when you are using DataReader or Data validation, there is 
-some data types that you can use to work, and here it is with there 
-alias: 
+For Deirokay, as in any other application, data types are an important 
+concept. So, when you are parsing your data with Deirokay, there are 
+a few datatypes that you might want to make use of. They are: 
 
-.. list-table:: 
-   :header-rows: 1
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| DTypes     | String-like alias | Supported Arguments  | Default             | Argument Description                   |
++============+===================+======================+=====================+========================================+
+| All DTypes |                   | nullable             | True                | Values can be null                     |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| All DTypes |                   | unique               | False               | Values should be unique                |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| All DTypes |                   | rename               | None                | Rename column                          |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| INTEGER    | 'integer'         | thousand_sep         | None                | Thousand separator (e.g., "1,988")     |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| FLOAT      | 'float'           | thousand_sep         | None                | Thousand separator (e.g., "1,988")     |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| FLOAT      | 'float'           | decimal_sep          | '.'                 | Decimal separator (e.g., "3.14")       |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| DECIMAL    | 'decimal'         | decimal_sep          | '.'                 | Decimal separator (e.g., "3.14")       |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| DECIMAL    | 'decimal'         | thousand_sep         | None                | Thousand separator (e.g., "1,988")     |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| DECIMAL    | 'decimal'         | decimal_places       | None                | Decimal places (e.g., 2 for "1.25")    |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| BOOLEAN    | 'boolean'         | truthies             | ['true','True']     | Values taken as True                   |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| BOOLEAN    | 'boolean'         | falsies              | ['false', 'False']  | Values taken as False                  |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| BOOLEAN    | 'boolean'         | ignore_case          | False               | Ignore case when evaluating True/False |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| BOOLEAN    | 'boolean'         | default_value        | None                | Value to use if not truthy nor falsy   |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| DATETIME   | 'datetime'        | format               | '%Y-%m-%d %H:%M:%S' | Date Time format                       |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| TIME       | 'time'            | format               | '%H:%M:%S'          | Time format                            |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| DATE       | 'date'            | format               | '%Y-%m-%d'          | Date format                            |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
+| STRING     | 'string'          | treat_null_as        | None                | Value to replace when null (e.g., "")  |
++------------+-------------------+----------------------+---------------------+----------------------------------------+
 
-   * - DTypes
-     - String-like alias
-     - Supported Arguments
-     - Default
-     - Argument Description
-
-   * - All DTypes
-     -
-     - nullable
-     - True
-     - Values can be null
-
-   * - All DTypes
-     -
-     - unique
-     - False
-     - Values should be unique
-
-   * - All DTypes
-     -
-     - rename
-     - None
-     - Rename column
-
-   * - INTEGER
-     - 'integer'
-     - thousand_sep
-     - None
-     - Thousand separator (e.g., "1,988")
-
-   * - FLOAT
-     - 'float'
-     - thousand_sep
-     - None
-     - Thousand separator (e.g., "1,988")
-
-   * - FLOAT
-     - 'float'
-     - decimal_sep
-     - '.'
-     - Decimal separator (e.g., "3.14")
-
-   * - DECIMAL
-     - 'decimal'
-     - decimal_sep
-     - '.'
-     - Decimal separator (e.g., "3.14")
-
-   * - DECIMAL
-     - 'decimal'
-     - thousand_sep
-     - None
-     - Thousand separator (e.g., "1,988")
-
-   * - DECIMAL
-     - 'decimal'
-     - decimal_places
-     - None
-     - Decimal places (e.g., 2 for "1.25")
-
-   * - BOOLEAN
-     - 'boolean'
-     - truthies
-     - ['true', 'True']
-     - Values taken as True
-
-   * - BOOLEAN
-     - 'boolean'
-     - falsies
-     - ['false', 'False']
-     - Values taken as False
-
-   * - BOOLEAN
-     - 'boolean'
-     - ignore_case
-     - False
-     - Ignore case when evaluating True/False
-
-   * - BOOLEAN
-     - 'boolean'
-     - default_value
-     - None
-     - Value to use if not truthy nor falsy
-
-   * - DATETIME
-     - 'datetime'
-     - format
-     - '%Y-%m-%d %H:%M:%S'
-     - Date Time format
-
-   * - TIME
-     - 'time'
-     - format
-     - '%H:%M:%S'
-     - Time format
-
-   * - DATE
-     - 'date'
-     - format
-     - '%Y-%m-%d'
-     - Date format
-
-   * - STRING
-     - 'string'
-     - treat_null_as
-     - None
-     - Value to replace when null (e.g., "")
-
-Other concept to keep an eye on is Threaders. When you use the
+Another concept to keep an eye on is the Treaters. When you use the
 DataReader and Data validation, Deirokay use some of class to deal with
 your needs when it is about threat data, like NumericTreater, 
 BooleanTreater, FloatTreater, DecimalTreater, IntegerTreater, 
