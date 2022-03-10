@@ -6,8 +6,8 @@ Here you can find the description about key concepts that you will see
 when you are using Deirokay.
 
 
-DTypes and Treaters
-====================
+Deirokay DTypes
+===============
 
 For Deirokay, as in any other application, data types are an important 
 concept. So, when you are parsing your data with Deirokay, there are 
@@ -51,25 +51,13 @@ a few datatypes that you might want to make use of. They are:
 | STRING     | 'string'          | treat_null_as        | None                | Value to replace when null (e.g., "")  |
 +------------+-------------------+----------------------+---------------------+----------------------------------------+
 
-Another concept to keep an eye on is the Treaters. When you use the
-DataReader and Data validation, Deirokay use some of class to deal with
-your needs when it is about threat data, like NumericTreater, 
-BooleanTreater, FloatTreater, DecimalTreater, IntegerTreater, 
-DateTreater , TimeTreater, StringTreater. In the future, in case you 
-need new threaders you just inherits from the bases classes and build
-your own theater.
 
+Deirokay Options Document
+=========================
 
-Options Document
-================
-
-The process to treated an dataframe, deirokay uses the Data Reader 
-module that works with the options documents. This document holds a 
-parameters like 'sep'( separator), 'encryption' and 'columns'. This 
-last one specifies your parsing options that will be applied in choice 
-features. You can use the DTypes to work in your described column, 
-thousand separator, decimal places and format data. At the end of this
-process your features will be as you would excepts to. 
+In order to be able to parse a file, the `data_reader` method should receive specifications about how to interpret each column of your data, as well as source-wise parameters, such as file encoding or column separator (in case of `.csv` files). 
+Those specifications, called Deirokay Options document, can be expressed in form of a JSON/YAML file or a Python object.
+To specify each of your columns, you must declare which Deirokay DType should be used, including additional parameters regarding the datatype you chose.
 
 .. code-block:: json
 
@@ -77,22 +65,22 @@ process your features will be as you would excepts to.
         "sep": "|",
         "encryption": "iso-8859-1",
         "columns": [
-            “customer_name”: {
-                “dtype”: “string”
+            "customer_name": {
+                “dtype": "string"
             },
-            “age”: {
-                “dtype”: “integer”,
-                “thousand_sep”: “.”
+            "age": {
+                "dtype": “integer”,
+                "thousand_sep": "."
             },
-            “id”: {
-                “dtype”: “integer”,
-                “thousand_sep”: “.”
+            "id": {
+                "dtype": “integer”,
+                “"thousand_sep": "."
             },
             “revenue”: {
-                “dtype”: “decimal”,
-                “decimal_places”: 2,
-                “decimal_sep”: “,”,
-                “thousand_sep”: “.”
+                "dtype": "decimal",
+                "decimal_places”: 2,
+                "decimal_sep”: “,”,
+                "thousand_sep": “.”
             }
         ]
     }
