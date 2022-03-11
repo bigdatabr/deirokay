@@ -1,12 +1,11 @@
-========
-Concepts
-========
+===========
+Definitions
+===========
 
 Here you can find the description about key concepts that you will see when using Deirokay.
 
-
-Deirokay DTypes
-===============
+DTypes
+======
 
 For Deirokay, as in any other application, data types are an important 
 concept. So, when you are parsing your data with Deirokay, there are 
@@ -51,8 +50,8 @@ a few datatypes that you might want to make use of. They are:
 +------------+-------------------+----------------------+---------------------+----------------------------------------+
 
 
-Deirokay Options Document
-=========================
+Options Document
+================
 
 In order to be able to parse a file, the `deirokay.data_reader` method should receive specifications about how to interpret each column of your data, as well as source-wise parameters, such as file encoding or column separator (in case of `.csv` files). 
 Those specifications, called *Deirokay Options document*, can be expressed in form of a JSON/YAML file or a Python object.
@@ -87,8 +86,8 @@ In current version of Deirokay, all other parameters besides `columns` are trans
         }
     }
 
-Deirokay Validation Document
-============================
+Validation Document
+===================
 
 The *Validation Document* gathers all constraints, expectations and business rules that you want to test and validate against your data.
 
@@ -142,11 +141,7 @@ The `statements` are the actual validation rules, which will be applied to the g
 The `scope` defines a column or a list of columns to be validated.
 
 To get dive into *Deirokay Statements*, you can find more at 
-:ref:`Statements`.
-Last but not least, the validation statements are need 
-to you specifies what parameters you need, like the 'type', 'distinct', 
-'min', 'severity', 'at_least', 'max', when you work through the 
-columns of your dataset.
+:doc:`Statements <statements>`.
 
 
 Validation Result
@@ -228,6 +223,3 @@ It is up to you to modify it and enrich it with your own rules.
 
 By default, this function receives an DataFrame previously parsed using `data_reader`, a  name for the validation document and optionally a path where to save the document to. 
 The `profile` method also returns the same document as a Python *dict* object.
-
-
-.. include:: contents.rst

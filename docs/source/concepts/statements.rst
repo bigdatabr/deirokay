@@ -1,5 +1,3 @@
-.. _Statements:
-
 ==========
 Statements
 ==========

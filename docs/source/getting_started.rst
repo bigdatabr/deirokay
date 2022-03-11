@@ -107,13 +107,13 @@ Below you see an option document:
 .. code-block:: json
 
     {
-        “sep”: “|” ,
-        “encryption”: “iso-8859-1”,
-        “columns”: [
+        "sep": "|" ,
+        "encryption": "iso-8859-1",
+        "columns": {
             "name": {
-            "dtype": "string",
-            "nullable": false,
-            "unique": true
+              "dtype": "string",
+              "nullable": false,
+              "unique": true
             },
             "age": {
                 "dtype": "integer",
@@ -125,7 +125,7 @@ Below you see an option document:
                 "nullable": true,
                 "unique": false
             }
-        ]
+        }
     }
 
 To be able to use this option document you just need to import from Deirokay the DataReader, and will get a
@@ -135,20 +135,20 @@ pandas dataframe that doesn't have the initial problems:
 
   >>> from deirokay import data_reader
   >>> data_reader('example.csv', options='options.json')
-  >>>     name   age  is_married
-  >>>0    john    55        True
-  >>>1    mariah  44        <NA>
-  >>>2    carl    <NA>      False
-  >>>pandas.read_csv('example.csv').dtypes
-  >>>name           object
-  >>>age           float64
-  >>>is_married     object
-  >>>dtype: object
+      name   age  is_married
+  0    john    55        True
+  1    mariah  44        <NA>
+  2    carl    <NA>      False
+  >>> pandas.read_csv('example.csv').dtypes
+  name           object
+  age           float64
+  is_married     object
+  dtype: object
 
 It is good to point out that the `options` argument also accepts `dict` objects directly.
 When parsing your file, you may also provide a set of different arguments, which varies in function
 of the data types. When passing Deirokay file options as `dict`, you may optionally import the 
-available data types from the `deirokay.enums.DTypes` enumeration class.
+available data types from the `deirokay.enums.DTypes` enumeration class to prevent typos.
 
 Making the validation process to work
 =====================================
@@ -204,10 +204,10 @@ and apply over
 
   >>> from deirokay import data_reader, validate
   >>> data_reader('example.csv', options='options.json')
-  >>>     name   age  is_married
-  >>> 0    john    55        True
-  >>> 1    mariah  44        <NA>
-  >>> 2    carl    <NA>      False
+          name   age  is_married
+      0    john    55        True
+      1    mariah  44        <NA>
+      2    carl    <NA>      False
   >>> validation_result_document = validate(df,
                                       against='assertions.json',
                                       raise_exception=False)
@@ -222,43 +222,42 @@ format -- either `json` or `yaml` -- in the `save_format` argument).
 
 Here is an example of validation result document:
 
-``` JSON
-{
-  "name": "validate_example",
-  "description": "An optional field to provide further textual information",
-  "items": [
-    {
-      "scope": [
-        "name"
-      ],
-      "statements": [
-        {
-          "type": "unique",
-          "at_least_%": 90,
-          "report": {
-            "detail": {
-              "unique_rows": 1500,
-              "unique_rows_%": 99
-            },
-            "result": "pass"
-          }
-        },
-        {
-          "type": "not_null",
-          "at_least_%": 95,
-          "report": {
-            "detail": {
-              "null_rows": 0,
-              "null_rows_%": 0,
-              "not_null_rows": 1500,
-              "not_null_rows_%": 100
-            },
-            "result": "pass"
-          }
-        }
-      ]
-    }
-  ]
-}
-```
+.. code-block:: python
 
+  {
+    "name": "validate_example",
+    "description": "An optional field to provide further textual information",
+    "items": [
+      {
+        "scope": [
+          "name"
+        ],
+        "statements": [
+          {
+            "type": "unique",
+            "at_least_%": 90,
+            "report": {
+              "detail": {
+                "unique_rows": 1500,
+                "unique_rows_%": 99
+              },
+              "result": "pass"
+            }
+          },
+          {
+            "type": "not_null",
+            "at_least_%": 95,
+            "report": {
+              "detail": {
+                "null_rows": 0,
+                "null_rows_%": 0,
+                "not_null_rows": 1500,
+                "not_null_rows_%": 100
+              },
+              "result": "pass"
+            }
+          }
+        ]
+      }
+    ]
+  }

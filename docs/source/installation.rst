@@ -1,4 +1,3 @@
-============
 Installation
 ============
 
@@ -7,7 +6,7 @@ show all possibilities that you have to install Deirokay. But first you
 will need to get python and pip ready to go on your machine, in case that
 you don't have yet.
 
-.. code-block:: console
+.. code-block:: bash
 
     sudo apt install python3 python3-pip
 
@@ -18,22 +17,22 @@ This page guides you through the installation process. And you can get
 
 Install Deirokay directly from master branch typing in your
 command line:
-pip install git+http://gitlab.bigdata/data-engineers/deirokay
+
+.. code-block:: bash
+
+    pip install git+http://gitlab.bigdata/data-engineers/deirokay
 
 To include optional dependencies for AWS S3, install:
-pip install git+http://gitlab.bigdata/data-engineers/deirokay[s3]
 
-If you want to be in sync with the latest (and possibly unstable) 
-release: 
-pip install git+http://gitlab.bigdata/data-engineers/deirokay@dev
+.. code-block:: bash
 
+    pip install git+http://gitlab.bigdata/data-engineers/deirokay[s3]
 
-
-Installation for development
-============================
 
 If you wish to contribute for Deirokay development, maybe
 you will want to install a more complete set of packages for
-testing and to help you in your development.
-pip install git+http://gitlab.bigdata/data-engineers/deirokay[dev]
+testing to help you in your development.
 
+.. code-block:: bash
+
+    pip install git+http://gitlab.bigdata/data-engineers/deirokay[dev]
