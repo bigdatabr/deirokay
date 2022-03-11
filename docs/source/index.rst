@@ -1,6 +1,6 @@
-========
-Deirokay
-========
+===============
+Deirokay - Home
+===============
 
 Deirokay (*dejɾo'kaj*) is a tool for data parsing and data validation.
 Deirokay separates document parsing from validation 
@@ -25,7 +25,7 @@ Deirokay comes with several features to help you in your daily
 data quality problems. The main tools that facilitate your job
 are *Data Reader*, *Data Validation* and *Data Profiling*.
 
-The :ref:`deirokay.data_reader<deirokay.parser.parser.data_reader>` method is responsible for parsing and transforming your source data into a trustable DataFrame before it gets validated. You may get a DataFrame from a file, a database or an existing Pandas DataFrame that has not been treated yet, all you need to do is to provide a Deirokay Options Document specifying the parsing options.
+The :ref:`deirokay.data_reader<deirokay.parser.parser>` method is responsible for parsing and transforming your source data into a trustable DataFrame before it gets validated. You may get a DataFrame from a file, a database or an existing Pandas DataFrame that has not been treated yet, all you need to do is to provide a Deirokay Options Document specifying the parsing options.
 Deirokay Data Reader can also be imported and used in your project to improve your analysis and data manipulation when using Pandas.
 
 Data Validation is performed by the :ref:`deirokay.validate<deirokay.validator.validate>` method and works with the help of Deirokay Validation Documents. The latter must be created for each data file and they gather all the validation (using native or custom statements) to be executed against the data. 
@@ -47,9 +47,15 @@ In comparison to the most popular open-source alternative, `Great Expectations <
 
 Deirokay also provides a better logging system that allows you to reuse past validation results in your next validation process, making it possible to test your data using dynamic parameters such as moving averages.
 
-Deirokay also integrates easily with `Apache Airflow <https://airflow.apache.org/docs/>`_ with its built-in `DeirokayOperator`.
+Deirokay also integrates easily with `Apache Airflow <https://airflow.apache.org/docs/>`_ with its built-in :ref:`DeirokayOperator<deirokay.airflow>`.
 
 On the other hand, Great Expectations is a well consolidated tool with great community support and already used in a lot of projects. It already has a vast set of builtin expectations (analogous to Deirokay Statements), a cli tool to manage your configurations and also generates *Data Docs* for visualization of your validations (which unfortunately still lacks of offline support, requiring you to be online to download external `.js` and `.css` and be able to view the docs).
+
+
+Documentation TODOs
+===================
+
+.. todolist::
 
 
 .. include:: contents.rst

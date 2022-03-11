@@ -51,6 +51,7 @@ extensions = [
 
 # napoleon configuration for numpy docstring
 todo_include_todos = True
+todo_link_only = True
 napoleon_use_ivar = True
 napoleon_use_google_string = False
 napoleon_include_special_with_doc = True

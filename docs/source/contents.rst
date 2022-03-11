@@ -21,4 +21,7 @@
    :maxdepth: 2
    :caption: References
 
+   reference/dtypes
+   reference/statements
+   reference/templates
    api-reference/index

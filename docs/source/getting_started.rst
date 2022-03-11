@@ -20,25 +20,15 @@ will have a lot of data sources like Databases, File System or Object storage, d
 comes from another process and many others. Now let's suppose that all this data are gather
 together in this *example.csv*. AS you can see below, there is no standard 
 
-.. list-table:: example.csv
-   :header-rows: 1
-
-   * - Name
-     - Age
-     - is_married
-
-   * - john
-     - 55
-     - True
-
-   * - mariah
-     - 44
-     - 
-
-   * - carl
-     - 
-     - False
-
++--------+-----+------------+
+| Name   | Age | is_married |
++--------+-----+------------+
+| John   | 55  | True       |
++--------+-----+------------+
+| Mariah | 44  |            |
++--------+-----+------------+
+| Carl   |     |            |
++--------+-----+------------+
 
 It's important to notice that the Data validation is a process need in data pipelines,
 so it could be possibly to guarantee that all data is correct and free of weird problems
@@ -69,24 +59,15 @@ Even though that strings are correctly parsed, just look how it goes to integer 
 just because have in it an null cell. If you ever write the file back to your hard disk, you'll get
 the following content:
 
-.. list-table:: output.csv
-   :header-rows: 1
-
-   * - Name
-     - Age
-     - is_married
-
-   * - john
-     - 55.0
-     - True
-
-   * - mariah
-     - 44.0
-     - 
-
-   * - carl
-     - 
-     - False
++--------+------+------------+
+| Name   | Age  | is_married |
++--------+------+------------+
+| John   | 55.0 | True       |
++--------+------+------------+
+| Mariah | 44.0 |            |
++--------+------+------------+
+| Carl   |      |            |
++--------+------+------------+
 
 So depending on the dataset that you are working with, you will see different problems like time formats wrongs,
 dates, strings and many more. The next session will help you with this.
@@ -161,40 +142,31 @@ an example of validation document:
 .. code-block:: json
 
   {
-    "name": "example",
-    "descripiton": "just a statement test",
-    "items": {
-      "scope":"name",
-         "statements":[
-            {
-               "type":"row_count",
-               "distinct":true,
-               "min":1000
-            },
-            {
-               "type":"unique"
-            }
-         ]
-      },
-      {
-         "scope": "age",
-         "statements":[
-            {
-               "type":"not_null"
-            }
-         ]
-      },
-      {
-        "scope": "is_married",
-        "statements": [
+      "name": "example",
+      "descripiton": "just a statement test",
+      "items": [
           {
-            "type": "contain",
-            "severity": 1,
-            "True"
+              "scope": "name",
+              "statements": [
+                  {
+                      "type": "row_count",
+                      "distinct": true,
+                      "min": 2
+                  },
+                  {
+                      "type": "unique"
+                  }
+              ]
+          },
+          {
+              "scope": "age",
+              "statements": [
+                  {
+                      "type": "not_null"
+                  }
+              ]
           }
-        ]
-      }
-    }
+      ]
   }
 
 Finale to test your dataset against the validation document, you must import the feature validate
@@ -204,13 +176,13 @@ and apply over
 
   >>> from deirokay import data_reader, validate
   >>> data_reader('example.csv', options='options.json')
-          name   age  is_married
-      0    john    55        True
-      1    mariah  44        <NA>
-      2    carl    <NA>      False
+       name   age  is_married
+  0    john    55        True
+  1    mariah  44        <NA>
+  2    carl    <NA>      False
   >>> validation_result_document = validate(df,
-                                      against='assertions.json',
-                                      raise_exception=False)
+  ...                                       against='assertions.json',
+  ...                                       raise_exception=False)
 
 The resulting validation document will present the reports for each
 statement, as well as its final result: `pass` or `fail`. You may
@@ -222,7 +194,7 @@ format -- either `json` or `yaml` -- in the `save_format` argument).
 
 Here is an example of validation result document:
 
-.. code-block:: python
+.. code-block:: json
 
   {
     "name": "validate_example",
