@@ -25,15 +25,14 @@ Deirokay comes with several features to help you in your daily
 data quality problems. The main tools that facilitate your job
 are *Data Reader*, *Data Validation* and *Data Profiling*.
 
-The `deirokay.data_reader` method is responsible for parsing and transforming your source data into a trustable DataFrame before it gets validated. You may get a DataFrame from a file, a database or an existing Pandas DataFrame that has not been treated yet, all you need to do is to provide a Deirokay Options Document specifying the parsing options.
+The :ref:`deirokay.data_reader<deirokay.parser.parser.data_reader>` method is responsible for parsing and transforming your source data into a trustable DataFrame before it gets validated. You may get a DataFrame from a file, a database or an existing Pandas DataFrame that has not been treated yet, all you need to do is to provide a Deirokay Options Document specifying the parsing options.
 Deirokay Data Reader can also be imported and used in your project to improve your analysis and data manipulation when using Pandas.
 
-Data Validation is performed by the `deirokay.validate` method and works with the help of Deirokay Validation Documents. The latter must be created for each data file and they gather all the validation (using native or custom statements) to be executed against the data. 
+Data Validation is performed by the :ref:`deirokay.validate<deirokay.validator.validate>` method and works with the help of Deirokay Validation Documents. The latter must be created for each data file and they gather all the validation (using native or custom statements) to be executed against the data. 
 Every validation results in a *Validation Result Document*, which you may choose to log for reference or later use.
 
-Data Profiling is here to help you with automatically generating 
-Validation Documents based on template data. The user is encouraged to correct and 
-supplement the generated document to better meet their expectations.
+Data Profiling is provided by the :ref:`deirokay.profile<deirokay.profiler.profile>` method and is here to help you with automatically generating Validation Documents based on template data. 
+The user is encouraged to modify and supplement the generated document to better meet their requirements.
 
 
 Why use Deirokay instead of other data quality tools?

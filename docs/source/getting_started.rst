@@ -55,15 +55,15 @@ data types can be misrepresented as another dtypes as it 's show below:
 
     >>> import pandas
     >>> pandas.read_csv('example.csv')
-    >>>    name    age     is_married
-    >>> 0   john    55.0    True
-    >>> 1   mariah  44.0    NaN
-    >>> 2   carl    NaN     False
+        name    age     is_married
+    0   john    55.0    True
+    1   mariah  44.0    NaN
+    2   carl    NaN     False
     >>> pandas.read_csv('example.csv').dtypes
-    >>> name           object
-    >>> age           float64
-    >>> is_married     object
-    >>> dtype: object
+    name           object
+    age           float64
+    is_married     object
+    dtype: object
 
 Even though that strings are correctly parsed, just look how it goes to integer column that become float column
 just because have in it an null cell. If you ever write the file back to your hard disk, you'll get

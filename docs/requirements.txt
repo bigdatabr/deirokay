@@ -1,2 +1,1 @@
-Deirokay[dev]
-PyYaml
+nbsphinx

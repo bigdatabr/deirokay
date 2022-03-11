@@ -43,8 +43,10 @@ extensions = [
     'sphinx.ext.viewcode',
     # Add a link to another page of the documentation
     'sphinx.ext.autosectionlabel',
-    # configuration that was indicated in the documentation
-    'sphinx_rtd_theme'
+    # Theme
+    'sphinx_rtd_theme',
+    # Notebook support
+    'nbsphinx'
 ]
 
 # napoleon configuration for numpy docstring

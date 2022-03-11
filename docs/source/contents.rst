@@ -1,20 +1,20 @@
 .. toctree::
    :hidden:
    :maxdepth: 2
-   :caption: Home
+   :caption: User Guide
 
    self
    installation
    getting_started
+   tutorial
 
 .. toctree::
    :hidden:
    :maxdepth: 1
-   :caption: Concepts
+   :caption: Deirokay Concepts
 
    concepts/definitions
    concepts/statements
-
 
 .. toctree::
    :hidden:
