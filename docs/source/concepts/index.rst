@@ -2,8 +2,7 @@
 Concepts
 ========
 
-Here you can find the description about key concepts that you will see 
-when you are using Deirokay.
+Here you can find the description about key concepts that you will see when using Deirokay.
 
 
 Deirokay DTypes
@@ -55,111 +54,106 @@ a few datatypes that you might want to make use of. They are:
 Deirokay Options Document
 =========================
 
-In order to be able to parse a file, the `data_reader` method should receive specifications about how to interpret each column of your data, as well as source-wise parameters, such as file encoding or column separator (in case of `.csv` files). 
-Those specifications, called Deirokay Options document, can be expressed in form of a JSON/YAML file or a Python object.
+In order to be able to parse a file, the `deirokay.data_reader` method should receive specifications about how to interpret each column of your data, as well as source-wise parameters, such as file encoding or column separator (in case of `.csv` files). 
+Those specifications, called *Deirokay Options document*, can be expressed in form of a JSON/YAML file or a Python object.
 To specify each of your columns, you must declare which Deirokay DType should be used, including additional parameters regarding the datatype you chose.
 
+The block of code below depicts an example of options document in JSON format.
+The only required parameter for this document is the `columns` key, which contains the specifications for each column.
+In current version of Deirokay, all other parameters besides `columns` are transparently passed to the respective Pandas reader, based on the data file extension or source.
+
 .. code-block:: json
 
     {
-        "sep": "|",
-        "encryption": "iso-8859-1",
-        "columns": [
+        "sep": ",",
+        "encoding": "utf-8",
+        "columns": {
+            "id": {
+                "dtype": "integer",
+                "thousand_sep": ","
+            },
             "customer_name": {
-                “dtype": "string"
+                "dtype": "string"
             },
             "age": {
-                "dtype": “integer”,
-                "thousand_sep": "."
+                "dtype": "integer"
             },
-            "id": {
-                "dtype": “integer”,
-                “"thousand_sep": "."
-            },
-            “revenue”: {
+            "revenue": {
                 "dtype": "decimal",
-                "decimal_places”: 2,
-                "decimal_sep”: “,”,
-                "thousand_sep": “.”
+                "decimal_places": 2,
+                "decimal_sep": ".",
+                "thousand_sep": ","
             }
-        ]
+        }
     }
 
-Validation Document
-===================
-In the validation process, the most important thing to know is that 
-the validation document can be write for every step in the pipeline 
-process to validate the dataframe or file. Here you find the parts that 
-compose the document that validates your data.
+Deirokay Validation Document
+============================
 
-1. Name & Descripiton
----------------------
-
-Every validation document starts with the name of the dataset that will 
-work on and followed by an descripiton to help that everyone can 
-understand.
+The *Validation Document* gathers all constraints, expectations and business rules that you want to test and validate against your data.
 
 .. code-block:: json
 
-    {
-        "name": "CUSTOMERS",
-        "description": "Client's data"
-    }
+  {
+    "name": "CUSTOMERS",
+    "description": "Client's data",
+    "items": [
+      {
+        "scope": "customer_name",
+        "statements": [
+          {
+            "type": "row_count",
+            "distinct": true,
+            "min": 1000
+          },
+          {
+            "type": "unique"
+          }
+        ]
+      },
+      {
+        "scope": [
+          "age",
+          "id"
+        ],
+        "statements": [
+          {
+            "type": "not_null"
+          }
+        ]
+      }
+    ]
+  }
 
-2. Validation items
+The fields that compose such a document are presented below:
+
+1. Name & Description
 ---------------------
 
-Anther topic in the Validation Document is the validation items, 
-that are composed by the validation statements and validation scope. 
-The last one defines which columns will be analysed and you can pass 
-one or more groups of columns. Within the scope you can pass an alias 
-to the statement. To get dive into it, you can find more at 
+Every validation document starts with the `name` of the dataset that will work on followed by an optional `description`.
+Be sure the `name` field does not contain reserved characters if you want your validation logs to be saved to a local folder or S3 bucket.
+
+2. Validation items
+-------------------
+
+Another field in the Validation Document is `items`, which contains a list of `Validation Items`.
+A validation item is composed by a `scope` and a `statements` list.
+The `statements` are the actual validation rules, which will be applied to the given `scope`.
+The `scope` defines a column or a list of columns to be validated.
+
+To get dive into *Deirokay Statements*, you can find more at 
 .. _Statements. Last but not least, the validation statements are need 
 to you specifies what parameters you need, like the 'type', 'distinct', 
 'min', 'severity', 'at_least', 'max', when you work through the 
 columns of your dataset.
 
-.. code-block:: json
-    
-    {
-   "name":"CUSTOMERS",
-   "descripiton":"Client's data",
-   "items":[
-      {
-         "scope":"customer_name",
-         "statements":[
-            {
-               "type":"row_count",
-               "distinct":true,
-               "min":1000
-            },
-            {
-               "type":"unique"
-            }
-         ]
-      },
-      {
-         "scope":[
-            "age",
-            "id"
-         ],
-         "statements":[
-            {
-               "type":"not_null"
-            }
-         ]
-      }
-   ]
-}
 
+Validation Result
+=================
 
-Validation Document Result
-==========================
-At the end of your data validation, deirokay can organize an output 
-document(.json/.yaml) that reflects your validation document and have a 
-plus of the report statement,this shows if your statements pass or not 
-in relational to your analyses described in the validation items in 
-detail. See below an example
+At the end of the data validation, Deirokay create meaningful logs that reflect your validation document. A validation report is attached to each statement, containing its validation result (either `pass` or `fail`) and useful statistics about the analysed scope. 
+
+In the code below, we can see an example of a validation document:
 
 .. code-block:: json
 
@@ -168,19 +162,19 @@ detail. See below an example
         "description": "Client's data",
         "items": [
             {
-                “scope”: "NUM_TRANSACAO01",
-                "alias": "test"
-                “statements”: 
+                "scope": "transaction_id",
+                "statements": [
                     {
-                        “type”: "not_null",
+                        "type": "not_null",
                         "at_least_%": 100.0,
-                        “severity": 1
+                        "severity": 1
                     }
+                ]
             }
         ]
     }
 
-And the result wil be:
+which generates the following validation report:
 
 .. code-block:: json
 
@@ -189,77 +183,50 @@ And the result wil be:
         "description": "Client's data",
         "items": [
             {
-                “scope”: "NUM_TRANSACAO01",
-                "alias": "test",
-                “statements”: 
+                "scope": "transaction_id",
+                "statements": [
                     {
-                        “type”: "not_null",
+                        "type": "not_null",
                         "at_least_%": 100.0,
-                        “severity": 1,
+                        "severity": 1,
                         "report": {
                             "detail": {
-                                "num_rows": 0,
-                                "num_rows_%": 0,
-                                "not_num_rows": 830400,
-                                "not_num_rows_%": 100
+                                "null_rows": 0,
+                                "null_rows_%": 0,
+                                "not_null_rows": 830400,
+                                "not_null_rows_%": 100
                             },
                             "result": "pass"
                         }
 
                     }
+                ]
             }
         ]
     }
 
 Profiling
 =========
-An extra function that comes with Deirokay is you can be able to 
-generate a validation document from a given template DataFrame for 
-builtin Deirokay statements. See the exempla below:
+A native feature of Deirokay is the ability to generate a validation document from a given template DataFrame.
+Once you have correctly use `deirokay.data_reader` to parse your data into a DataFrame, you may use `deirokay.profile` to quickly create a first version of your validation document. 
 
 .. code-block:: python
 
-    from deirokay import data_reader, validate, profile
-    from datetime import datetime
+    from deirokay import data_reader, profile
+
 
     df = data_reader('file.csv', options='options.json')
 
     profile(df, 'CUSTOMERS', save_to='validation_doc.json')
 
-    ### Later
 
-    validate(
-    df, assertions='validation_doc.json', save_to='.'
-    )
+You should get a `validation_doc.json` file at the end of the process, containing a bunch of valid statements about your data.
 
-And you wil get an "validation_doc.json" at the end of the process, similar to this:
-
-.. code-block:: json
-
-    {
-      "name":"CUSTOMERS",
-      "description":"Autogenerated…",
-      "items":[
-          {
-            "scope":"customer_name",
-            "statements":[
-                {
-                  "type":"unique",
-                  "at_least_%":95.25
-                },
-                {
-                  "type":"not_null",
-                  "at_least_%":95.25
-                }
-            ]
-          }
-      ]
-  }
-
-This function should be used only as a draft for a validation document 
-or as a means to quickly launch a first version with minimum efforts.By 
-default, this function receives an DataFrame (that as ideally parsed
-with DataReader), an document name(string) that represents the 
+The results of this function should be used only as a draft for a validation document 
+or as a means to quickly launch a first version with minimum efforts. 
+It is up to you to modify it and enrich it with your own rules.
+By default, this function receives an DataFrame (that as ideally parsed
+with `data_reader`), an document name that represents the 
 validation document name and the path where wil save it( like local or 
 S3). At the end, auto-generated validation document as Python 'dict'.
 returns an. If no path are passed, no document will be save by default.
