@@ -221,14 +221,12 @@ Once you have correctly use `deirokay.data_reader` to parse your data into a Dat
 
 
 You should get a `validation_doc.json` file at the end of the process, containing a bunch of valid statements about your data.
-
 The results of this function should be used only as a draft for a validation document 
 or as a means to quickly launch a first version with minimum efforts. 
 It is up to you to modify it and enrich it with your own rules.
-By default, this function receives an DataFrame (that as ideally parsed
-with `data_reader`), an document name that represents the 
-validation document name and the path where wil save it( like local or 
-S3). At the end, auto-generated validation document as Python 'dict'.
-returns an. If no path are passed, no document will be save by default.
+
+By default, this function receives an DataFrame previously parsed using `data_reader`, a  name for the validation document and optionally a path where to save the document to. 
+The `profile` method also returns the same document as a Python *dict* object.
+
 
 .. include:: contents.rst
