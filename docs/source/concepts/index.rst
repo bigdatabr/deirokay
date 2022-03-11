@@ -142,7 +142,8 @@ The `statements` are the actual validation rules, which will be applied to the g
 The `scope` defines a column or a list of columns to be validated.
 
 To get dive into *Deirokay Statements*, you can find more at 
-.. _Statements. Last but not least, the validation statements are need 
+:ref:`Statements`.
+Last but not least, the validation statements are need 
 to you specifies what parameters you need, like the 'type', 'distinct', 
 'min', 'severity', 'at_least', 'max', when you work through the 
 columns of your dataset.

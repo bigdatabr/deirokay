@@ -1,3 +1,5 @@
+.. _Statements:
+
 ==========
 Statements
 ==========
@@ -73,18 +75,18 @@ pass attributes regarding the statement itself, and not the statement
 type. They are:
 
 - **type**: It defines the statement type itself, so it cannot be used 
-as a parameter name. Should be set to *custom* in case of custom 
-statements, and the statement class location should be declared in 
-**location**.
+  as a parameter name. Should be set to *custom* in case of custom 
+  statements, and the statement class location should be declared in 
+  **location**.
 
-- **severity**: Set a severity level for a statement in case of failure
-. It must be an integer value, conventionally from 1 (minimal) to 5 
-(critical). In one use case, you could create several similar 
-statements setting different threshold levels for a statement parameter
-, each one with a different severity level.
+- **severity**: Set a severity level for a statement in case of failure.
+  It must be an integer value, conventionally from 1 (minimal) to 5 
+  (critical). In one use case, you could create several similar 
+  statements setting different threshold levels for a statement parameter,
+  each one with a different severity level.
 
 - **location**: When declaring a custom statement, this key specifies 
-where the statement class is stored, and what is the class name.
+  where the statement class is stored, and what is the class name.
 
 
 How Statements are processed
@@ -95,7 +97,7 @@ validation document, must match a statement class name (the *name*
 attribute of a statement class).
 
 .. _deirokay/statements.py: 
-http://gitlab.bigdata/data-engineers/deirokay/-/blob/master/deirokay/statements.py
+  http://gitlab.bigdata/data-engineers/deirokay/-/blob/master/deirokay/statements.py
 
 The native statement classes are all declared in 
 `deirokay/statements.py`_. See an example:
