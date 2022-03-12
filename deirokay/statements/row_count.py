@@ -3,6 +3,7 @@ Statement to check the number of rows in a scope.
 """
 from pandas import DataFrame
 
+from .._typing import DeirokayStatement
 from .base_statement import BaseStatement
 
 
@@ -147,19 +148,22 @@ class RowCount(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df: DataFrame) -> dict:
+    def profile(df: DataFrame) -> DeirokayStatement:
+        statement: DeirokayStatement
+
         if len(df.columns) > 1:
             count = len(df)
-            return {
+            statement = {
                 'type': 'row_count',
                 'min': count,
                 'max': count
             }
         else:
             count = len(df.drop_duplicates())
-            return {
+            statement = {
                 'type': 'row_count',
                 'distinct': True,
                 'min': count,
                 'max': count
             }
+        return statement

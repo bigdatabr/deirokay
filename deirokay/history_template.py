@@ -32,7 +32,7 @@ def series_from_fs(series_name: str, lookback: int,
         List of logs to be queried.
     """
 
-    acc = (folder/series_name).ls(recursive=True, files_only=True)
+    acc = list((folder/series_name).ls(recursive=True, files_only=True))
 
     acc.sort(reverse=True)
     acc = acc[:min(lookback, len(acc))]

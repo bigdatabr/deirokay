@@ -3,6 +3,7 @@ Statement to check the number of not-null rows in a scope.
 """
 from pandas import DataFrame
 
+from .._typing import DeirokayStatement
 from .base_statement import BaseStatement
 
 
@@ -127,12 +128,12 @@ class NotNull(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df: DataFrame) -> dict:
+    def profile(df: DataFrame) -> DeirokayStatement:
         not_nulls = ~df.isnull().all(axis=1)
 
         statement = {
             'type': 'not_null'
-        }
+        }  # type: DeirokayStatement
 
         at_least_perc = float(100.0*not_nulls.sum()/len(not_nulls))
 

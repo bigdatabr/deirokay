@@ -9,16 +9,38 @@ from typing import List, Optional
 from pandas import DataFrame
 
 from .__version__ import __version__
+from ._typing import (DeirokayStatement, DeirokayValidationDocument,
+                      DeirokayValidationItem)
 from .fs import fs_factory
-from .statements import Contain, NotNull, RowCount, Unique
-
-profiling_statement_classes = [
-    NotNull, RowCount, Unique, Contain
-]
+from .statements import STATEMENTS_MAP
 
 
-def _generate_items(df: DataFrame) -> List[dict]:
-    items = []
+def _generate_statements(df_scope: DataFrame,
+                         table_only: bool) -> List[DeirokayStatement]:
+
+    statements: List[DeirokayStatement] = []
+
+    for stmt_cls in STATEMENTS_MAP.values():
+        if table_only and stmt_cls.table_only or not stmt_cls.table_only:
+            try:
+                statement = stmt_cls.profile(df_scope)
+                statements.append(statement)
+            except NotImplementedError:
+                pass
+            except Exception as e:
+                columns = list(df_scope.columns)
+                warnings.warn(
+                    f'Unexpected error when profiling scope {columns}'
+                    f' using {stmt_cls.__name__} statement: {e}\n\n'
+                    'Please, consider reporting this issue to the '
+                    'developers.',
+                    RuntimeWarning
+                )
+    return statements
+
+
+def _generate_items(df: DataFrame) -> List[DeirokayValidationItem]:
+    items: List[DeirokayValidationItem] = []
 
     df_columns = list(df.columns)
     scope__table_stmt = zip([df_columns] + df_columns,
@@ -26,33 +48,19 @@ def _generate_items(df: DataFrame) -> List[dict]:
     for scope, table_only in scope__table_stmt:
         df_scope = df[scope] if isinstance(scope, list) else df[[scope]]
         item = {
-            'scope': scope
-        }
-        items.append(item)
-        statements = item['statements'] = []
+            'scope': scope,
+            'statements': _generate_statements(df_scope, table_only=table_only)
+        }  # type: DeirokayValidationItem
 
-        for stmt_cls in profiling_statement_classes:
-            if table_only and stmt_cls.table_only or not stmt_cls.table_only:
-                try:
-                    statement = stmt_cls.profile(df_scope)
-                    statements.append(statement)
-                except NotImplementedError:
-                    pass
-                except Exception as e:
-                    warnings.warn(
-                        f'Unexpected error when profiling scope {scope}'
-                        f' using {stmt_cls.__name__} statement: {e}\n\n'
-                        'Please, consider reporting this issue to the '
-                        'developers.',
-                        RuntimeWarning
-                    )
+        if item['statements']:
+            items.append(item)
 
     return items
 
 
 def profile(df: DataFrame,
             document_name: str,
-            save_to: Optional[str] = None) -> dict:
+            save_to: Optional[str] = None) -> DeirokayValidationDocument:
     """Generate a validation document from a given template DataFrame
     using profiling methods for builtin Deirokay statements.
     By default, statement objects are generated for the entire template
@@ -84,8 +92,8 @@ def profile(df: DataFrame,
     validation_document = {
         'name': document_name,
         'description': f'Auto generated using Deirokay {__version__}',
-    }
-    validation_document['items'] = _generate_items(df)
+        'items': _generate_items(df)
+    }  # type: DeirokayValidationDocument
 
     if save_to:
         fs_factory(save_to).write_dict(validation_document, indent=2)

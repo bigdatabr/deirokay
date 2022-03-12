@@ -3,6 +3,7 @@ Statement to check the number unique rows in a scope.
 """
 from pandas import DataFrame
 
+from .._typing import DeirokayStatement
 from .base_statement import BaseStatement
 
 
@@ -59,12 +60,12 @@ class Unique(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df: DataFrame) -> dict:
+    def profile(df: DataFrame) -> DeirokayStatement:
         unique = ~df.duplicated(keep=False)
 
         statement = {
             'type': 'unique',
-        }
+        }  # type: DeirokayStatement
 
         at_least_perc = float(100.0*unique.sum()/len(unique))
 

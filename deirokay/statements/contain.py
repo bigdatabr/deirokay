@@ -4,6 +4,7 @@ Statement to check the presence (or absence) of values in a scope.
 from numpy import inf
 from pandas import DataFrame, concat
 
+from .._typing import DeirokayStatement
 from ..parser import get_dtype_treater, get_treater_instance
 from .base_statement import BaseStatement
 
@@ -376,10 +377,9 @@ class Contain(BaseStatement):
             return self._check_all(value_count)
         elif self.rule == 'only':
             return self._check_only(value_count)
-        elif self.rule == 'all_and_only':
-            is_check_all = self._check_all(value_count)
-            is_check_only = self._check_only(value_count)
-            return is_check_all and is_check_only
+        else:
+            return (self._check_all(value_count) and
+                    self._check_only(value_count))
 
     def _check_all(self, value_count: dict) -> bool:
         """
@@ -403,7 +403,7 @@ class Contain(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df: DataFrame) -> dict:
+    def profile(df: DataFrame) -> DeirokayStatement:
         if any(dtype != df.dtypes for dtype in df.dtypes):
             raise NotImplementedError(
                 "Refusing to mix up different types of columns"
@@ -421,7 +421,7 @@ class Contain(BaseStatement):
         statement_template = {
             'type': 'contain',
             'rule': 'all'
-        }
+        }  # type: DeirokayStatement
         # Get most common type to infer treater
         try:
             statement_template.update(

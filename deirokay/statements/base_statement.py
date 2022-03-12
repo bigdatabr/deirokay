@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 
 from pandas import DataFrame
 
+from .._typing import DeirokayStatement
+
 
 class BaseStatement(ABC):
     """Base abstract statement class for all Deirokay statements.
@@ -93,7 +95,7 @@ class BaseStatement(ABC):
         """
 
     @staticmethod
-    def profile(df: DataFrame) -> dict:
+    def profile(df: DataFrame) -> DeirokayStatement:
         """Given a template data table, generate a statement dict
         from it.
 

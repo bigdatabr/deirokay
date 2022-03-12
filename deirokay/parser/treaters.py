@@ -10,7 +10,7 @@ from numpy import nan
 from pandas import NA, NaT, Series, to_datetime
 
 
-class Validator:
+class Validator():
     """Base validation class for column data type validation.
     """
 
@@ -18,10 +18,10 @@ class Validator:
         self.unique = unique
         self.nullable = nullable
 
-    def __call__(self, listlike: Iterable) -> None:
+    def __call__(self, listlike: Iterable) -> Series:
         return self.treat(Series(listlike))
 
-    def treat(self, series: Series) -> None:
+    def treat(self, series: Series) -> Series:
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 
@@ -56,6 +56,8 @@ class Validator:
                              f"There are {len(duplicated)} non unique values,"
                              " and here are some of them:\n"
                              f"{duplicated_limit}...")
+
+        return series
 
     @staticmethod
     def serialize(series: Series) -> dict:
@@ -92,7 +94,7 @@ class NumericTreater(Validator):
 
     # docstr-coverage:inherited
     def treat(self, series: Series) -> Series:
-        super().treat(series)
+        series = super().treat(series)
         series = self._treat_thousand_sep(series)
 
         return series
@@ -138,7 +140,7 @@ class BooleanTreater(Validator):
             raise ValueError('Truthies and Falsies sets should be'
                              ' disjoint sets.')
 
-    def _evaluate(self, value: Union[bool, str, None]) -> bool:
+    def _evaluate(self, value: Union[bool, str, None]) -> Union[bool, None]:
         if value is True:
             return True
         if value is False:
@@ -157,7 +159,7 @@ class BooleanTreater(Validator):
 
     # docstr-coverage:inherited
     def treat(self, series: Series) -> Series:
-        super().treat(series)
+        series = super().treat(series)
         series = series.apply(self._evaluate).astype('boolean')
         # Validate again
         super().treat(series)
@@ -295,7 +297,7 @@ class DateTime64Treater(Validator):
 
     # docstr-coverage:inherited
     def treat(self, series: Series) -> Series:
-        super().treat(series)
+        series = super().treat(series)
 
         return to_datetime(series, format=self.format)
 
@@ -374,7 +376,7 @@ class StringTreater(Validator):
 
     # docstr-coverage:inherited
     def treat(self, series: Series) -> Series:
-        super().treat(series)
+        series = super().treat(series)
 
         if self.treat_null_as is not None:
             series = series.fillna(self.treat_null_as)

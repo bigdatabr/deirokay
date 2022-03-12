@@ -7,13 +7,14 @@
 # -- Path setup --------------------------------------------------------------
 
 import os
+import sys
 from datetime import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-os.sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 from deirokay.__version__ import __version__  # noqa E501
 

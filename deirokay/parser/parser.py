@@ -5,21 +5,22 @@ Functions to parse files into pandas DataFrames.
 import datetime
 import decimal
 from os.path import splitext
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Type, Union
 
 import pandas
-from deirokay.enums import DTypes
-from deirokay.fs import fs_factory
-from deirokay.parser.treaters import Validator
-from deirokay.utils import _check_columns_in_df_columns
 from pandas import (DataFrame, Timestamp, read_csv, read_excel, read_parquet,
                     read_sql)
+
+from deirokay._typing import DeirokayOption, DeirokayOptionsDocument
+from deirokay.enums import DTypes
+from deirokay.fs import fs_factory
+from deirokay.utils import _check_columns_in_df_columns
 
 from . import treaters
 
 
 def data_reader(data: Union[str, DataFrame],
-                options: Union[dict, str],
+                options: Union[str, DeirokayOptionsDocument],
                 **kwargs) -> DataFrame:
     """Create a DataFrame from a file or an existing DataFrame and
     apply Deirokay treatments to correctly parse it and pre-validate
@@ -38,13 +39,16 @@ def data_reader(data: Union[str, DataFrame],
         A pandas DataFrame treated by Deirokay.
     """
     if isinstance(options, str):
-        options = fs_factory(options).read_dict()
-    options.update(kwargs)
+        options_dict = fs_factory(options).read_dict()
+    else:
+        options_dict = options
 
-    columns = options.pop('columns')
+    options_dict.update(kwargs)
+
+    columns = options_dict.pop('columns')
 
     if isinstance(data, str):
-        df = pandas_read(data, columns=list(columns), **options)
+        df = pandas_read(data, columns=list(columns), **options_dict)
     else:
         df = data.copy()[list(columns)]
     data_treater(df, columns)
@@ -73,6 +77,7 @@ def pandas_read(data: str, columns: List[str], sql: bool = False,
     DataFrame
         The pandas DataFrame.
     """
+    default_kwargs: Dict[str, Any]
     if sql:
         default_kwargs = {
             'columns': columns
@@ -118,37 +123,44 @@ def pandas_read(data: str, columns: List[str], sql: bool = False,
         return read_(data, **kwargs)[columns]
 
 
-def get_dtype_treater(dtype: type) -> treaters.Validator:
+def get_dtype_treater(dtype: Any) -> Type[treaters.Validator]:
     """Map a dtype to its Treater class."""
-    treat_dtypes: Dict[type, treaters.Validator] = {
+
+    treat_dtypes = {
         DTypes.INT64: treaters.IntegerTreater,
-        int: treaters.IntegerTreater,
         DTypes.FLOAT64: treaters.FloatTreater,
-        float: treaters.FloatTreater,
         DTypes.STRING: treaters.StringTreater,
-        str: treaters.StringTreater,
         DTypes.DATETIME: treaters.DateTime64Treater,
-        Timestamp: treaters.DateTime64Treater,
         DTypes.DATE: treaters.DateTreater,
-        datetime.date: treaters.DateTreater,
         DTypes.TIME: treaters.TimeTreater,
-        datetime.time: treaters.TimeTreater,
         DTypes.BOOLEAN: treaters.BooleanTreater,
-        bool: treaters.BooleanTreater,
         DTypes.DECIMAL: treaters.DecimalTreater,
+    }
+    treat_primitives = {
+        int: treaters.IntegerTreater,
+        float: treaters.FloatTreater,
+        str: treaters.StringTreater,
+        Timestamp: treaters.DateTime64Treater,
+        datetime.date: treaters.DateTreater,
+        datetime.time: treaters.TimeTreater,
+        bool: treaters.BooleanTreater,
         decimal.Decimal: treaters.DecimalTreater,
     }
-    if isinstance(dtype, str):
-        dtype = DTypes(dtype)
 
     try:
-        return treat_dtypes[dtype]
-    except KeyError:
+        if isinstance(dtype, DTypes):
+            return treat_dtypes[dtype]
+        elif isinstance(dtype, str):
+            return treat_dtypes[DTypes(dtype)]
+        else:
+            return treat_primitives[dtype]
+
+    except KeyError as e:
         raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
-                                  " implemented yet")
+                                  " implemented yet") from e
 
 
-def get_treater_instance(option: dict) -> Validator:
+def get_treater_instance(option: DeirokayOption) -> treaters.Validator:
     """Create a treater instance from a Deirokay-style option.
 
     Example
@@ -186,8 +198,8 @@ def data_treater(df: DataFrame, options: dict) -> None:
     """
     _check_columns_in_df_columns(options.keys(), df.columns)
 
-    for col, option in options.items():
-        option: dict = option.copy()
+    for col, opt in options.items():
+        option: dict = opt.copy()
 
         dtype = option.get('dtype', None)
         rename_to = option.pop('rename', None)

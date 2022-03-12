@@ -8,11 +8,12 @@ import importlib
 import json
 import os
 import re
+import sys
 from os.path import splitext
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from types import ModuleType
-from typing import IO, List, Optional
+from typing import IO, Optional, Sequence
 
 import yaml
 
@@ -71,9 +72,9 @@ def _import_file_as_python_module(path_to_file: str) -> ModuleType:
         raise ValueError('You should pass a valid Python file')
 
     module_dir = os.path.dirname(path_to_file)
-    os.sys.path.insert(0, module_dir)
+    sys.path.insert(0, module_dir)
     module = importlib.import_module(module_name)
-    os.sys.path.pop(0)
+    sys.path.pop(0)
 
     return module
 
@@ -92,7 +93,7 @@ class FileSystem():
         self.path = path
 
     def ls(self, recursive: bool = False,
-           files_only: bool = False) -> List['FileSystem']:
+           files_only: bool = False) -> Sequence['FileSystem']:
         """List files in a prefix or folder.
 
         Parameters
@@ -207,7 +208,7 @@ class FileSystem():
         """Import file as a Python module."""
         raise NotImplementedError
 
-    def open(self, *args, **kwargs):
+    def open(self, *args, **kwargs) -> IO:
         """Open file."""
         raise NotImplementedError
 
@@ -253,7 +254,7 @@ class LocalFileSystem(FileSystem):
 
     # docstr-coverage:inherited
     def ls(self, recursive: bool = False,
-           files_only: bool = False) -> List['LocalFileSystem']:
+           files_only: bool = False) -> Sequence['LocalFileSystem']:
         if recursive is False:
             raise NotImplementedError
 
@@ -300,19 +301,21 @@ class S3FileSystem(FileSystem):
                 ' passed (but not both).'
             )
 
-        if not path:
-            path = os.path.join(bucket, prefix_or_key)
-        else:
-            bucket, prefix_or_key = split_s3_path(path)
+        if bucket and prefix_or_key:
+            final_bucket, final_prefix_or_key = bucket, prefix_or_key
+            final_path = os.path.join(bucket, prefix_or_key)
+        elif path:
+            final_bucket, final_prefix_or_key = split_s3_path(path)
+            final_path = path
 
-        super().__init__(path)
+        super().__init__(final_path)
         self.client = client or boto3.client('s3')
-        self.bucket = bucket
-        self.prefix_or_key = prefix_or_key
+        self.bucket = final_bucket
+        self.prefix_or_key = final_prefix_or_key
 
     # docstr-coverage:inherited
     def ls(self, recursive: bool = False,
-           files_only: bool = False) -> List['S3FileSystem']:
+           files_only: bool = False) -> Sequence['S3FileSystem']:
         if recursive is False:
             raise NotImplementedError
 
