@@ -148,7 +148,7 @@ def get_treater_instance(option: dict):
 
     Example
     -------
-    
+
     .. code-block:: python
 
         option = {
