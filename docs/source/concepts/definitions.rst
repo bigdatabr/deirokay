@@ -80,14 +80,14 @@ The *Validation Document* gathers all constraints, expectations and business rul
 
 The fields that compose such a document are presented below:
 
-1. Name & Description
----------------------
+Name & Description
+------------------
 
 Every validation document starts with the `name` of the dataset that will work on followed by an optional `description`.
 Be sure the `name` field does not contain reserved characters if you want your validation logs to be saved to a local folder or S3 bucket.
 
-2. Validation items
--------------------
+Validation Items
+----------------
 
 Another field in the Validation Document is `items`, which contains a list of `Validation Items`.
 A validation item is composed by a `scope` and a `statements` list.

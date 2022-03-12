@@ -1,8 +1,8 @@
 .. _home:
 
-=============
-Deirokay Home
-=============
+===============
+Deirokay - Home
+===============
 
 Deirokay (*dejɾo'kaj*) is a Python tool for data parsing and data validation.
 Deirokay separates document parsing from validation 

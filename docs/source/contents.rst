@@ -24,6 +24,7 @@
    features/data_reader
    features/validate
    features/profile
+   features/template
    features/deirokay_operator
 
 .. toctree::

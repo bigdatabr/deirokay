@@ -1,0 +1,38 @@
+{
+    "name": "example",
+    "description": "Getting started with Deirokay",
+    "items": [
+        {
+            "scope": "name",
+            "statements": [
+                {
+                    "type": "unique"
+                }
+            ]
+        },
+        {
+            "scope": "is_married",
+            "statements": [
+                {
+                    "type": "contain",
+                    "rule": "all",
+                    "values": [
+                        true
+                    ],
+                    "parser": {
+                        "dtype": "boolean"
+                    },
+                    "min_occurrences": 3
+                }
+            ]
+        },
+        {
+            "scope": "age",
+            "statements": [
+                {
+                    "type": "not_null"
+                }
+            ]
+        }
+    ]
+}

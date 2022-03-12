@@ -2,12 +2,8 @@
 Validator
 =========
 
-Jinja Template
-==============
-
-Series template
-===============
+The `validate` method can be imported from :ref:`deirokay.validate<deirokay.validator.validate>`.
 
 .. todo::
 
-    Validator
+    Details about validator usage.
