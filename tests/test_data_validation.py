@@ -81,7 +81,7 @@ def test_custom_statement():
 @pytest.fixture
 def prepare_s3_custom_statement():
     local_path = 'tests/custom_statement.py'
-    s3_path = 's3://bigdata-momo/temp/custom_statement.py'
+    s3_path = 's3://deirokay/custom_statement.py'
     bucket, key = split_s3_path(s3_path)
 
     import boto3

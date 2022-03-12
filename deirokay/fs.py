@@ -3,6 +3,7 @@ Module for FileSystem abstractions and utilities for multi-purpose
 paths.
 """
 
+import contextlib
 import importlib
 import json
 import os
@@ -23,7 +24,7 @@ except ImportError as e:
     boto3_import_error = e
 
 
-BUCKET_KEY_REGEX = re.compile(r's3:\/\/([\w\-]+)\/([\w\-\/.]+)')
+BUCKET_KEY_REGEX = re.compile(r's3:\/\/([\w\-]+)\/([\w\-\/.]*)')
 
 
 def split_s3_path(s3_path: str) -> tuple:
@@ -139,7 +140,8 @@ class FileSystem():
         dict
             Python dictionary with the file content.
         """
-        raise NotImplementedError
+        with self.open('r') as fp:
+            return yaml.safe_load(fp)
 
     def write_yaml(self, doc: dict, **kwargs) -> None:
         """Serialize and write a Python `dict` to a YAML file.
@@ -150,7 +152,8 @@ class FileSystem():
             The Python `dict`.
 
         """
-        raise NotImplementedError
+        with self.open('w') as fp:
+            yaml.dump(doc, fp, sort_keys=False, **kwargs)
 
     def read_json(self) -> dict:
         """Read and parse a JSON file as a Python `dict`.
@@ -160,7 +163,8 @@ class FileSystem():
         dict
             Python dictionary with the file content.
         """
-        raise NotImplementedError
+        with self.open('r') as fp:
+            return json.load(fp)
 
     def write_json(self, doc: dict, **kwargs) -> None:
         """Serialize and write a Python `dict` to a JSON file.
@@ -170,7 +174,8 @@ class FileSystem():
         doc : dict
             The Python `dict`.
         """
-        raise NotImplementedError
+        with self.open('w') as fp:
+            json.dump(doc, fp, **kwargs)
 
     def isdir(self) -> bool:
         """Return True if the path is a directory.
@@ -208,7 +213,8 @@ class FileSystem():
 
     def read(self, *args, **kwargs) -> str:
         """Read a file as text."""
-        return self.open(*args, **kwargs).read()
+        with self.open(*args, **kwargs) as fp:
+            return fp.read()
 
     def __truediv__(self, rest: str) -> 'FileSystem':
         """Create another FileSystem object by '/'-joining a FileSystem
@@ -257,26 +263,6 @@ class LocalFileSystem(FileSystem):
                 acc += [os.path.join(parent, folder) for folder in folders]
             acc += [os.path.join(parent, file) for file in files]
         return [LocalFileSystem(path) for path in acc]
-
-    # docstr-coverage:inherited
-    def read_yaml(self) -> dict:
-        with self.open() as fp:
-            return yaml.safe_load(fp)
-
-    # docstr-coverage:inherited
-    def write_yaml(self, doc: dict, **kwargs) -> None:
-        with self.open('w') as fp:
-            yaml.dump(doc, fp, sort_keys=False, **kwargs)
-
-    # docstr-coverage:inherited
-    def read_json(self) -> dict:
-        with self.open() as fp:
-            return json.load(fp)
-
-    # docstr-coverage:inherited
-    def write_json(self, doc: dict, **kwargs) -> None:
-        with self.open('w') as fp:
-            json.dump(doc, fp, **kwargs)
 
     # docstr-coverage:inherited
     def import_as_python_module(self) -> ModuleType:
@@ -341,32 +327,8 @@ class S3FileSystem(FileSystem):
         ]
 
     # docstr-coverage:inherited
-    def read_yaml(self) -> dict:
-        return yaml.safe_load(self.open())
-
-    # docstr-coverage:inherited
-    def write_yaml(self, doc: dict, **kwargs) -> None:
-        return self.client.put_object(
-            Body=yaml.dump(doc, sort_keys=False, **kwargs),
-            Bucket=self.bucket,
-            Key=self.prefix_or_key
-        )
-
-    # docstr-coverage:inherited
-    def read_json(self) -> dict:
-        return json.load(self.open())
-
-    # docstr-coverage:inherited
-    def write_json(self, doc: dict, **kwargs) -> None:
-        return self.client.put_object(
-            Body=json.dumps(doc, **kwargs),
-            Bucket=self.bucket,
-            Key=self.prefix_or_key
-        )
-
-    # docstr-coverage:inherited
     def import_as_python_module(self) -> ModuleType:
-        extension = os.path.splitext(self.path)[1]
+        _, extension = os.path.splitext(self.path)
         with NamedTemporaryFile(suffix=extension) as tmp_fp:
             self.client.download_file(self.bucket,
                                       self.prefix_or_key,
@@ -375,13 +337,23 @@ class S3FileSystem(FileSystem):
             return module
 
     # docstr-coverage:inherited
-    def open(self) -> IO:
-        o = self.client.get_object(Bucket=self.bucket, Key=self.prefix_or_key)
-        return o['Body']
-
-    # docstr-coverage:inherited
-    def read(self, *args, **kwargs) -> str:
-        return super().read(*args, **kwargs).decode('utf-8')
+    def open(self, mode, *args, **kwargs) -> IO:
+        if mode == 'r':
+            body = self.client.get_object(Bucket=self.bucket,
+                                          Key=self.prefix_or_key)['Body']
+            return contextlib.closing(body)
+        elif mode == 'w':
+            def _writable():
+                with NamedTemporaryFile(mode, *args, **kwargs) as tmp_fp:
+                    yield tmp_fp
+                    tmp_fp.flush()
+                    self.client.upload_file(
+                        tmp_fp.name,
+                        self.bucket,
+                        self.prefix_or_key
+                    )
+            return contextlib.contextmanager(_writable)()
+        raise NotImplementedError(f"Mode '{mode}' not supported.")
 
 
 def fs_factory(path: str) -> FileSystem:

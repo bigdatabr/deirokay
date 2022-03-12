@@ -57,7 +57,7 @@ def prepare_history_s3():
                     .get('Contents', [])):
             s3.delete_object(Bucket=bucket, Key=obj['Key'])
 
-    s3_path = 's3://bigdata-momo/temp/deirokay/'
+    s3_path = 's3://deirokay/'
     bucket, prefix = split_s3_path(s3_path)
     delete_s3_prefix(bucket, prefix)
     yield s3_path
