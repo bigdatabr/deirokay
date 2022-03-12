@@ -4,23 +4,24 @@ Deirokay data types.
 """
 
 from decimal import Decimal
+from typing import Iterable, List, Optional, Union
 
 from numpy import nan
 from pandas import NA, NaT, Series, to_datetime
 
 
-class Validator:
+class Validator():
     """Base validation class for column data type validation.
     """
 
-    def __init__(self, *, unique=False, nullable=True):
+    def __init__(self, *, unique: bool = False, nullable: bool = True):
         self.unique = unique
         self.nullable = nullable
 
-    def __call__(self, listlike):
+    def __call__(self, listlike: Iterable) -> Series:
         return self.treat(Series(listlike))
 
-    def treat(self, series: Series):
+    def treat(self, series: Series) -> Series:
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 
@@ -56,6 +57,8 @@ class Validator:
                              " and here are some of them:\n"
                              f"{duplicated_limit}...")
 
+        return series
+
     @staticmethod
     def serialize(series: Series) -> dict:
         """Create a Deirokay-compatible serializable object that can
@@ -84,19 +87,19 @@ class Validator:
 class NumericTreater(Validator):
     """Base class for numeric treaters"""
 
-    def __init__(self, thousand_sep=None, **kwargs):
+    def __init__(self, thousand_sep: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
 
         self.thousand_sep = thousand_sep
 
     # docstr-coverage:inherited
-    def treat(self, series):
-        super().treat(series)
+    def treat(self, series: Series) -> Series:
+        series = super().treat(series)
         series = self._treat_thousand_sep(series)
 
         return series
 
-    def _treat_thousand_sep(self, series):
+    def _treat_thousand_sep(self, series: Series) -> Series:
         if self.thousand_sep is not None:
             try:
                 series = series.str.replace(self.thousand_sep, '', regex=False)
@@ -114,10 +117,10 @@ class BooleanTreater(Validator):
     """Treater for boolean-like variables"""
 
     def __init__(self,
-                 truthies=['true', 'True'],
-                 falsies=['false', 'False'],
-                 ignore_case=False,
-                 default_value=None,
+                 truthies: List[str] = ['true', 'True'],
+                 falsies: List[str] = ['false', 'False'],
+                 ignore_case: bool = False,
+                 default_value: Optional[bool] = None,
                  **kwargs):
         super().__init__(**kwargs)
 
@@ -137,7 +140,7 @@ class BooleanTreater(Validator):
             raise ValueError('Truthies and Falsies sets should be'
                              ' disjoint sets.')
 
-    def _evaluate(self, value):
+    def _evaluate(self, value: Union[bool, str, None]) -> Union[bool, None]:
         if value is True:
             return True
         if value is False:
@@ -155,8 +158,8 @@ class BooleanTreater(Validator):
                          f'Expected values: {self.truthies | self.falsies}')
 
     # docstr-coverage:inherited
-    def treat(self, series):
-        super().treat(series)
+    def treat(self, series: Series) -> Series:
+        series = super().treat(series)
         series = series.apply(self._evaluate).astype('boolean')
         # Validate again
         super().treat(series)
@@ -165,7 +168,7 @@ class BooleanTreater(Validator):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series):
+    def serialize(series: Series) -> dict:
         def _convert(item):
             if item is NA:
                 return None
@@ -181,19 +184,19 @@ class BooleanTreater(Validator):
 class FloatTreater(NumericTreater):
     """Treater for float variables"""
 
-    def __init__(self, decimal_sep=None, **kwargs):
+    def __init__(self, decimal_sep: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
 
         self.decimal_sep = decimal_sep
 
     # docstr-coverage:inherited
-    def treat(self, series):
+    def treat(self, series: Series) -> Series:
         series = super().treat(series)
         series = self._treat_decimal_sep(series)
 
         return series.astype(float).astype('Float64')
 
-    def _treat_decimal_sep(self, series):
+    def _treat_decimal_sep(self, series: Series) -> Series:
         if self.decimal_sep is not None and self.decimal_sep != '.':
             try:
                 series = series.str.replace(self.decimal_sep, '.', regex=False)
@@ -209,7 +212,7 @@ class FloatTreater(NumericTreater):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series):
+    def serialize(series: Series) -> dict:
         def _convert(item):
             if item is NA:
                 return None
@@ -225,13 +228,13 @@ class FloatTreater(NumericTreater):
 class DecimalTreater(FloatTreater):
     """Treater for decimal variables"""
 
-    def __init__(self, decimal_places=None, **kwargs):
+    def __init__(self, decimal_places: Optional[int] = None, **kwargs):
         super().__init__(**kwargs)
 
         self.decimal_places = decimal_places
 
     # docstr-coverage:inherited
-    def treat(self, series):
+    def treat(self, series: Series) -> Series:
         series = NumericTreater.treat(self, series)
         series = self._treat_decimal_sep(series)
         series = series.map(lambda x: Decimal(x) if x is not None else None)
@@ -239,7 +242,7 @@ class DecimalTreater(FloatTreater):
 
         return series
 
-    def _treat_decimal_places(self, series):
+    def _treat_decimal_places(self, series: Series) -> Series:
         if self.decimal_places is not None:
             q = Decimal(10) ** -self.decimal_places
             series = series.apply(
@@ -249,7 +252,7 @@ class DecimalTreater(FloatTreater):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series):
+    def serialize(series: Series) -> dict:
         def _convert(item):
             if item is None or item is NA:
                 return None
@@ -266,12 +269,12 @@ class IntegerTreater(NumericTreater):
     """Treater for integer variables"""
 
     # docstr-coverage:inherited
-    def treat(self, series):
+    def treat(self, series: Series) -> Series:
         return super().treat(series).astype(float).astype('Int64')
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series):
+    def serialize(series: Series) -> dict:
         def _convert(item):
             if item is NA:
                 return None
@@ -287,20 +290,20 @@ class IntegerTreater(NumericTreater):
 class DateTime64Treater(Validator):
     """Treater for datetime variables"""
 
-    def __init__(self, format='%Y-%m-%d %H:%M:%S', **kwargs):
+    def __init__(self, format: str = '%Y-%m-%d %H:%M:%S', **kwargs):
         super().__init__(**kwargs)
 
         self.format = format
 
     # docstr-coverage:inherited
-    def treat(self, series):
-        super().treat(series)
+    def treat(self, series: Series) -> Series:
+        series = super().treat(series)
 
         return to_datetime(series, format=self.format)
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series):
+    def serialize(series: Series) -> dict:
         def _convert(item):
             if item is None or item is NaT:
                 return None
@@ -316,16 +319,16 @@ class DateTime64Treater(Validator):
 class DateTreater(DateTime64Treater):
     """Treater for date-only variables"""
 
-    def __init__(self, format='%Y-%m-%d', **kwargs):
+    def __init__(self, format: str = '%Y-%m-%d', **kwargs):
         super().__init__(format, **kwargs)
 
     # docstr-coverage:inherited
-    def treat(self, series):
+    def treat(self, series: Series) -> Series:
         return super().treat(series).dt.date
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series):
+    def serialize(series: Series) -> dict:
         def _convert(item):
             if item is None or item is NaT:
                 return None
@@ -341,16 +344,16 @@ class DateTreater(DateTime64Treater):
 class TimeTreater(DateTime64Treater):
     """Treater for time-only variables"""
 
-    def __init__(self, format='%H:%M:%S', **kwargs):
+    def __init__(self, format: str = '%H:%M:%S', **kwargs):
         super().__init__(format, **kwargs)
 
     # docstr-coverage:inherited
-    def treat(self, series):
+    def treat(self, series: Series) -> Series:
         return super().treat(series).dt.time
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series):
+    def serialize(series: Series) -> dict:
         def _convert(item):
             if item is None or item is NaT:
                 return None
@@ -366,14 +369,14 @@ class TimeTreater(DateTime64Treater):
 class StringTreater(Validator):
     """Treater for string variables"""
 
-    def __init__(self, treat_null_as=None, **kwargs):
+    def __init__(self, treat_null_as: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
 
         self.treat_null_as = treat_null_as
 
     # docstr-coverage:inherited
-    def treat(self, series):
-        super().treat(series)
+    def treat(self, series: Series) -> Series:
+        series = super().treat(series)
 
         if self.treat_null_as is not None:
             series = series.fillna(self.treat_null_as)
@@ -382,7 +385,7 @@ class StringTreater(Validator):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series):
+    def serialize(series: Series) -> dict:
         def _convert(item):
             if item is None:
                 return None

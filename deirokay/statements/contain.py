@@ -1,29 +1,202 @@
+"""
+Statement to check the presence (or absence) of values in a scope.
+"""
 from numpy import inf
-from pandas import concat
+from pandas import DataFrame, concat
 
+from .._typing import DeirokayStatement
 from ..parser import get_dtype_treater, get_treater_instance
 from .base_statement import BaseStatement
 
 
 class Contain(BaseStatement):
     """
-    Checks if a given column contains specific values. We can also
-    check the number of their occurrences, specifying a minimum and
+    Checks if the given scope contains specific values. We can also
+    check the number of their occurrences by specifying a minimum and
     maximum value of frequency.
+
+    The available parameters for this statement are:
+
+    * `rule` (required): One of `all`, `only` or `all_and_only`.
+    * `values` (required): A list of values to which the rule applies.
+    * `parser` (required): The parser to be used to parse the `values`.
+      Correspond to the `parser` parameter of the `treater` function
+      (see `deirokay.data_reader` method).
+    * `min_occurrences`: a global minimum number of occurrences for
+      each of the `values`. Default: 1 for `all` and `all_and_only`
+      rules, 0 for `only`.
+    * `max_occurrences`: a global maximum number of occurrences for
+      each of the `values`. Default: `inf` (unbounded).
+    * `occurrences_per_value`: a list of dictionaries overriding the
+      global boundaries. Each dictionary may have the following keys:
+
+        * `values` (required): a value (or a list) to which the
+          occurrence bounds below must apply to.
+        * `min_occurrences`: a minimum number of occurrences for these
+          values. Default: global `min_occurrences` parameter.
+        * `max_occurrences`: a maximum number of occurrences for these
+          values. Default: global `max_occurrences` parameter.
+
+      Global parameters apply to all values not present in any of the
+      dictionaries in `occurrences_per_value` (but yet present on the
+      main `values` list).
+
+    * `verbose`: if `True`, the report will include the percentage of
+      occurrences for each value. Default: `True`.
+
+    The `all` rule checks if all the `values` declared are present in
+    the scope (possibly tolerating other values not declared in
+    `values`).
+    Use it when you want to be sure that your data contains at least
+    all the values you declare, also setting `min_occurrences` and
+    `max_occurrences` when necessary.
+    You may also check for "zero" occurrences of a set of values by
+    setting `max_occurrences` to 0.
+
+    The `only` rule ensures that the `values` are the only possible
+    values in the scope (possibly not containing them at all).
+    Use it when you want to enumerate the admitted values for the
+    scope, as in an enumeration.
+
+    The `all_and_only` rule checks both if all the `values` declared
+    are present in the scope and if only they are present (not
+    tolerating values not declared).
+    Use it when you know all the possible values for the scope and you
+    are sure that they will be always present.
+
+    The `min_occurrences` and `max_occurrences` parameters are applied
+    applied to all the `values` declared, and only these. It means you
+    cannot (yet) specify boundaries for values you did't declare.
+
+    You may also notice that, by tweaking the expected number of
+    occurrences, you may end up having the very same behaviour
+    regardless the `rule` you choose.
+    In this case, you should go for the rule that semantically matches
+    best your intents, so that your final validation document looks
+    more readable and easy to understand.
+
+    Examples
+    --------
+    * You have a table of users containg a column `handedness`
+      only admitting the values:
+      `right-handed`, `left-handed` and `ambidextrous`.
+      You know that some of these values may not appear in the data,
+      but you don't want other values to be present.
+
+    .. code-block:: json
+
+        {
+            "scope": "handedness",
+            "statements": [
+                {
+                    "type": "contain",
+                    "rule": "only",
+                    "values": ["right-handed", "left-handed", "ambidextrous"],
+                    "parser": {"dtype": "string"}
+                }
+            ]
+        }
+
+    * You have a table of servers containg a column `role` which may
+      contain the values `master` and `slave`.
+      You want to be sure that there is always one and only one master
+      server in the data.
+
+    .. code-block:: json
+
+        {
+            "scope": "role",
+            "statements": [
+                {
+                    "type": "contain",
+                    "rule": "all",
+                    "values": ["master"],
+                    "parser": {"dtype": "string"},
+                    "min_occurrences": 1,
+                    "max_occurrences": 1
+                }
+            ]
+        }
+
+    You may also extend the previous example by making some adjustments
+    to ensure that there is no other value than `master` and `role`
+    in the data. Make notice that although the `rule` below is changed
+    to `only`, the statement above is still contemplated by the
+    `occurrences_per_value` parameter in the following validation item:
+
+    .. code-block:: json
+
+        {
+            "scope": "role",
+            "statements": [
+                {
+                    "type": "contain",
+                    "rule": "only",
+                    "values": ["master", "slave"],
+                    "parser": {"dtype": "string"},
+                    "occurrences_per_value": [
+                        {
+                            "values": ["master"],
+                            "min_occurrences": 1,
+                            "max_occurrences": 1
+                        }
+                    ]
+                }
+            ]
+        }
+
+    * You have a table of transactions containing details about
+      transactions in all the branches of a company. You expect that
+      there should always be at least one transaction per branch.
+
+    .. code-block:: json
+
+        {
+            "scope": ["branch_name"],
+            "statements": [
+                {
+                    "type": "contain",
+                    "rule": "all_and_only",
+                    "values": [
+                        "Albany", "Utica", "Scranton", "Akron",
+                        "Nashua", "Buffalo", "Rochester"
+                    ],
+                    "parser": {"dtype": "string"}
+                }
+            ]
+        }
+
+    * You have a table for the logs of user accesses to a website which
+      contains an `IP` column. You want to be sure that blacklisted
+      IPs are not present in the data. The following validation item in
+      YAML format checks for the absense of blacklisted IPs:
+
+    .. code-block:: yaml
+
+        scope: IP
+        statements:
+        - type: contain
+          rule: all
+          max_occurrences: 0
+          values: # blacklisted IPs
+          - 3.48.48.135
+          - 3.48.48.136
+          parser: {dtype: string}
+
     """
     name = 'contain'
     expected_parameters = [
         'rule',
         'values',
         'parser',
-        'occurrences_per_value',
         'min_occurrences',
         'max_occurrences',
+        'occurrences_per_value',
         'verbose'
     ]
     table_only = False
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.rule = self.options['rule']
@@ -40,7 +213,7 @@ class Contain(BaseStatement):
         self._set_default_minmax_occurrences()
         self._assert_parameters()
 
-    def _set_default_minmax_occurrences(self):
+    def _set_default_minmax_occurrences(self) -> None:
         min_occurrences_rule_default = {
             'all': 1,
             'only': 0,
@@ -57,13 +230,13 @@ class Contain(BaseStatement):
         if self.max_occurrences is None:
             self.max_occurrences = max_occurrences_rule_default[self.rule]
 
-    def _assert_parameters(self):
+    def _assert_parameters(self) -> None:
         assert self.rule in ('all', 'only', 'all_and_only')
         assert self.min_occurrences >= 0
         assert self.max_occurrences >= 0
 
     # docstr-coverage:inherited
-    def report(self, df):
+    def report(self, df: DataFrame) -> dict:
         # Concat all columns
         count_isin = (
             concat(df[col] for col in df.columns).value_counts()
@@ -92,8 +265,8 @@ class Contain(BaseStatement):
         }
 
     # docstr-coverage:inherited
-    def result(self, report):
-        self._set_min_max_boundaries(self.value_count)
+    def result(self, report: dict) -> bool:
+        self._set_min_max_boundaries()
         self._set_values_scope()
 
         if not self._check_interval(self.value_count):
@@ -102,7 +275,7 @@ class Contain(BaseStatement):
             return False
         return True
 
-    def _set_min_max_boundaries(self, value_count):
+    def _set_min_max_boundaries(self) -> None:
         # Global boundaries
         min_max_boundaries = {}
         for value in self.values:
@@ -149,7 +322,7 @@ class Contain(BaseStatement):
         ]
         self.values_scope_filter = values_col
 
-    def _check_interval(self, value_count):
+    def _check_interval(self, value_count: dict) -> bool:
         """
         Check if each value is inside an interval of min and max
         number of occurrencies. These values are set globally in
@@ -174,7 +347,7 @@ class Contain(BaseStatement):
                     return False
         return True
 
-    def _check_rule(self, value_count):
+    def _check_rule(self, value_count: dict) -> bool:
         """
         Checks if given columns attend the given requirements
         of presence or absence of values, according to a criteria
@@ -204,12 +377,11 @@ class Contain(BaseStatement):
             return self._check_all(value_count)
         elif self.rule == 'only':
             return self._check_only(value_count)
-        elif self.rule == 'all_and_only':
-            is_check_all = self._check_all(value_count)
-            is_check_only = self._check_only(value_count)
-            return is_check_all and is_check_only
+        else:
+            return (self._check_all(value_count) and
+                    self._check_only(value_count))
 
-    def _check_all(self, value_count):
+    def _check_all(self, value_count: dict) -> bool:
         """
         Checks if values in df contains all the expected values
         """
@@ -219,7 +391,7 @@ class Contain(BaseStatement):
             return False
         return True
 
-    def _check_only(self, value_count):
+    def _check_only(self, value_count: dict) -> bool:
         """
         Checks if all values in df are inside the expected values
         """
@@ -231,7 +403,7 @@ class Contain(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df):
+    def profile(df: DataFrame) -> DeirokayStatement:
         if any(dtype != df.dtypes for dtype in df.dtypes):
             raise NotImplementedError(
                 "Refusing to mix up different types of columns"
@@ -249,7 +421,7 @@ class Contain(BaseStatement):
         statement_template = {
             'type': 'contain',
             'rule': 'all'
-        }
+        }  # type: DeirokayStatement
         # Get most common type to infer treater
         try:
             statement_template.update(

@@ -2,7 +2,6 @@
 Set of functions related to Deirokay validation.
 """
 
-import inspect
 import json
 import warnings
 from copy import deepcopy
@@ -15,22 +14,12 @@ from jinja2 import BaseLoader
 from jinja2 import StrictUndefined as strict
 from jinja2.nativetypes import NativeEnvironment
 
-import deirokay.statements
 from deirokay.enums import SeverityLevel
 from deirokay.exceptions import ValidationError
 from deirokay.fs import FileSystem, LocalFileSystem, fs_factory
 from deirokay.history_template import get_series
-from deirokay.statements import BaseStatement
+from deirokay.statements import STATEMENTS_MAP, BaseStatement
 from deirokay.utils import _check_columns_in_df_columns, _render_dict
-
-# List all Core statement classes automatically
-core_statement_classes = {
-    cls.name: cls
-    for _, cls in inspect.getmembers(deirokay.statements)
-    if isinstance(cls, type) and
-    issubclass(cls, BaseStatement) and
-    cls is not BaseStatement
-}
 
 
 def _load_custom_statement(location: str):
@@ -84,12 +73,12 @@ def _process_stmt(statement: dict) -> BaseStatement:
             raise KeyError('A custom statement must define a `location`'
                            ' parameter.')
         cls = _load_custom_statement(location)
-    elif stmt_type in core_statement_classes:
-        cls = core_statement_classes[stmt_type]
+    elif stmt_type in STATEMENTS_MAP:
+        cls = STATEMENTS_MAP[stmt_type]
     else:
         raise NotImplementedError(
             f'Statement type "{stmt_type}" not implemented.\n'
-            f'The available types are {list(core_statement_classes)}'
+            f'The available types are {list(STATEMENTS_MAP)}'
             ' or `custom` for your own statements.'
         )
 
@@ -170,8 +159,8 @@ def validate(df: pandas.DataFrame, *,
     """
 
     if save_to:
-        save_to = fs_factory(save_to)
-        if isinstance(save_to, LocalFileSystem) and not save_to.isdir():
+        save_to_fs = fs_factory(save_to)
+        if isinstance(save_to_fs, LocalFileSystem) and not save_to_fs.isdir():
             raise ValueError('The `save_to` parameter must be an existing'
                              ' directory or an S3 path.')
 
@@ -187,14 +176,14 @@ def validate(df: pandas.DataFrame, *,
 
     # Render templates
     template = dict(
-        series=lambda x, y: get_series(x, y, read_from=save_to),
+        series=lambda x, y: get_series(x, y, read_from=save_to_fs),
         **(template or {})
     )
     _render_dict(NativeEnvironment(loader=BaseLoader(), undefined=strict),
                  dict_=validation_document,
                  template=template)
 
-    for item in validation_document.get('items'):
+    for item in validation_document['items']:
         scope = item.get('scope')
         scope = [scope] if not isinstance(scope, list) else scope
         _check_columns_in_df_columns(scope, df.columns)
@@ -210,7 +199,7 @@ def validate(df: pandas.DataFrame, *,
             stmt['report'] = report
 
     if save_to:
-        _save_validation_document(validation_document, save_to,
+        _save_validation_document(validation_document, save_to_fs,
                                   save_format, current_date)
 
     if raise_exception:
@@ -220,7 +209,7 @@ def validate(df: pandas.DataFrame, *,
 
 
 def raise_validation(validation_result_document: dict,
-                     exception_level: SeverityLevel):
+                     exception_level: SeverityLevel) -> None:
     """Check for a validation result `dict` and raise a
     `ValidationError` exception whenever a statement whose severity
     level is greater or equal to `exception_level` fails.
@@ -239,7 +228,7 @@ def raise_validation(validation_result_document: dict,
         greater or equal to `exception_level`.
     """
     highest_level = None
-    for item in validation_result_document.get('items'):
+    for item in validation_result_document['items']:
         scope = item['scope']
         for stmt in item.get('statements'):
             severity = stmt.get('severity', SeverityLevel.CRITICAL)
@@ -263,7 +252,7 @@ def raise_validation(validation_result_document: dict,
 def _save_validation_document(document: dict,
                               save_to: FileSystem,
                               save_format: Optional[str] = None,
-                              current_date: Optional[datetime] = None):
+                              current_date: Optional[datetime] = None) -> None:
     if current_date is None:
         warnings.warn(
             'Document is being saved using the current date returned by the'
@@ -271,7 +260,7 @@ def _save_validation_document(document: dict,
             ' `current_date` argument to `validate`.', Warning
         )
         current_date = datetime.utcnow()
-    current_date = current_date.strftime('%Y%m%dT%H%M%S')
+    current_date = current_date.strftime('%Y%m%dT%H%M%S')  # type: ignore
 
     document_name = document['name']
     folder_path = save_to / document_name

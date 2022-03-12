@@ -1,21 +1,79 @@
 """
-Module for BaseStatement and builtin Deirokay statements.
+Statement to evaluate mathematical expressions againt a set of
+columns from a given scope.
 """
-
 import re
 from decimal import Decimal
 
 import numpy
-import pandas
-from pandas import Float64Dtype, Int64Dtype, Series
+from pandas import (DataFrame, Float32Dtype, Float64Dtype, Int32Dtype,
+                    Int64Dtype, Series)
 
 from .base_statement import BaseStatement
 
 
 class ColumnExpression(BaseStatement):
     """
-    Evaluates an expression involving the scope columns, using
-    `numpy.eval()`
+    Evaluates an expression (or a list of expressions) involving
+    the scope columns, using `numpy.eval()`.
+    The statement passes only if all expressions evaluate to `True`.
+
+    The columns in the scope must be ideally of the same dtype.
+    This statement supports the following dtypes:
+    `string`, `integer`, `float` and `decimal`.
+
+    The available parameters for this statement are:
+
+    * `expressions` (required): an expression (or a `list` of
+      expressions) to be evaluated.
+      The valid operators are: `==`, `!=`, `=~`, `>=`, `<=`, `>` and
+      `<`.
+    * `at_least_%`: the minimum percentage of valid rows. Default: 100.
+    * `at_most_%`: the maximum percentage of valid rows. Default: 100.
+    * `rtol`: the relative tolerance for float evaluations (when
+      using the `=~` operator). Default: 1e-5.
+    * `atol`: the absolute tolerance for float evaluations (when
+      using the `=~` operator). Default: 1e-8.
+
+    Examples
+    --------
+    In the example below, in JSON format, we test whether or not the
+    values of the `a` column are equal to the values of the `b` column.
+    Similarly, we test whether or not the values of the `b` column are
+    greater than the values of the `c` column:
+
+    .. code-block:: json
+
+        {
+            "scope": ["a", "b", "c"],
+            "statements": [
+                {
+                    "type": "column_expression",
+                    "expressions": ["a == b", "a < c"],
+                    "at_least_%": 50.0
+                }
+            ]
+        }
+
+    For float comparisons, you may prefer using the `rtol` or `atol`
+    parameters, in addition to the `=~` operator. For example, if you
+    want to test whether or not the values of the `a` column are equal
+    to the values of the `b` column with a relative tolerance of 1e-3,
+    you can use the following JSON:
+
+    .. code-block:: json
+
+        {
+            "scope": ["a", "b"],
+            "statements": [
+                {
+                    "type": "column_expression",
+                    "expressions": "a =~ b",
+                    "rtol": 1e-3
+                }
+            ]
+        }
+
     """
 
     name = 'column_expression'
@@ -24,7 +82,7 @@ class ColumnExpression(BaseStatement):
     ]
     table_only = False
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.expressions = self.options['expressions']
@@ -42,7 +100,7 @@ class ColumnExpression(BaseStatement):
                 raise SyntaxError('Expression comparison operand not found')
 
     # docstr-coverage:inherited
-    def report(self, df):
+    def report(self, df: DataFrame) -> dict:
         report = {}
         df = df.copy()
         df = self._fix_df_dtypes(df)
@@ -60,7 +118,7 @@ class ColumnExpression(BaseStatement):
             }
         return report
 
-    def _fix_df_dtypes(self, df):
+    def _fix_df_dtypes(self, df: DataFrame) -> DataFrame:
         """
         Fixes DataFrame dtypes. If Int64Dtype() or Float64Dtype(),
         converts to traditional int64 and float64 dtypes. If object
@@ -70,8 +128,8 @@ class ColumnExpression(BaseStatement):
         When a pandas version corrects this bug, we can delete this
         method.
         """
-        pandas_dtypes_int = [Int64Dtype(), pandas.Int32Dtype()]
-        pandas_dtypes_float = [Float64Dtype(), pandas.Float32Dtype()]
+        pandas_dtypes_int = [Int64Dtype(), Int32Dtype()]
+        pandas_dtypes_float = [Float64Dtype(), Float32Dtype()]
         pandas_dtypes_decimal = [Decimal]
         for col in df.columns:
             if df[[col]].dtypes.isin(pandas_dtypes_int)[0]:
@@ -90,17 +148,17 @@ class ColumnExpression(BaseStatement):
                     df[[col]] = df[[col]].astype(float)
         return df
 
-    def _eval(self, df, expr):
+    def _eval(self, df: DataFrame, expr: str) -> Series:
         if '=~' not in expr:
             row_count = df.eval(expr)
         else:
             row_count = self._isclose_eval(df, expr)
         return row_count
 
-    def _isclose_eval(self, df, expr):
+    def _isclose_eval(self, df: DataFrame, expr: str) -> Series:
         """
         Accomplishes the paper of `pandas.eval` when we have the
-        =~ comparison to evaluate. That implementation is done by
+        `=~` comparison to evaluate. That implementation is done by
         using `numpy.eval`.
         """
         expr_calculus = re.split('|'.join(self.valid_expressions), expr)
@@ -134,7 +192,7 @@ class ColumnExpression(BaseStatement):
         return eval_bool
 
     # docstr-coverage:inherited
-    def result(self, report):
+    def result(self, report: dict) -> bool:
         for expr in report.keys():
             if not report[expr].get('valid_rows_%') >= self.at_least_perc:
                 return False

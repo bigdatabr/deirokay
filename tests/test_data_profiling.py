@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from deirokay import data_reader, profile, validate
 
 
@@ -9,4 +11,6 @@ def test_profiling():
     )
 
     validation_document = profile(df, 'transactions_sample')
+    pprint(validation_document)
+
     validate(df, against=validation_document)

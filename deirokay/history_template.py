@@ -4,6 +4,7 @@ logs from a given directory and assembling them as pandas Series.
 """
 
 import warnings
+from typing import Callable, List
 
 import jq
 from pandas import Series
@@ -11,7 +12,8 @@ from pandas import Series
 from .fs import FileSystem
 
 
-def series_from_fs(series_name: str, lookback: int, folder: FileSystem):
+def series_from_fs(series_name: str, lookback: int,
+                   folder: FileSystem) -> List[dict]:
     """List log files as FileSystem objects for a given Validation
     Document.
 
@@ -30,7 +32,7 @@ def series_from_fs(series_name: str, lookback: int, folder: FileSystem):
         List of logs to be queried.
     """
 
-    acc = (folder/series_name).ls(recursive=True, files_only=True)
+    acc = list((folder/series_name).ls(recursive=True, files_only=True))
 
     acc.sort(reverse=True)
     acc = acc[:min(lookback, len(acc))]
@@ -41,7 +43,7 @@ def series_from_fs(series_name: str, lookback: int, folder: FileSystem):
 class NullCallableNode():
     """Dummy node which returns nothing."""
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Callable[[], None]:
         return lambda: None
 
 
@@ -49,7 +51,7 @@ class StatementNode():
     """Node at Statement level."""
     detail_keys = jq.compile('.[].report.detail | keys')
 
-    def __init__(self, statements):
+    def __init__(self, statements) -> None:
         attributes = StatementNode.detail_keys.input(statements).all()
         attributes = set([key for sub in attributes for key in sub])
 
@@ -60,7 +62,7 @@ class StatementNode():
             )
             setattr(self, att, Series(child))
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> NullCallableNode:
         return NullCallableNode()
 
 
@@ -70,7 +72,7 @@ class ItemNode():
         '.[].statements[] | if .alias != null then .alias else .type end'
     )
 
-    def __init__(self, items):
+    def __init__(self, items: List[str]):
         attributes = set(ItemNode.attribute_keys.input(items).all())
 
         for att in attributes:
@@ -80,7 +82,7 @@ class ItemNode():
             ).input(items).all()
             setattr(self, att, StatementNode(child))
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> StatementNode:
         return StatementNode([])
 
 
@@ -90,7 +92,7 @@ class DocumentNode():
         '.[].items[] | if .alias != null then .alias else .scope end'
     )
 
-    def __init__(self, docs):
+    def __init__(self, docs: List[dict]):
         try:
             attributes = set(DocumentNode.attribute_keys.input(docs).all())
         except TypeError:
@@ -106,7 +108,7 @@ class DocumentNode():
             ).input(docs).all()
             setattr(self, att, ItemNode(child))
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str):
         return ItemNode([])
 
 

@@ -6,17 +6,17 @@
 
 # -- Path setup --------------------------------------------------------------
 
+import os
+import sys
 from datetime import datetime
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-from os.path import dirname, join
+sys.path.insert(0, os.path.abspath('../../'))
 
-with open(join(dirname(__file__), '../../deirokay/__version__.py')) as v:
-    __version__ = None
-    exec(v.read().strip())
-
+from deirokay.__version__ import __version__  # noqa E501
 
 # -- Project information -----------------------------------------------------
 
@@ -43,11 +43,16 @@ extensions = [
     # Add a link to the Python source code for classes, functions etc.
     'sphinx.ext.viewcode',
     # Add a link to another page of the documentation
-    'sphinx.ext.autosectionlabel'
+    'sphinx.ext.autosectionlabel',
+    # Theme
+    'sphinx_rtd_theme',
+    # Notebook support
+    'nbsphinx'
 ]
 
 # napoleon configuration for numpy docstring
 todo_include_todos = True
+todo_link_only = True
 napoleon_use_ivar = True
 napoleon_use_google_string = False
 napoleon_include_special_with_doc = True
