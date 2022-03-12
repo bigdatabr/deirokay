@@ -42,11 +42,16 @@ extensions = [
     # Add a link to the Python source code for classes, functions etc.
     'sphinx.ext.viewcode',
     # Add a link to another page of the documentation
-    'sphinx.ext.autosectionlabel'
+    'sphinx.ext.autosectionlabel',
+    # Theme
+    'sphinx_rtd_theme',
+    # Notebook support
+    'nbsphinx'
 ]
 
 # napoleon configuration for numpy docstring
 todo_include_todos = True
+todo_link_only = True
 napoleon_use_ivar = True
 napoleon_use_google_string = False
 napoleon_include_special_with_doc = True

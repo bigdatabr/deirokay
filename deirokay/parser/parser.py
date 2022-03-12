@@ -149,10 +149,13 @@ def get_treater_instance(option: dict):
     Example
     -------
 
-    option = {
-        'dtype': 'integer',
-        'thousand_sep': ','
-    }
+    .. code-block:: python
+
+        option = {
+            'dtype': 'integer',
+            'thousand_sep': ','
+        }
+
     """
     option = option.copy()
     dtype = option.pop('dtype')

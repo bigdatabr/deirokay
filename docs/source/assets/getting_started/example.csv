@@ -1,0 +1,7 @@
+name,age,is_married
+John,55,True
+Mariah,44,yes
+Carl,,false
+Josh,12,yes
+Anna,32,no
+Josh,12,true

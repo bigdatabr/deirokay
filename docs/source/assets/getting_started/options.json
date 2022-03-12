@@ -1,0 +1,23 @@
+{
+    "columns": {
+        "name": {
+            "dtype": "string"
+        },
+        "age": {
+            "dtype": "integer"
+        },
+        "is_married": {
+            "dtype": "boolean",
+            "truthies": [
+                "yes",
+                "true",
+                "True"
+            ],
+            "falsies": [
+                "no",
+                "false",
+                "False"
+            ]
+        }
+    }
+}
