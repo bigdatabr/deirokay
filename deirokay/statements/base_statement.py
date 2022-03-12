@@ -1,36 +1,37 @@
+"""
+The base statement that all other statements inherit from.
+"""
+from abc import ABC, abstractmethod
+
 from pandas import DataFrame
 
+from .._typing import DeirokayStatement
 
-class BaseStatement:
+
+class BaseStatement(ABC):
     """Base abstract statement class for all Deirokay statements.
-
-    Parameters
-    ----------
-    options : dict
-        Statement parameters provided by user.
 
     Attributes
     ----------
-    name : str
-        Statement name when referred in Validation Documents (only
-        valid for non-custom statements).
-    expected_parameters : List[str]
-        Parameters expected for this statement.
-    table_only : bool
-        Whether or not this statement in applicable only to the entire
-        table, instead of scoped columns.
+    options : dict
+        Statement parameters provided by user.
     """
 
     name = 'base_statement'
+    """str: Statement name when referred in Validation Documents
+    (only valid for Deirokay built-in statements)."""
     expected_parameters = ['type', 'severity', 'location']
+    """List[str]: Parameters expected for this statement."""
     table_only = False
+    """bool: Whether or not this statement in applicable only to the
+    entire table, instead of scoped columns."""
 
-    def __init__(self, options: dict):
+    def __init__(self, options: dict) -> None:
         self._validate_options(options)
         self.options = options
 
-    def _validate_options(self, options: dict):
-        """Make sure all providded statement parameters are expected
+    def _validate_options(self, options: dict) -> None:
+        """Make sure all provided statement parameters are expected
         by statement classes"""
         cls = type(self)
         unexpected_parameters = [
@@ -45,7 +46,7 @@ class BaseStatement:
                 f'The valid parameters are: {cls.expected_parameters}'
             )
 
-    def __call__(self, df: DataFrame):
+    def __call__(self, df: DataFrame) -> dict:
         """Run statement instance."""
         internal_report = self.report(df)
         result = self.result(internal_report)
@@ -56,6 +57,7 @@ class BaseStatement:
         }
         return final_report
 
+    @abstractmethod
     def report(self, df: DataFrame) -> dict:
         """Receive a DataFrame containing only columns on the scope of
         validation and returns a report of related metrics that can
@@ -73,8 +75,8 @@ class BaseStatement:
         dict
             A dictionary of useful statistics about the target columns.
         """
-        return {}
 
+    @abstractmethod
     def result(self, report: dict) -> bool:
         """Receive the report previously generated and declare this
         statement as either fulfilled (True) or failed (False).
@@ -91,10 +93,9 @@ class BaseStatement:
         bool
             Whether or not this statement passed.
         """
-        return True
 
     @staticmethod
-    def profile(df: DataFrame) -> dict:
+    def profile(df: DataFrame) -> DeirokayStatement:
         """Given a template data table, generate a statement dict
         from it.
 
@@ -107,5 +108,12 @@ class BaseStatement:
         -------
         dict
             Statement dict.
+
+        Raises
+        ------
+        NotImplementedError
+            If this method is not implemented by the subclass or the
+            profile generation for this statement was intentionally
+            skipped.
         """
         raise NotImplementedError
