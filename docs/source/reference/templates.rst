@@ -1,2 +1,2 @@
-List of Built-in Templates
-==========================
+Template Reference
+==================

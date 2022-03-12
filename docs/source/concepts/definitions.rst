@@ -4,54 +4,8 @@ Definitions
 
 Here you can find the description about key concepts that you will see when using Deirokay.
 
-DTypes
-======
-
-For Deirokay, as in any other application, data types are an important 
-concept. So, when you are parsing your data with Deirokay, there are 
-a few datatypes that you might want to make use of. They are: 
-
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| DTypes     | String-like alias | Supported Arguments  | Default             | Argument Description                   |
-+============+===================+======================+=====================+========================================+
-| All DTypes |                   | nullable             | True                | Values can be null                     |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| All DTypes |                   | unique               | False               | Values should be unique                |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| All DTypes |                   | rename               | None                | Rename column                          |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| INTEGER    | 'integer'         | thousand_sep         | None                | Thousand separator (e.g., "1,988")     |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| FLOAT      | 'float'           | thousand_sep         | None                | Thousand separator (e.g., "1,988")     |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| FLOAT      | 'float'           | decimal_sep          | '.'                 | Decimal separator (e.g., "3.14")       |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| DECIMAL    | 'decimal'         | decimal_sep          | '.'                 | Decimal separator (e.g., "3.14")       |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| DECIMAL    | 'decimal'         | thousand_sep         | None                | Thousand separator (e.g., "1,988")     |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| DECIMAL    | 'decimal'         | decimal_places       | None                | Decimal places (e.g., 2 for "1.25")    |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| BOOLEAN    | 'boolean'         | truthies             | ['true','True']     | Values taken as True                   |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| BOOLEAN    | 'boolean'         | falsies              | ['false', 'False']  | Values taken as False                  |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| BOOLEAN    | 'boolean'         | ignore_case          | False               | Ignore case when evaluating True/False |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| BOOLEAN    | 'boolean'         | default_value        | None                | Value to use if not truthy nor falsy   |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| DATETIME   | 'datetime'        | format               | '%Y-%m-%d %H:%M:%S' | Date Time format                       |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| TIME       | 'time'            | format               | '%H:%M:%S'          | Time format                            |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| DATE       | 'date'            | format               | '%Y-%m-%d'          | Date format                            |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-| STRING     | 'string'          | treat_null_as        | None                | Value to replace when null (e.g., "")  |
-+------------+-------------------+----------------------+---------------------+----------------------------------------+
-
-
-Options Document
-================
+Deirokay Options Document
+=========================
 
 In order to be able to parse a file, the `deirokay.data_reader` method should receive specifications about how to interpret each column of your data, as well as source-wise parameters, such as file encoding or column separator (in case of `.csv` files). 
 Those specifications, called *Deirokay Options document*, can be expressed in form of a JSON/YAML file or a Python object.

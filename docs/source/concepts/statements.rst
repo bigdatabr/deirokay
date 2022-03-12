@@ -94,11 +94,7 @@ For a statement to be processed, its type, as declared in the
 validation document, must match a statement class name (the *name* 
 attribute of a statement class).
 
-.. _deirokay/statements.py: 
-  http://gitlab.bigdata/data-engineers/deirokay/-/blob/master/deirokay/statements.py
-
-The native statement classes are all declared in 
-`deirokay/statements.py`_. See an example:
+The native statement classes are all declared in :ref:`deirokay.statements`. See an example:
 
 .. code-block:: python
 

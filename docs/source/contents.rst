@@ -11,10 +11,20 @@
 .. toctree::
    :hidden:
    :maxdepth: 1
-   :caption: Deirokay Concepts
+   :caption: Concepts
 
    concepts/definitions
    concepts/statements
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Main Features
+
+   features/data_reader
+   features/validate
+   features/profile
+   features/deirokay_operator
 
 .. toctree::
    :hidden:
