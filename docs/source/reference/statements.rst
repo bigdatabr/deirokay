@@ -1,5 +1,5 @@
-Statement Reference
-===================
+Statements
+==========
 
 Deirokay statements can all be found in :ref:`deirokay.statements` page.
 

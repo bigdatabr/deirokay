@@ -214,11 +214,12 @@ Finally, to test your dataset against the validation document:
 
 .. code-block:: python
 
-    >>> from deirokay import data_reader
-    >>> df = data_reader('example.csv', options='options.json')
-    >>> validation_result_document = validate(df,
-    ...                                       against='assertions.json',
-    ...                                       raise_exception=False)
+    from deirokay import data_reader
+
+    df = data_reader('example.csv', options='options.json')
+    validation_result_document = validate(df,
+                                          against='assertions.json',
+                                          raise_exception=False)
 
 The resulting validation document will present the reports for each
 statement, as well as its final result: `pass` or `fail`. You may

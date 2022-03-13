@@ -68,6 +68,10 @@ Make notice every statement declaration identifies its *type*, which is
 the rule to be tested. In function of its type, a statement may have 
 several additional parameters, and they can be optional or not.
 
+
+Special Parameters for Statements
+=================================
+
 There are special parameter names, which are actually directives to 
 pass attributes regarding the statement itself, and not the statement 
 type. They are:
