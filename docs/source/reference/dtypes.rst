@@ -1,5 +1,5 @@
-DType Reference
-===============
+DTypes
+======
 
 For Deirokay, as in any other application, data types are an important 
 concept. So, when you are parsing your data with Deirokay, there are 

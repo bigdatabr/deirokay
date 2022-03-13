@@ -24,6 +24,14 @@
    features/data_reader
    features/validate
    features/profile
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Extra Features
+
+   features/severity_level
+   features/custom_statements
    features/template
    features/deirokay_operator
 
