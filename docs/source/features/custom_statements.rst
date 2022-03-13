@@ -20,7 +20,7 @@ success) or `False` (to signal that the statement is invalid).
  
 The code below shows an example of a custom statement:
 
-.. code-block: python
+.. code-block:: python
 
     from deirokay.statements import BaseStatement
 
