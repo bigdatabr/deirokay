@@ -1,6 +1,6 @@
-=========
-Validator
-=========
+==============
+Data Validator
+==============
 
 The `validate` method can be imported from :ref:`deirokay.validate<deirokay.validator.validate>`.
 
