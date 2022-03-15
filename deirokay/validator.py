@@ -2,11 +2,13 @@
 Set of functions related to Deirokay validation.
 """
 
+import functools
 import json
 import warnings
 from copy import deepcopy
 from datetime import datetime
 from os.path import splitext
+from types import ModuleType
 from typing import Optional, Union
 
 import pandas
@@ -22,6 +24,16 @@ from deirokay.statements import STATEMENTS_MAP, BaseStatement
 from deirokay.utils import _check_columns_in_df_columns, _render_dict
 
 
+@functools.lru_cache(maxsize=32)
+def _cached_import_file_as_module(file_path: str) -> ModuleType:
+    """Import a file as a module, caching the result.
+    This prevents the need to import the same file multiple times.
+    """
+    fs = fs_factory(file_path)
+    module = fs.import_as_python_module()
+    return module
+
+
 def _load_custom_statement(location: str):
     """Load a custom statement from a .py file"""
     if '::' not in location:
@@ -31,8 +43,7 @@ def _load_custom_statement(location: str):
 
     file_path, class_name = location.split('::')
 
-    fs = fs_factory(file_path)
-    module = fs.import_as_python_module()
+    module = _cached_import_file_as_module(file_path)
     cls = getattr(module, class_name)
 
     if not issubclass(cls, BaseStatement):
