@@ -11,3 +11,12 @@ def prepare_history_folder():
     os.mkdir(local_path)
     yield local_path
     shutil.rmtree(local_path)
+
+
+@pytest.fixture
+def require_s3_test_bucket():
+    s3_test_bucket = os.environ.get('DEIROKAY_TEST_BUCKET')
+    if not s3_test_bucket:
+        pytest.skip('DEIROKAY_TEST_BUCKET variable not set')
+
+    return s3_test_bucket

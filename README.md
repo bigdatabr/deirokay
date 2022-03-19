@@ -45,3 +45,10 @@ testing and to help you in your development.
 ## Documentation
 
 Please, [read the docs](https://deirokay.readthedocs.io/).
+
+## Instructions for testing
+
+Make sure you set the `DEIROKAY_TEST_BUCKET` environment variable to a
+bucket that you have access to (*s3:GetObject*, *s3:PutObject* and 
+*s3:DeleteObject* actions), otherwise some tests that depends on AWS S3
+will be skipped.

@@ -48,7 +48,7 @@ def test_data_validation_with_jinja(prepare_history_folder):
 
 
 @pytest.fixture
-def prepare_history_s3():
+def prepare_history_s3(require_s3_test_bucket):
     import boto3
     s3 = boto3.client('s3')
 
@@ -57,14 +57,13 @@ def prepare_history_s3():
                     .get('Contents', [])):
             s3.delete_object(Bucket=bucket, Key=obj['Key'])
 
-    s3_path = 's3://deirokay/'
+    s3_path = f's3://{require_s3_test_bucket}/'
     bucket, prefix = split_s3_path(s3_path)
     delete_s3_prefix(bucket, prefix)
     yield s3_path
     delete_s3_prefix(bucket, prefix)
 
 
-@pytest.mark.skip(reason='Need AWS credentials')
 def test_data_validation_with_jinja_using_s3(prepare_history_s3):
 
     df = data_reader(
