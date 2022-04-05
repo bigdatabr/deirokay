@@ -3,6 +3,7 @@ pytest-cov
 pytest-postgresql
 psycopg
 boto3
+moto
 s3fs
 pyarrow
 SQLAlchemy

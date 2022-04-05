@@ -1,6 +1,8 @@
 import os
 import shutil
 
+import boto3
+import moto
 import pytest
 
 
@@ -13,10 +15,9 @@ def prepare_history_folder():
     shutil.rmtree(local_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def require_s3_test_bucket():
-    s3_test_bucket = os.environ.get('DEIROKAY_TEST_BUCKET')
-    if not s3_test_bucket:
-        pytest.skip('DEIROKAY_TEST_BUCKET variable not set')
-
-    return s3_test_bucket
+    with moto.mock_s3():
+        s3 = boto3.client('s3')
+        s3.create_bucket(Bucket='test-bucket')
+        yield 'test-bucket'
