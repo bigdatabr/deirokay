@@ -38,10 +38,17 @@
       }
     ],
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "sed -i -E s/\\\".*\\\"/\\\"${nextRelease.version}\\\"/ deirokay/__version__.py"
+      }
+    ],
+    [
       "@semantic-release/git",
       {
         "assets": [
-          "CHANGELOG.md"
+          "CHANGELOG.md",
+          "deirokay/__version__.py"
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
