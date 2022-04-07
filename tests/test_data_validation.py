@@ -79,9 +79,9 @@ def test_custom_statement():
 
 
 @pytest.fixture
-def prepare_s3_custom_statement():
+def prepare_s3_custom_statement(require_s3_test_bucket):
     local_path = 'tests/custom_statement.py'
-    s3_path = 's3://deirokay/custom_statement.py'
+    s3_path = f's3://{require_s3_test_bucket}/custom_statement.py'
     bucket, key = split_s3_path(s3_path)
 
     import boto3
@@ -91,7 +91,6 @@ def prepare_s3_custom_statement():
     s3.delete_object(Bucket=bucket, Key=key)
 
 
-@pytest.mark.skip(reason='Need AWS credentials')
 def test_custom_statement_from_s3(prepare_s3_custom_statement):
     df = data_reader(
         'tests/transactions_sample.csv',
