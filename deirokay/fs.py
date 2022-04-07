@@ -5,10 +5,12 @@ paths.
 
 import contextlib
 import importlib
+import itertools
 import json
 import os
 import re
 import sys
+from collections import deque
 from os.path import splitext
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -92,8 +94,9 @@ class FileSystem():
     def __init__(self, path: str):
         self.path = path
 
-    def ls(self, recursive: bool = False,
-           files_only: bool = False) -> Sequence['FileSystem']:
+    def ls(self, recursive: bool = False, files_only: bool = False,
+           reverse: bool = False, limit: Optional[int] = None
+           ) -> Sequence['FileSystem']:
         """List files in a prefix or folder.
 
         Parameters
@@ -253,17 +256,24 @@ class LocalFileSystem(FileSystem):
     """FileSystem wrapper for local files and folders."""
 
     # docstr-coverage:inherited
-    def ls(self, recursive: bool = False,
-           files_only: bool = False) -> Sequence['LocalFileSystem']:
+    def ls(self, recursive: bool = False, files_only: bool = False,
+           reverse: bool = False, limit: Optional[int] = None
+           ) -> Sequence['LocalFileSystem']:
         if recursive is False:
             raise NotImplementedError
+        if files_only is False:
+            raise NotImplementedError
 
-        acc = []
-        for parent, folders, files in os.walk(self.path):
-            if not files_only:
-                acc += [os.path.join(parent, folder) for folder in folders]
-            acc += [os.path.join(parent, file) for file in files]
-        return [LocalFileSystem(path) for path in acc]
+        def _recursive_list():
+            for parent, _, files in sorted(os.walk(self.path),
+                                           key=lambda parent, *_: parent,
+                                           reverse=reverse):
+                for file in sorted(files, reverse=reverse):
+                    yield os.path.join(parent, file)
+
+        limited_files = itertools.islice(_recursive_list(), limit)
+
+        return [LocalFileSystem(path) for path in limited_files]
 
     # docstr-coverage:inherited
     def import_as_python_module(self) -> ModuleType:
@@ -285,6 +295,8 @@ class LocalFileSystem(FileSystem):
 
 class S3FileSystem(FileSystem):
     """FileSystem wrapper for objects stored in AWS S3."""
+
+    LIST_OBJECTS_MAX_KEYS = 1000
 
     def __init__(self, path: Optional[str] = None,
                  bucket: Optional[str] = None,
@@ -314,19 +326,51 @@ class S3FileSystem(FileSystem):
         self.prefix_or_key = final_prefix_or_key
 
     # docstr-coverage:inherited
-    def ls(self, recursive: bool = False,
-           files_only: bool = False) -> Sequence['S3FileSystem']:
+    def ls(self, recursive: bool = False, files_only: bool = False,
+           reverse: bool = False, limit: Optional[int] = None
+           ) -> Sequence['S3FileSystem']:
         if recursive is False:
             raise NotImplementedError
+        if files_only is False:
+            raise NotImplementedError
 
-        ls = self.client.list_objects(Bucket=self.bucket,
-                                      Prefix=self.prefix_or_key)
-        acc = [obj['Key'] for obj in ls.get('Contents', [])]
+        # To handle requests containing over 1000 items, we need to
+        # paginate through the results.
+        max_keys = self.LIST_OBJECTS_MAX_KEYS
+        page_iterable = self.client.get_paginator('list_objects_v2').paginate(
+            Bucket=self.bucket,
+            Prefix=self.prefix_or_key,
+            PaginationConfig={'PageSize': max_keys}
+        )
+        if not reverse:
+            chained_items = (
+                item['Key']
+                for page in page_iterable
+                for item in page.get('Contents', [])
+            )
+        else:
+            # Use deque with maxlen to exhaust the paginator and keep
+            # only the last pages (those necessary to satisfy the
+            # limit).
+            pages_to_keep = (
+                None if limit is None else (limit+max_keys-2)//max_keys+1
+            )
+            last_pages = deque(iter(page_iterable), maxlen=pages_to_keep)
+            # Worst case scenario: the last page contains only one
+            # item. Hence, from 2 to 1001, we need at least 2 pages,
+            # and so on. Thus, the expression `(limit+998)//1000 + 1`
+            chained_items = (
+                item['Key']
+                for page in reversed(last_pages)
+                for item in reversed(page.get('Contents', []))
+            )
+
+        chained_items = itertools.islice(chained_items, limit)
         return [
             S3FileSystem(bucket=self.bucket,
                          prefix_or_key=key,
                          client=self.client)
-            for key in acc
+            for key in chained_items
         ]
 
     # docstr-coverage:inherited

@@ -9,11 +9,12 @@ from typing import Callable, List
 import jq
 from pandas import Series
 
+from ._typing import DeirokayValidationDocument
 from .fs import FileSystem
 
 
 def series_from_fs(series_name: str, lookback: int,
-                   folder: FileSystem) -> List[dict]:
+                   folder: FileSystem) -> List[DeirokayValidationDocument]:
     """List log files as FileSystem objects for a given Validation
     Document.
 
@@ -32,12 +33,10 @@ def series_from_fs(series_name: str, lookback: int,
         List of logs to be queried.
     """
 
-    acc = list((folder/series_name).ls(recursive=True, files_only=True))
-
-    acc.sort(reverse=True)
-    acc = acc[:min(lookback, len(acc))]
-
-    return [file.read_dict() for file in acc]
+    ls = (folder/series_name).ls(
+        recursive=True, files_only=True, reverse=True, limit=lookback
+    )
+    return [file.read_dict() for file in ls]
 
 
 class NullCallableNode():
