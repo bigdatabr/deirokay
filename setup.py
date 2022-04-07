@@ -27,7 +27,7 @@ setup(
     description="A tool for data profiling and data validation",
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url="http://gitlab.bigdata/bressanmarcos/deirokay",
+    url="https://github.com/bigdatabr/deirokay",
     classifiers=[
         'Programming Language :: Python :: 3',
         'Operating System :: OS Independent',
