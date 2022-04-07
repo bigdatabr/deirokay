@@ -1,3 +1,14 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+### [0.7.2](https://github.com/bigdatabr/deirokay/compare/0.7.1...0.7.2) (2022-04-07)
+
+
+### Bug Fixes
+
+* Deal with pagination in S3 list_objects ([ed5e10e](https://github.com/bigdatabr/deirokay/commit/ed5e10e2a0e4e8ea3fc03ab8b5e2001c4bb222e6))
+
 # Release 0.7.1
 
 2022-02-22
