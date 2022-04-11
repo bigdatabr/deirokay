@@ -5,6 +5,7 @@
 
    self
    installation
+   contributing
    getting_started
    tutorial
 
