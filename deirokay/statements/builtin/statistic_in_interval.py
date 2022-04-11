@@ -62,21 +62,21 @@ class StatisticInInterval(BaseStatement):
             "scope": "a",
             "statements": [
                 {
-                    "name": "statistic_in_interval",
+                    "type": "statistic_in_interval",
                     "statistic": "mean",
                     ">": 0.4,
                     "!~": 0.5,
                     "<": 0.6
                 },
                 {
-                    "name": "statistic_in_interval",
+                    "type": "statistic_in_interval",
                     "statistic": "std",
                     "<": 0.1,
                     ">": 0.2,
                     "combination_logic": "or"
                 },
                 {
-                    "name": "statistic_in_interval",
+                    "type": "statistic_in_interval",
                     "statistic": ["min", "max"],
                     ">=": 0,
                     "<=": 1
