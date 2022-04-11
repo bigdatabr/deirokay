@@ -34,14 +34,10 @@ To include optional dependences for AWS S3, install:
 
 `pip install Deirokay[s3]`
 
-### Installation for development
-
-If you wish to contribute for Deirokay development, maybe
-you will want to install a more complete set of packages for
-testing and to help you in your development.
-
-`pip install Deirokay[dev]`
-
 ## Documentation
 
 Please, [read the docs](https://deirokay.readthedocs.io/).
+
+## Contributing
+
+Check our [contributing](./CONTRIBUTING.md) guidelines.
