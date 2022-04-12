@@ -3,11 +3,73 @@ Classes and functions to treat column data types according to
 Deirokay data types.
 """
 
+import datetime
+import decimal
 from decimal import Decimal
-from typing import Iterable, List, Optional, Union
+from typing import Any, Iterable, List, Optional, Type, Union
 
 from numpy import nan
-from pandas import NA, NaT, Series, to_datetime
+from pandas import NA, NaT, Series, Timestamp, to_datetime
+
+from deirokay._typing import DeirokayOption
+from deirokay.enums import DTypes
+
+
+def get_treater_instance(option: DeirokayOption) -> 'Validator':
+    """Create a treater instance from a Deirokay-style option.
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        option = {
+            'dtype': 'integer',
+            'thousand_sep': ','
+        }
+    """
+    option = option.copy()
+    dtype = option.pop('dtype')
+
+    cls = get_dtype_treater(dtype)
+    return cls(**option)
+
+
+def get_dtype_treater(dtype: Any) -> Type['Validator']:
+    """Map a dtype to its Treater class."""
+
+    treat_dtypes = {
+        DTypes.INT64: IntegerTreater,
+        DTypes.FLOAT64: FloatTreater,
+        DTypes.STRING: StringTreater,
+        DTypes.DATETIME: DateTime64Treater,
+        DTypes.DATE: DateTreater,
+        DTypes.TIME: TimeTreater,
+        DTypes.BOOLEAN: BooleanTreater,
+        DTypes.DECIMAL: DecimalTreater,
+    }
+    treat_primitives = {
+        int: IntegerTreater,
+        float: FloatTreater,
+        str: StringTreater,
+        Timestamp: DateTime64Treater,
+        datetime.date: DateTreater,
+        datetime.time: TimeTreater,
+        bool: BooleanTreater,
+        decimal.Decimal: DecimalTreater,
+    }
+
+    try:
+        if isinstance(dtype, DTypes):
+            return treat_dtypes[dtype]
+        elif isinstance(dtype, str):
+            return treat_dtypes[DTypes(dtype)]
+        else:
+            return treat_primitives[dtype]
+
+    except KeyError as e:
+        raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
+                                  " implemented yet") from e
 
 
 class Validator():

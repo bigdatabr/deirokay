@@ -195,7 +195,7 @@ def validate(df: pandas.DataFrame, *,
                  template=template)
 
     for item in validation_document['items']:
-        scope = item.get('scope')
+        scope = item['scope']
         scope = [scope] if not isinstance(scope, list) else scope
         _check_columns_in_df_columns(scope, df.columns)
 
