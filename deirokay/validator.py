@@ -16,6 +16,7 @@ from jinja2 import BaseLoader
 from jinja2 import StrictUndefined as strict
 from jinja2.nativetypes import NativeEnvironment
 
+from deirokay._typing import DeirokayValidationDocument
 from deirokay.enums import SeverityLevel
 from deirokay.exceptions import ValidationError
 from deirokay.fs import FileSystem, LocalFileSystem, fs_factory
@@ -98,6 +99,27 @@ def _process_stmt(statement: dict) -> BaseStatement:
     return statement_instance
 
 
+def _render_validation_document(
+    validation_document: DeirokayValidationDocument,
+    custom_template: Optional[dict] = None,
+    context: Optional[dict] = None,
+) -> DeirokayValidationDocument:
+    """Render a validation document using Jinja2."""
+
+    custom_template = custom_template or {}
+    context = context or {}
+
+    template = {
+        'series': functools.partial(get_series,
+                                    read_from=context.get('save_to_fs')),
+        **custom_template
+    }
+
+    _render_dict(NativeEnvironment(loader=BaseLoader(), undefined=strict),
+                 dict_=validation_document,
+                 template=template)
+
+
 def validate(df: pandas.DataFrame, *,
              against: Union[str, dict],
              save_to: Optional[str] = None,
@@ -171,9 +193,6 @@ def validate(df: pandas.DataFrame, *,
 
     if save_to:
         save_to_fs = fs_factory(save_to)
-        if isinstance(save_to_fs, LocalFileSystem) and not save_to_fs.isdir():
-            raise ValueError('The `save_to` parameter must be an existing'
-                             ' directory or an S3 path.')
 
     if isinstance(against, str):
         save_format = save_format or splitext(against)[1].lstrip('.')
@@ -185,14 +204,8 @@ def validate(df: pandas.DataFrame, *,
         f'Not a valid format {save_format}'
     )
 
-    # Render templates
-    template = dict(
-        series=lambda x, y: get_series(x, y, read_from=save_to_fs),
-        **(template or {})
-    )
-    _render_dict(NativeEnvironment(loader=BaseLoader(), undefined=strict),
-                 dict_=validation_document,
-                 template=template)
+    _render_validation_document(validation_document, template,
+                                context=locals())
 
     for item in validation_document['items']:
         scope = item['scope']
@@ -201,7 +214,7 @@ def validate(df: pandas.DataFrame, *,
 
         df_scope = df[scope]
 
-        for stmt in item.get('statements'):
+        for stmt in item['statements']:
             report = _process_stmt(stmt)(df_scope)
             if report['result'] is True:
                 report['result'] = 'pass'
@@ -241,9 +254,9 @@ def raise_validation(validation_result_document: dict,
     highest_level = None
     for item in validation_result_document['items']:
         scope = item['scope']
-        for stmt in item.get('statements'):
+        for stmt in item['statements']:
             severity = stmt.get('severity', SeverityLevel.CRITICAL)
-            result = stmt.get('report').get('result')
+            result = stmt['report']['result']
 
             if result == 'fail':
                 if severity >= exception_level:
