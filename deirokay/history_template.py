@@ -96,8 +96,8 @@ class DocumentNode():
             attributes = set(DocumentNode.attribute_keys.input(docs).all())
         except TypeError:
             raise TypeError(
-                'Every list-like scope must be aliased'
-                ' when some scope uses `series` templates.'
+                'All list-like scopes must be aliased'
+                ' when some statement uses the `series` template.'
                 ' Make sure your last Deirokay logs obey this rule.'
             )
 
