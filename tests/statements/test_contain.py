@@ -1,7 +1,7 @@
 import pytest
 
 from deirokay import data_reader, validate
-from deirokay.statements import Contain
+from deirokay.statements.builtin import Contain
 
 
 @pytest.mark.parametrize('rule, scope, result',

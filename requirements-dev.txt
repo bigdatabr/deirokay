@@ -4,14 +4,16 @@ jq==1.2.1
 pandas==1.3 ; python_version < "3.10"
 pandas==1.4 ; python_version >= "3.10"
 PyYAML==5.1
+lazy_import==v0.2.2
+dask[distributed]
 # Libraries for testing
 apache-airflow==2.0.0
 boto3
 moto
-psycopg
 pyarrow
 pytest
 pytest-cov
-pytest-postgresql
+pytest-postgresql  # requires postgresql
+psycopg[binary]
 s3fs
 SQLAlchemy

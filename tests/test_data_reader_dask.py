@@ -1,5 +1,4 @@
 import dask.dataframe as dd
-import psycopg
 import pytest
 from pandas import read_csv
 
@@ -7,31 +6,33 @@ from deirokay import data_reader
 from deirokay.enums import DTypes
 
 
-def test_data_reader_with_json_options():
+def test_data_reader_with_json_options_dask():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend='dask'
     )
-    assert len(df) == 20
+    assert len(df.compute()) == 20
 
-    print(df)
+    print(df.compute())
     print(df.dtypes)
 
 
-def test_data_reader_with_yaml_options():
+def test_data_reader_with_yaml_options_dask():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.yaml'
+        options='tests/options.yaml',
+        backend='dask'
     )
-    assert len(df) == 20
+    assert len(df.compute()) == 20
 
-    print(df)
+    print(df.compute())
     print(df.dtypes)
 
 
-def test_data_reader_with_dict_options():
+def test_data_reader_with_dict_options_dask():
 
     options = {
         'encoding': 'iso-8859-1',
@@ -65,7 +66,8 @@ def test_data_reader_with_dict_options():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options=options
+        options=options,
+        backend='dask'
     )
     assert len(df) == 20
 
@@ -73,7 +75,7 @@ def test_data_reader_with_dict_options():
     print(df.dtypes)
 
 
-def test_data_reader_with_dict_options_only_a_few_columns():
+def test_data_reader_with_dict_options_only_a_few_columns_dask():
 
     options = {
         'encoding': 'iso-8859-1',
@@ -87,31 +89,34 @@ def test_data_reader_with_dict_options_only_a_few_columns():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options=options
+        options=options,
+        backend='dask'
     )
     assert len(df) == 20
     assert len(df.columns) == 2
     assert all(col in ('WERKS01', 'DT_OPERACAO01') for col in df.columns)
 
 
-def test_data_reader_without_options_exception():
+def test_data_reader_without_options_exception_dask():
     with pytest.raises(TypeError):
         data_reader(
-            'tests/transactions_sample.csv'
+            'tests/transactions_sample.csv',
+            backend='dask'
         )
 
 
-def test_data_reader_parquet():
+def test_data_reader_parquet_dask():
     df = data_reader(
         'tests/sample_parquet.parquet',
-        options='tests/sample_parquet.json'
+        options='tests/sample_parquet.json',
+        backend='dask'
     )
 
     print(df)
     print(df.dtypes)
 
 
-def test_data_reader_from_dataframe():
+def test_data_reader_from_dataframe_dask():
     df = read_csv('tests/transactions_sample.csv', sep=';',
                   thousands='.', decimal=',')
 
@@ -140,13 +145,13 @@ def test_data_reader_from_dataframe():
                        'falsies': ['inactive']},
         }
     }
-    df = data_reader(df, options=options)
+    df = data_reader(df, options=options, backend='dask')
 
     print(df)
     print(df.dtypes)
 
 
-def test_data_reader_from_dask_dataframe():
+def test_data_reader_from_dask_dataframe_dask():
     df = read_csv('tests/transactions_sample.csv', sep=';',
                   thousands='.', decimal=',')
     df = dd.from_pandas(df, npartitions=1)
@@ -176,53 +181,13 @@ def test_data_reader_from_dask_dataframe():
                        'falsies': ['inactive']},
         }
     }
-    df = data_reader(df, options=options)
+    df = data_reader(df, options=options, backend='dask')
 
     print(df)
     print(df.dtypes)
 
 
-@pytest.fixture(scope='module')
-def create_db(postgresql_proc):
-    db_credentials = {
-        'dbname': 'postgres',
-        'user': postgresql_proc.user,
-        'password': postgresql_proc.password,
-        'host': postgresql_proc.host,
-        'port': postgresql_proc.port,
-        'options': postgresql_proc.options
-    }
-
-    with psycopg.connect(**db_credentials) as db_connection:
-        with db_connection.cursor() as cursor:
-            cursor.execute('''
-                CREATE SCHEMA deirokay;
-                CREATE TABLE deirokay.test (
-                    column1 varchar NULL,
-                    column2 int4 NULL,
-                    column3 timestamp NULL,
-                    column4 float8 NULL,
-                    column5 bool NULL
-                );
-                INSERT INTO deirokay.test
-                VALUES
-                    ('hey',123,'2021-12-12 20:21:20.000',21.5456,true),
-                    ('deirokay',NULL,'2021-12-12 20:21:20.000',21.5456,true),
-                    (NULL,8123,'2021-12-12 20:21:20.000',NULL,false),
-                    ('ho',1851,'2021-12-04 00:21:20.000',2949.454,NULL);
-            ''')
-        db_connection.commit()
-
-    yield db_credentials
-
-    with psycopg.connect(**db_credentials) as db_connection:
-        with db_connection.cursor() as cursor:
-            cursor.execute('DROP SCHEMA deirokay CASCADE;')
-        db_connection.commit()
-
-
-def test_data_reader_from_sql_file(create_db):
-    db_credentials = create_db
+def test_data_reader_from_sql_file_dask():
     options = {
         'columns': {
             'column1': {'dtype': 'string'},
@@ -232,16 +197,13 @@ def test_data_reader_from_sql_file(create_db):
             'column5': {'dtype': 'boolean'},
         }
     }
-    with psycopg.connect(**db_credentials) as con:
-        df = data_reader('tests/data_reader_from_sql_file.sql', options,
-                         con=con)
-
-    print(df)
-    print(df.dtypes)
+    with pytest.raises(NotImplementedError):
+        data_reader('tests/data_reader_from_sql_file.sql',
+                    options,
+                    backend='dask')
 
 
-def test_data_reader_from_sql_query(create_db):
-    db_credentials = create_db
+def test_data_reader_from_sql_query_dask():
     options = {
         'columns': {
             'column1': {'dtype': 'string'},
@@ -251,9 +213,6 @@ def test_data_reader_from_sql_query(create_db):
             'column5': {'dtype': 'boolean'},
         }
     }
-    with psycopg.connect(**db_credentials) as con:
-        df = data_reader('select * from deirokay.test;', options,
-                         sql=True, con=con)
-
-    print(df)
-    print(df.dtypes)
+    with pytest.raises(NotImplementedError):
+        data_reader('select * from deirokay.test;', options,
+                    sql=True, backend='dask')

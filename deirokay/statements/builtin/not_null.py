@@ -1,9 +1,12 @@
 """
 Statement to check the number of not-null rows in a scope.
 """
-from pandas import DataFrame
+import pandas
 
-from .._typing import DeirokayStatement
+from deirokay._typing import DeirokayStatement
+from deirokay.enums import Backend
+
+from ..multibackend import profile, report
 from .base_statement import BaseStatement
 
 
@@ -92,6 +95,7 @@ class NotNull(BaseStatement):
 
     name = 'not_null'
     expected_parameters = ['at_least_%', 'at_most_%', 'multicolumn_logic']
+    supported_backends = [Backend.PANDAS]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -102,8 +106,8 @@ class NotNull(BaseStatement):
 
         assert self.multicolumn_logic in ('any', 'all')
 
-    # docstr-coverage:inherited
-    def report(self, df: DataFrame) -> dict:
+    @report(Backend.PANDAS)
+    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
         if self.multicolumn_logic == 'all':
             #  REMINDER: ~all == any
             not_nulls = ~df.isnull().any(axis=1)
@@ -127,8 +131,9 @@ class NotNull(BaseStatement):
         return True
 
     # docstr-coverage:inherited
+    @profile(Backend.PANDAS)
     @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
+    def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:
         not_nulls = ~df.isnull().all(axis=1)
 
         statement = {

@@ -1,9 +1,14 @@
 """
 Statement to check the number of rows in a scope.
 """
-from pandas import DataFrame
+from typing import List
 
-from .._typing import DeirokayStatement
+import pandas
+
+from deirokay._typing import DeirokayStatement
+from deirokay.enums import Backend
+
+from ..multibackend import profile, report
 from .base_statement import BaseStatement
 
 
@@ -112,6 +117,7 @@ class RowCount(BaseStatement):
 
     name = 'row_count'
     expected_parameters = ['min', 'max', 'distinct']
+    supported_backends: List[Backend] = [Backend.PANDAS]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -121,7 +127,8 @@ class RowCount(BaseStatement):
         self.distinct = self.options.get('distinct', False)
 
     # docstr-coverage:inherited
-    def report(self, df: DataFrame) -> dict:
+    @report(Backend.PANDAS)
+    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
         row_count = len(df)
         distinct_count = len(df.drop_duplicates())
 
@@ -147,8 +154,9 @@ class RowCount(BaseStatement):
         return True
 
     # docstr-coverage:inherited
+    @profile(Backend.PANDAS)
     @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
+    def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:
         statement: DeirokayStatement
 
         if len(df.columns) > 1:

@@ -4,11 +4,14 @@ columns from a given scope.
 """
 import re
 from decimal import Decimal
+from typing import List
 
 import numpy
-from pandas import (DataFrame, Float32Dtype, Float64Dtype, Int32Dtype,
-                    Int64Dtype, Series)
+import pandas
 
+from deirokay.enums import Backend
+
+from ..multibackend import report
 from .base_statement import BaseStatement
 
 
@@ -80,7 +83,7 @@ class ColumnExpression(BaseStatement):
     expected_parameters = [
         'expressions', 'at_least_%', 'at_most_%', 'rtol', 'atol'
     ]
-    table_only = False
+    supported_backends: List[Backend] = [Backend.PANDAS]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -100,7 +103,8 @@ class ColumnExpression(BaseStatement):
                 raise SyntaxError('Expression comparison operand not found')
 
     # docstr-coverage:inherited
-    def report(self, df: DataFrame) -> dict:
+    @report(Backend.PANDAS)
+    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
         report = {}
         df = df.copy()
         df = self._fix_df_dtypes(df)
@@ -118,7 +122,7 @@ class ColumnExpression(BaseStatement):
             }
         return report
 
-    def _fix_df_dtypes(self, df: DataFrame) -> DataFrame:
+    def _fix_df_dtypes(self, df: 'pandas.DataFrame') -> 'pandas.DataFrame':
         """
         Fixes DataFrame dtypes. If Int64Dtype() or Float64Dtype(),
         converts to traditional int64 and float64 dtypes. If object
@@ -128,8 +132,8 @@ class ColumnExpression(BaseStatement):
         When a pandas version corrects this bug, we can delete this
         method.
         """
-        pandas_dtypes_int = [Int64Dtype(), Int32Dtype()]
-        pandas_dtypes_float = [Float64Dtype(), Float32Dtype()]
+        pandas_dtypes_int = [pandas.Int64Dtype(), pandas.Int32Dtype()]
+        pandas_dtypes_float = [pandas.Float64Dtype(), pandas.Float32Dtype()]
         pandas_dtypes_decimal = [Decimal]
         for col in df.columns:
             if df[[col]].dtypes.isin(pandas_dtypes_int)[0]:
@@ -148,14 +152,16 @@ class ColumnExpression(BaseStatement):
                     df[[col]] = df[[col]].astype(float)
         return df
 
-    def _eval(self, df: DataFrame, expr: str) -> Series:
+    def _eval(self, df: 'pandas.DataFrame', expr: str) -> 'pandas.Series':
         if '=~' not in expr:
             row_count = df.eval(expr)
         else:
             row_count = self._isclose_eval(df, expr)
         return row_count
 
-    def _isclose_eval(self, df: DataFrame, expr: str) -> Series:
+    def _isclose_eval(self,
+                      df: 'pandas.DataFrame',
+                      expr: str) -> 'pandas.Series':
         """
         Accomplishes the paper of `pandas.eval` when we have the
         `=~` comparison to evaluate. That implementation is done by
@@ -171,7 +177,7 @@ class ColumnExpression(BaseStatement):
                 comparison operands"""
             )
 
-        eval_bool = Series(len(df) * [True])
+        eval_bool = pandas.Series(len(df) * [True])
 
         for i in range(len(expr_calculus) - 1):
             comparison_to_eval = (
@@ -181,7 +187,7 @@ class ColumnExpression(BaseStatement):
             if expr_comparison[i] != '=~':
                 eval_bool = df.eval(comparison_to_eval) & eval_bool
             else:
-                eval_bool = Series(
+                eval_bool = pandas.Series(
                     numpy.isclose(
                         df.eval(expr_calculus[i]),
                         df.eval(expr_calculus[i+1]),

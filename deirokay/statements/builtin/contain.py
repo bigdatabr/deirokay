@@ -1,11 +1,16 @@
 """
 Statement to check the presence (or absence) of values in a scope.
 """
-from numpy import inf
-from pandas import DataFrame, concat
+from typing import List
 
-from .._typing import DeirokayStatement
-from ..parser import get_dtype_treater, get_treater_instance
+import numpy
+import pandas
+
+from deirokay._typing import DeirokayStatement
+from deirokay.enums import Backend
+from deirokay.parser import get_dtype_treater, get_treater_instance
+
+from ..multibackend import profile, report
 from .base_statement import BaseStatement
 
 
@@ -194,7 +199,7 @@ class Contain(BaseStatement):
         'occurrences_per_value',
         'verbose'
     ]
-    table_only = False
+    supported_backends: List[Backend] = [Backend.PANDAS]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -220,9 +225,9 @@ class Contain(BaseStatement):
             'all_and_only': 1
         }
         max_occurrences_rule_default = {
-            'all': inf,
-            'only': inf,
-            'all_and_only': inf
+            'all': numpy.inf,
+            'only': numpy.inf,
+            'all_and_only': numpy.inf
         }
 
         if self.min_occurrences is None:
@@ -236,10 +241,11 @@ class Contain(BaseStatement):
         assert self.max_occurrences >= 0
 
     # docstr-coverage:inherited
-    def report(self, df: DataFrame) -> dict:
+    @report(Backend.PANDAS)
+    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
         # Concat all columns
         count_isin = (
-            concat(df[col] for col in df.columns).value_counts()
+            pandas.concat(df[col] for col in df.columns).value_counts()
         )
         self.value_count = count_isin.to_dict()
 
@@ -402,14 +408,15 @@ class Contain(BaseStatement):
         return True
 
     # docstr-coverage:inherited
+    @profile(Backend.PANDAS)
     @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
+    def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:
         if any(dtype != df.dtypes for dtype in df.dtypes):
             raise NotImplementedError(
                 "Refusing to mix up different types of columns"
             )
 
-        series = concat(df[col] for col in df.columns)
+        series = pandas.concat(df[col] for col in df.columns)
 
         unique_series = series.drop_duplicates().dropna()
         if len(unique_series) > 20:

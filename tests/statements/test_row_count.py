@@ -1,7 +1,7 @@
 import pytest
 
 from deirokay import data_reader, validate
-from deirokay.statements import RowCount
+from deirokay.statements.builtin import RowCount
 
 
 @pytest.mark.parametrize(

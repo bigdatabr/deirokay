@@ -139,7 +139,7 @@ The native statement classes are all declared in :ref:`deirokay.statements`. See
             return True
 
         @staticmethod
-        def profile(df):
+        def _profile_pandas(df):
             not_nulls = ~df.isnull().all(axis=1)
 
             statement = {
