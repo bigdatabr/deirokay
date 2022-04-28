@@ -6,6 +6,7 @@ Deirokay data types.
 from decimal import Decimal
 from typing import Iterable, List, Optional, Union
 
+import dask.dataframe as dd
 from numpy import nan
 from pandas import NA, NaT, Series, to_datetime
 
@@ -19,9 +20,12 @@ class Validator():
         self.nullable = nullable
 
     def __call__(self, listlike: Iterable) -> Series:
+        if isinstance(listlike, dd.Series):
+            return self.treat(listlike)
         return self.treat(Series(listlike))
 
-    def treat(self, series: Series) -> Series:
+    def treat(self,
+              series: Union[Series, dd.Series]) -> Union[Series, dd.Series]:
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 
@@ -47,8 +51,21 @@ class Validator():
                              "Here are the indices of some null values:\n"
                              f"{null_indices_limit}...")
 
-        if self.unique and not series.is_unique:
-            duplicated = list(series[series.duplicated(keep='first')])
+        if self.unique and not (len(series) == len(series.drop_duplicates())):
+            if isinstance(series, dd.Series):
+                # Sort values to make sure duplicates share a partition
+                series = series.to_frame().sort_values(
+                        by=series.name)[series.name]
+
+                # Get duplicates inside every partition.
+                # This makes sure every duplicate is found, but maybe
+                # a duplicated value will appear twice.
+                duplicated = series.map_partitions(
+                    lambda x: x.duplicated(keep='first')
+                )
+                duplicated = series[duplicated].compute().to_list()
+            else:
+                duplicated = list(series[series.duplicated(keep='first')])
             duplicated_limit = duplicated[:min(len(duplicated), 10)]
 
             raise ValueError(f"The '{series.name}' column values"
