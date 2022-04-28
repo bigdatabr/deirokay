@@ -7,6 +7,7 @@ import decimal
 from os.path import splitext
 from typing import Any, Dict, List, Type, Union
 
+import dask.dataframe as dd
 import pandas
 from pandas import (DataFrame, Timestamp, read_csv, read_excel, read_parquet,
                     read_sql)
@@ -21,7 +22,8 @@ from . import treaters
 
 def data_reader(data: Union[str, DataFrame],
                 options: Union[str, DeirokayOptionsDocument],
-                **kwargs) -> DataFrame:
+                dask=False,
+                **kwargs) -> Union[DataFrame, dd.DataFrame]:
     """Create a DataFrame from a file or an existing DataFrame and
     apply Deirokay treatments to correctly parse it and pre-validate
     its content.
@@ -32,11 +34,13 @@ def data_reader(data: Union[str, DataFrame],
         [description]
     options : Union[dict, str]
         Either a `dict` or a local/S3 path to an YAML/JSON file.
+    dask: bool, default False
+        Whether to return a pandas or dask DataFrame.
 
     Returns
     -------
-    DataFrame
-        A pandas DataFrame treated by Deirokay.
+    Union[dd.DataFrame, DataFrame]
+        A pandas or dask DataFrame treated by Deirokay.
     """
     if isinstance(options, str):
         options_dict = fs_factory(options).read_dict()
@@ -47,8 +51,9 @@ def data_reader(data: Union[str, DataFrame],
 
     columns = options_dict.pop('columns')
 
+    _reader = dask_read if dask else pandas_read
     if isinstance(data, str):
-        df = pandas_read(data, columns=list(columns), **options_dict)
+        df = _reader(data, columns=list(columns), **options_dict)
     else:
         df = data.copy()[list(columns)]
     data_treater(df, columns)
@@ -123,6 +128,73 @@ def pandas_read(data: str, columns: List[str], sql: bool = False,
         return read_(data, **kwargs)[columns]
 
 
+def dask_read(data: str, columns: List[str], sql: bool = False,
+              **kwargs) -> dd.DataFrame:
+    """Infer the file type by its extension and call the proper
+    `dask` method to parse it.
+
+    Currently, parsing xlsx files or reading from databases is
+    not supported.
+
+    Parameters
+    ----------
+    data : str
+        Path to file or SQL query.
+    columns : List[str]
+        List of columns to be parsed.
+    sql : bool, optional
+        Whether or not `data` should be interpreted as a path to a file
+        or a SQL query.
+
+
+    Returns
+    -------
+    DataFrame
+        The pandas DataFrame.
+    """
+    default_kwargs: Dict[str, Any]
+    if sql:
+        raise NotImplementedError(
+            "Reading SQL queries into Dask dataframes is not supported."
+        )
+
+    file_extension = splitext(data)[1].lstrip('.')
+
+    if file_extension == 'sql':
+        raise NotImplementedError(
+            "Reading SQL queries into Dask dataframes is not supported."
+        )
+
+    elif file_extension == 'csv':
+        default_kwargs = {
+            'dtype': str,
+            'skipinitialspace': True,
+            'usecols': columns
+        }
+        default_kwargs.update(kwargs)
+        return dd.read_csv(data, **default_kwargs)
+
+    elif file_extension == 'parquet':
+        default_kwargs = {
+            'columns': columns
+        }
+        default_kwargs.update(kwargs)
+        return dd.read_parquet(data, **default_kwargs)
+
+    elif file_extension in ('xls', 'xlsx'):
+        default_kwargs = {
+            'usecols': columns
+        }
+        raise NotImplementedError(
+            "Not able to read XLSX files as Dask dataframes"
+        )
+    else:
+        read_ = getattr(dd, f'read_{file_extension}', None)
+        if read_ is None:
+            raise TypeError(f'File type "{file_extension}" not supported')
+        return read_(data, **kwargs)[columns]
+
+
 def get_dtype_treater(dtype: Any) -> Type[treaters.Validator]:
     """Map a dtype to its Treater class."""
 
@@ -180,13 +252,13 @@ def get_treater_instance(option: DeirokayOption) -> treaters.Validator:
     return cls(**option)
 
 
-def data_treater(df: DataFrame, options: dict) -> None:
+def data_treater(df: Union[DataFrame, dd.DataFrame], options: dict) -> None:
     """Receive options dict and call the proper treater class for each
     Deirokay data type.
 
     Parameters
     ----------
-    df : DataFrame
+    df : Union[DataFrame, dd.DataFrame]
         Raw DataFrame to be treated.
     options : dict
         Deirokay options.
