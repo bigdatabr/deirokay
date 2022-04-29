@@ -57,7 +57,7 @@ def data_reader(data: Union[str, DataFrame],
     else:
         df = data.copy()[list(columns)]
         if dask:
-            df = dd.from_pandas(df)
+            df = dd.from_pandas(df, npartitions=1)
     data_treater(df, columns)
 
     return df
