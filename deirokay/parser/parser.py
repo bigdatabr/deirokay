@@ -184,9 +184,6 @@ def dask_read(data: str, columns: List[str], sql: bool = False,
         return dd.read_parquet(data, **default_kwargs)
 
     elif file_extension in ('xls', 'xlsx'):
-        default_kwargs = {
-            'usecols': columns
-        }
         raise NotImplementedError(
             "Not able to read XLSX files as Dask dataframes"
         )
