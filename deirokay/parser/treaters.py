@@ -19,7 +19,7 @@ class Validator():
         self.unique = unique
         self.nullable = nullable
 
-    def __call__(self, listlike: Iterable) -> Series:
+    def __call__(self, listlike: Iterable) -> Union[Series, dd.Series]:
         if isinstance(listlike, dd.Series):
             return self.treat(listlike)
         return self.treat(Series(listlike))
@@ -31,8 +31,8 @@ class Validator():
 
         Parameters
         ----------
-        series : Series
-            Raw pandas Series to be treated.
+        series : Union[Series, dd.Series]
+            Raw pandas or dask Series to be treated.
 
         Raises
         ------
@@ -77,7 +77,7 @@ class Validator():
         return series
 
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def serialize(series: Union[Series, dd.Series]) -> dict:
         """Create a Deirokay-compatible serializable object that can
         be serialized (in JSON or YAML formats) and parsed back by
         Deirokay treaters.
@@ -90,8 +90,8 @@ class Validator():
 
         Parameters
         ----------
-        series : Series
-            Pandas Series to be serialized.
+        series : Union[Series, dd.Series]
+            Pandas or dask Series to be serialized.
 
         Returns
         -------
@@ -110,13 +110,15 @@ class NumericTreater(Validator):
         self.thousand_sep = thousand_sep
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
+    def treat(self, series: Union[Series, dd.Series]
+              ) -> Union[Series, dd.Series]:
         series = super().treat(series)
         series = self._treat_thousand_sep(series)
 
         return series
 
-    def _treat_thousand_sep(self, series: Series) -> Series:
+    def _treat_thousand_sep(self, series: Union[Series, dd.Series]
+                            ) -> Union[Series, dd.Series]:
         if self.thousand_sep is not None:
             try:
                 series = series.str.replace(self.thousand_sep, '', regex=False)
@@ -175,7 +177,8 @@ class BooleanTreater(Validator):
                          f'Expected values: {self.truthies | self.falsies}')
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
+    def treat(self, series: Union[Series, dd.Series]
+              ) -> Union[Series, dd.Series]:
         series = super().treat(series)
 
         kwargs = {}
@@ -212,13 +215,15 @@ class FloatTreater(NumericTreater):
         self.decimal_sep = decimal_sep
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
+    def treat(self, series: Union[Series, dd.Series]
+              ) -> Union[Series, dd.Series]:
         series = super().treat(series)
         series = self._treat_decimal_sep(series)
 
         return series.astype(float).astype('Float64')
 
-    def _treat_decimal_sep(self, series: Series) -> Series:
+    def _treat_decimal_sep(self, series: Union[Series, dd.Series]
+                           ) -> Union[Series, dd.Series]:
         if self.decimal_sep is not None and self.decimal_sep != '.':
             try:
                 series = series.str.replace(self.decimal_sep, '.', regex=False)
@@ -234,7 +239,7 @@ class FloatTreater(NumericTreater):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def serialize(series: Union[Series, dd.Series]) -> dict:
         def _convert(item):
             if item is NA:
                 return None
@@ -256,7 +261,8 @@ class DecimalTreater(FloatTreater):
         self.decimal_places = decimal_places
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
+    def treat(self, series: Union[Series, dd.Series]
+              ) -> Union[Series, dd.Series]:
         series = NumericTreater.treat(self, series)
         series = self._treat_decimal_sep(series)
 
@@ -273,7 +279,8 @@ class DecimalTreater(FloatTreater):
 
         return series
 
-    def _treat_decimal_places(self, series: Series) -> Series:
+    def _treat_decimal_places(self, series: Union[Series, dd.Series]
+                              ) -> Union[Series, dd.Series]:
         if self.decimal_places is not None:
             q = Decimal(10) ** -self.decimal_places
             if isinstance(series, dd.Series):
@@ -288,7 +295,7 @@ class DecimalTreater(FloatTreater):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def serialize(series: Union[Series, dd.Series]) -> dict:
         def _convert(item):
             if item is None or item is NA:
                 return None
@@ -305,12 +312,13 @@ class IntegerTreater(NumericTreater):
     """Treater for integer variables"""
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
+    def treat(self, series: Union[Series, dd.Series]
+              ) -> Union[Series, dd.Series]:
         return super().treat(series).astype(float).astype('Int64')
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def serialize(series: Union[Series, dd.Series]) -> dict:
         def _convert(item):
             if item is NA:
                 return None
@@ -332,7 +340,8 @@ class DateTime64Treater(Validator):
         self.format = format
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
+    def treat(self, series: Union[Series, dd.Series]
+              ) -> Union[Series, dd.Series]:
         series = super().treat(series)
 
         if isinstance(series, dd.Series):
@@ -342,7 +351,7 @@ class DateTime64Treater(Validator):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def serialize(series: Union[Series, dd.Series]) -> dict:
         def _convert(item):
             if item is None or item is NaT:
                 return None
@@ -362,12 +371,13 @@ class DateTreater(DateTime64Treater):
         super().__init__(format, **kwargs)
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
+    def treat(self, series: Union[Series, dd.Series]
+              ) -> Union[Series, dd.Series]:
         return super().treat(series).dt.date
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def serialize(series: Union[Series, dd.Series]) -> dict:
         def _convert(item):
             if item is None or item is NaT:
                 return None
@@ -387,12 +397,13 @@ class TimeTreater(DateTime64Treater):
         super().__init__(format, **kwargs)
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
+    def treat(self, series: Union[Series, dd.Series]
+              ) -> Union[Series, dd.Series]:
         return super().treat(series).dt.time
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def serialize(series: Union[Series, dd.Series]) -> dict:
         def _convert(item):
             if item is None or item is NaT:
                 return None
@@ -414,7 +425,8 @@ class StringTreater(Validator):
         self.treat_null_as = treat_null_as
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
+    def treat(self, series: Union[Series, dd.Series]
+              ) -> Union[Series, dd.Series]:
         series = super().treat(series)
 
         if self.treat_null_as is not None:
@@ -424,7 +436,7 @@ class StringTreater(Validator):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def serialize(series: Union[Series, dd.Series]) -> dict:
         def _convert(item):
             if item is None:
                 return None
