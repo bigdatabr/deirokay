@@ -56,6 +56,8 @@ def data_reader(data: Union[str, DataFrame],
         df = _reader(data, columns=list(columns), **options_dict)
     else:
         df = data.copy()[list(columns)]
+        if dask:
+            df = dd.from_pandas(df)
     data_treater(df, columns)
 
     return df
