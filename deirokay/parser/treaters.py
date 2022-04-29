@@ -177,7 +177,12 @@ class BooleanTreater(Validator):
     # docstr-coverage:inherited
     def treat(self, series: Series) -> Series:
         series = super().treat(series)
-        series = series.apply(self._evaluate).astype('boolean')
+
+        kwargs = {}
+        if isinstance(series, dd.Series):
+            kwargs['meta'] = (series.name, 'object')
+
+        series = series.apply(self._evaluate, **kwargs).astype('boolean')
         # Validate again
         super().treat(series)
 
@@ -254,7 +259,16 @@ class DecimalTreater(FloatTreater):
     def treat(self, series: Series) -> Series:
         series = NumericTreater.treat(self, series)
         series = self._treat_decimal_sep(series)
-        series = series.map(lambda x: Decimal(x) if x is not None else None)
+
+        if isinstance(series, dd.Series):
+            kwargs = {'meta': (series.name, 'object')}
+        else:
+            kwargs = {}
+
+        series = series.map(
+            lambda x: Decimal(x) if x is not None else None,
+            **kwargs
+        )
         series = self._treat_decimal_places(series)
 
         return series
@@ -262,8 +276,13 @@ class DecimalTreater(FloatTreater):
     def _treat_decimal_places(self, series: Series) -> Series:
         if self.decimal_places is not None:
             q = Decimal(10) ** -self.decimal_places
+            if isinstance(series, dd.Series):
+                kwargs = {'meta': (series.name, 'object')}
+            else:
+                kwargs = {}
             series = series.apply(
-                lambda x: x.quantize(q) if x is not None else None
+                lambda x: x.quantize(q) if x is not None else None,
+                **kwargs
             )
         return series
 
@@ -316,7 +335,10 @@ class DateTime64Treater(Validator):
     def treat(self, series: Series) -> Series:
         series = super().treat(series)
 
-        return to_datetime(series, format=self.format)
+        if isinstance(series, dd.Series):
+            return dd.to_datetime(series, format=self.format)
+        else:
+            return to_datetime(series, format=self.format)
 
     # docstr-coverage:inherited
     @staticmethod
