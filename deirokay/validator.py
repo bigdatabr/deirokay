@@ -11,12 +11,13 @@ from os.path import splitext
 from types import ModuleType
 from typing import Optional, Union
 
+import dask.dataframe as dd
 import pandas
 from jinja2 import BaseLoader
 from jinja2 import StrictUndefined as strict
 from jinja2.nativetypes import NativeEnvironment
 
-from deirokay.enums import SeverityLevel
+from deirokay.enums import Backend, SeverityLevel
 from deirokay.exceptions import ValidationError
 from deirokay.fs import FileSystem, LocalFileSystem, fs_factory
 from deirokay.history_template import get_series
@@ -53,7 +54,7 @@ def _load_custom_statement(location: str):
     return cls
 
 
-def _process_stmt(statement: dict) -> BaseStatement:
+def _process_stmt(statement: dict, backend: Backend) -> BaseStatement:
     """Receive statement dict and call the proper statement class.
     The `name` attribute of the class is used to bind the statement
     type to its class.
@@ -93,7 +94,7 @@ def _process_stmt(statement: dict) -> BaseStatement:
             ' or `custom` for your own statements.'
         )
 
-    statement_instance: BaseStatement = cls(statement)
+    statement_instance: BaseStatement = cls(statement, backend)
 
     return statement_instance
 
@@ -169,6 +170,13 @@ def validate(df: pandas.DataFrame, *,
         greater or equal to `exception_level`.
     """
 
+    if isinstance(df, pandas.DataFrame):
+        backend = Backend.PANDAS
+    elif isinstance(df, dd.DataFrame):
+        backend = Backend.DASK
+    else:
+        raise ValueError(f'Supported backends are {list(Backend)}.')
+
     if save_to:
         save_to_fs = fs_factory(save_to)
         if isinstance(save_to_fs, LocalFileSystem) and not save_to_fs.isdir():
@@ -202,7 +210,7 @@ def validate(df: pandas.DataFrame, *,
         df_scope = df[scope]
 
         for stmt in item.get('statements'):
-            report = _process_stmt(stmt)(df_scope)
+            report = _process_stmt(stmt, backend)(df_scope)
             if report['result'] is True:
                 report['result'] = 'pass'
             else:
