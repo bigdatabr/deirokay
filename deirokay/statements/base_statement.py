@@ -2,22 +2,11 @@
 The base statement that all other statements inherit from.
 """
 from abc import ABC, abstractmethod
-from enum import Enum
 
 from pandas import DataFrame
 
-from .._typing import DeirokayStatement
-
-
-class Backend(Enum):
-    """
-    The backend that the statement will be generated for.
-    """
-    PANDAS = 'pandas'
-    DASK = 'dask'
-
-
-VALID_BACKENDS = list(Backend._value2member_map_.keys())
+from deirokay._typing import DeirokayStatement
+from deirokay.enums import Backend
 
 
 class BaseStatement(ABC):
@@ -35,15 +24,18 @@ class BaseStatement(ABC):
     expected_parameters = ['type', 'severity', 'location']
     """List[str]: Parameters expected for this statement."""
     supported_backends = ['pandas']
-    """List[str]: Backends supported by this statement."""
+    """List[str]: Backends supported by this statement. Default is set
+    to [`pandas`] to keep backward compatibility."""
 
-    def __init__(self, options: dict, backend: Backend = 'pandas') -> None:
-        assert backend in self.supported_backends, (
+    def __init__(self,
+                 options: dict, backend: Backend = Backend.PANDAS
+                 ) -> None:
+        assert backend.value in self.supported_backends, (
             f'`{backend}` is not supported by `{self.name}` statement.'
         )
         self.backend = backend
         if 'report' in self.__abstractmethods__:
-            self.report = getattr(self, f'_report_{backend}', None)
+            self.report = getattr(self, f'_report_{backend.value}', None)
             if not self.report:
                 raise ValueError(
                     f'No report function found for `{self.name}` statement.'
@@ -61,12 +53,12 @@ class BaseStatement(ABC):
             'You should specify a `name` attribute for your statement class.'
         )
         invalid_backends = [
-            backend for backend in cls.supported_backends
-            if backend not in VALID_BACKENDS
+            backend_str for backend_str in cls.supported_backends
+            if backend_str not in Backend._value2member_map_
         ]
         assert not invalid_backends, (
             f'Invalid backend: {invalid_backends}.'
-            f' Valid backends are: {VALID_BACKENDS}'
+            f' Valid backends are: {list(Backend)}'
         )
         assert hasattr(cls, 'report') or all(
             hasattr(cls, f'_report_{backend}')

@@ -5,6 +5,15 @@ Deirokay enumeration classes.
 from enum import Enum, IntEnum, unique
 
 
+@unique
+class Backend(Enum):
+    """
+    The backend that the statement will be generated for.
+    """
+    PANDAS = 'pandas'
+    DASK = 'dask'
+
+
 class DTypes(str, Enum):
     """Deirokay data types."""
 
