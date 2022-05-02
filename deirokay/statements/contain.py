@@ -194,7 +194,6 @@ class Contain(BaseStatement):
         'occurrences_per_value',
         'verbose'
     ]
-    table_only = False
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

@@ -80,7 +80,6 @@ class ColumnExpression(BaseStatement):
     expected_parameters = [
         'expressions', 'at_least_%', 'at_most_%', 'rtol', 'atol'
     ]
-    table_only = False
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

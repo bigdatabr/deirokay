@@ -22,9 +22,6 @@ class BaseStatement(ABC):
     (only valid for Deirokay built-in statements)."""
     expected_parameters = ['type', 'severity', 'location']
     """List[str]: Parameters expected for this statement."""
-    table_only = False
-    """bool: Whether or not this statement in applicable only to the
-    entire table, instead of scoped columns."""
 
     def __init__(self, options: dict) -> None:
         self._validate_options(options)

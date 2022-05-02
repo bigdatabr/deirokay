@@ -15,27 +15,25 @@ from .fs import fs_factory
 from .statements import STATEMENTS_MAP
 
 
-def _generate_statements(df_scope: DataFrame,
-                         table_only: bool) -> List[DeirokayStatement]:
+def _generate_statements(df_scope: DataFrame) -> List[DeirokayStatement]:
 
     statements: List[DeirokayStatement] = []
 
     for stmt_cls in STATEMENTS_MAP.values():
-        if table_only and stmt_cls.table_only or not stmt_cls.table_only:
-            try:
-                statement = stmt_cls.profile(df_scope)
-                statements.append(statement)
-            except NotImplementedError:
-                pass
-            except Exception as e:
-                columns = list(df_scope.columns)
-                warnings.warn(
-                    f'Unexpected error when profiling scope {columns}'
-                    f' using {stmt_cls.__name__} statement: {e}\n\n'
-                    'Please, consider reporting this issue to the '
-                    'developers.',
-                    RuntimeWarning
-                )
+        try:
+            statement = stmt_cls.profile(df_scope)
+            statements.append(statement)
+        except NotImplementedError:
+            pass
+        except Exception as e:
+            columns = list(df_scope.columns)
+            warnings.warn(
+                f'Unexpected error when profiling scope {columns}'
+                f' using {stmt_cls.__name__} statement: {e}\n\n'
+                'Please, consider reporting this issue to the '
+                'developers.',
+                RuntimeWarning
+            )
     return statements
 
 
@@ -43,13 +41,13 @@ def _generate_items(df: DataFrame) -> List[DeirokayValidationItem]:
     items: List[DeirokayValidationItem] = []
 
     df_columns = list(df.columns)
-    scope__table_stmt = zip([df_columns] + df_columns,
-                            [True] + [False]*len(df_columns))
-    for scope, table_only in scope__table_stmt:
+    scope__table_stmt = [df_columns] + df_columns
+
+    for scope in scope__table_stmt:
         df_scope = df[scope] if isinstance(scope, list) else df[[scope]]
         item = {
             'scope': scope,
-            'statements': _generate_statements(df_scope, table_only=table_only)
+            'statements': _generate_statements(df_scope)
         }  # type: DeirokayValidationItem
 
         if item['statements']:
