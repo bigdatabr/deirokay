@@ -42,28 +42,16 @@ class BaseStatement(ABC):
             f'`{backend}` is not supported by `{self.name}` statement.'
         )
         self.backend = backend
-        if not hasattr(self, 'report'):
+        if 'report' in self.__abstractmethods__:
             self.report = getattr(self, f'_report_{backend}', None)
-            """Receive a DataFrame containing only columns on the scope of
-            validation and returns a report of related metrics that can
-            be used later to declare this Statement as fulfilled or
-            failed.
-
-            Parameters
-            ----------
-            df : DataFrame
-                The scoped DataFrame columns to be analysed in this report
-                by this statement.
-
-            Returns
-            -------
-            dict
-                A dictionary of useful statistics about the target columns.
-            """
             if not self.report:
                 raise ValueError(
                     f'No report function found for `{self.name}` statement.'
                 )
+            # The class should be informed of this change
+            self.__abstractmethods__ -= {'report'}
+            self.report.__isabstractmethod__ = False
+
         self._validate_options(options)
         self.options = options
 
@@ -115,6 +103,25 @@ class BaseStatement(ABC):
             'result': result
         }
         return final_report
+
+    @abstractmethod
+    def report(self, df: DataFrame) -> dict:
+        """Receive a DataFrame containing only columns on the scope of
+        validation and returns a report of related metrics that can
+        be used later to declare this Statement as fulfilled or
+        failed.
+
+        Parameters
+        ----------
+        df : DataFrame
+            The scoped DataFrame columns to be analysed in this report
+            by this statement.
+
+        Returns
+        -------
+        dict
+            A dictionary of useful statistics about the target columns.
+        """
 
     @abstractmethod
     def result(self, report: dict) -> bool:
