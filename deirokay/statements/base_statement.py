@@ -133,8 +133,10 @@ class BaseStatement(ABC):
             Whether or not this statement passed.
         """
 
-    @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
+    @classmethod
+    def profile(cls,
+                df: DataFrame,
+                backend: Backend = Backend.PANDAS) -> DeirokayStatement:
         """Given a template data table, generate a statement dict
         from it.
 
@@ -155,4 +157,7 @@ class BaseStatement(ABC):
             profile generation for this statement was intentionally
             skipped.
         """
-        raise NotImplementedError
+        try:
+            return getattr(cls, f'_profile_{backend.value}')(df)
+        except AttributeError:
+            raise NotImplementedError

@@ -11,12 +11,12 @@ from os.path import splitext
 from types import ModuleType
 from typing import Optional, Union
 
-import dask.dataframe as dd
 import pandas
 from jinja2 import BaseLoader
 from jinja2 import StrictUndefined as strict
 from jinja2.nativetypes import NativeEnvironment
 
+from deirokay.backend import detect_backend
 from deirokay.enums import Backend, SeverityLevel
 from deirokay.exceptions import ValidationError
 from deirokay.fs import FileSystem, LocalFileSystem, fs_factory
@@ -170,12 +170,7 @@ def validate(df: pandas.DataFrame, *,
         greater or equal to `exception_level`.
     """
 
-    if isinstance(df, pandas.DataFrame):
-        backend = Backend.PANDAS
-    elif isinstance(df, dd.DataFrame):
-        backend = Backend.DASK
-    else:
-        raise ValueError(f'Supported backends are {list(Backend)}.')
+    backend = detect_backend(df)
 
     if save_to:
         save_to_fs = fs_factory(save_to)

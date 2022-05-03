@@ -402,7 +402,7 @@ class Contain(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
+    def _profile_pandas(df: DataFrame) -> DeirokayStatement:
         if any(dtype != df.dtypes for dtype in df.dtypes):
             raise NotImplementedError(
                 "Refusing to mix up different types of columns"

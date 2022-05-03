@@ -148,7 +148,7 @@ class RowCount(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
+    def _profile_pandas(df: DataFrame) -> DeirokayStatement:
         statement: DeirokayStatement
 
         if len(df.columns) > 1:

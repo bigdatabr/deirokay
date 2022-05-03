@@ -60,7 +60,7 @@ class Unique(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
+    def _profile_pandas(df: DataFrame) -> DeirokayStatement:
         unique = ~df.duplicated(keep=False)
 
         statement = {

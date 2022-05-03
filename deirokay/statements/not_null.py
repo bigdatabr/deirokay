@@ -128,7 +128,7 @@ class NotNull(BaseStatement):
 
     # docstr-coverage:inherited
     @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
+    def _profile_pandas(df: DataFrame) -> DeirokayStatement:
         not_nulls = ~df.isnull().all(axis=1)
 
         statement = {
