@@ -7,6 +7,7 @@ import decimal
 from os.path import splitext
 from typing import Any, Dict, List, Type, Union
 
+import dask.dataframe as dd
 import pandas
 from pandas import (DataFrame, Timestamp, read_csv, read_excel, read_parquet,
                     read_sql)
@@ -53,7 +54,7 @@ def data_reader(data: Union[str, DataFrame],
     backend = backend_from_str(backend)
     reader = {
         Backend.PANDAS: pandas_read,
-        Backend.DASK: None
+        Backend.DASK: dask_read
     }[backend]
 
     df = reader(data, columns=list(columns), **options_dict)
@@ -126,6 +127,71 @@ def pandas_read(data: Union[DataFrame, str], columns: List[str],
         return read_excel(data, **kwargs)
     else:
         read_ = getattr(pandas, f'read_{file_extension}', None)
+        if read_ is None:
+            raise TypeError(f'File type "{file_extension}" not supported')
+        return read_(data, **kwargs)[columns]
+
+
+def dask_read(data: Union[DataFrame, str], columns: List[str],
+              sql: bool = False, **kwargs) -> DataFrame:
+    """Infer the file type by its extension and call the proper
+    `dask.dataframe` method to parse it.
+
+    Currently, parsing xlsx files or reading from databases is
+    not supported.
+
+    Parameters
+    ----------
+    data : Union[DataFrame, str]
+        Path to file or SQL query, or DataFrame object
+    columns : List[str]
+        List of columns to be parsed.
+    sql : bool, optional
+        Whether or not `data` should be interpreted as a path to a file
+        or a SQL query.
+
+    Returns
+    -------
+    dd.DataFrame
+        The dask DataFrame.
+    """
+    if isinstance(data, DataFrame):
+        dd.from_pandas(data, npartitions=1)
+    default_kwargs: Dict[str, Any]
+    if sql:
+        raise NotImplementedError(
+            "Reading SQL queries into Dask dataframes is not supported."
+        )
+
+    file_extension = splitext(data)[1].lstrip('.')
+
+    if file_extension == 'sql':
+        raise NotImplementedError(
+            "Reading SQL queries into Dask dataframes is not supported."
+        )
+
+    elif file_extension == 'csv':
+        default_kwargs = {
+            'dtype': str,
+            'skipinitialspace': True,
+            'usecols': columns
+        }
+        default_kwargs.update(kwargs)
+        return dd.read_csv(data, **default_kwargs)
+
+    elif file_extension == 'parquet':
+        default_kwargs = {
+            'columns': columns
+        }
+        default_kwargs.update(kwargs)
+        return dd.read_parquet(data, **default_kwargs)
+
+    elif file_extension in ('xls', 'xlsx'):
+        raise NotImplementedError(
+            "Not able to read XLSX files as Dask dataframes"
+        )
+    else:
+        read_ = getattr(dd, f'read_{file_extension}', None)
         if read_ is None:
             raise TypeError(f'File type "{file_extension}" not supported')
         return read_(data, **kwargs)[columns]
