@@ -12,12 +12,12 @@ class IntegerTreater(NumericTreater):
     """Treater for integer variables"""
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
-        return super().treat(series).astype(float).astype('Int64')
+    def _treat_pandas(self, series: Series) -> Series:
+        return super()._treat_pandas(series).astype(float).astype('Int64')
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def _serialize_pandas(series: Series) -> dict:
         def _convert(item):
             if item is NA:
                 return None

@@ -1,5 +1,7 @@
 from typing import Union
 
+import dask.dataframe as dd
+import pandas as pd
 from dask.dataframe import DataFrame as DaskDataFrame
 from pandas import DataFrame
 
@@ -28,6 +30,8 @@ def detect_backend(df: Union[DataFrame, DaskDataFrame]) -> Backend:
     _mapping = {
         DataFrame: Backend.PANDAS,
         DaskDataFrame: Backend.DASK,
+        pd.Series: Backend.PANDAS,
+        dd.Series: Backend.DASK
     }
     try:
         return _mapping[type(df)]

@@ -21,8 +21,8 @@ class DecimalTreater(FloatTreater):
         self.decimal_places = decimal_places
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
-        series = NumericTreater.treat(self, series)
+    def _treat_pandas(self, series: Series) -> Series:
+        series = NumericTreater._treat_pandas(self, series)
         series = self._treat_decimal_sep(series)
         series = series.map(lambda x: Decimal(x) if x is not None else None)
         series = self._treat_decimal_places(series)
@@ -39,7 +39,7 @@ class DecimalTreater(FloatTreater):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def _serialize_pandas(series: Series) -> dict:
         def _convert(item):
             if item is None or item is NA:
                 return None

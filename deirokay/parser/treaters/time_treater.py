@@ -15,12 +15,12 @@ class TimeTreater(DateTime64Treater):
         super().__init__(format, **kwargs)
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
-        return super().treat(series).dt.time
+    def _treat_pandas(self, series: Series) -> Series:
+        return super()._treat_pandas(series).dt.time
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def _serialize_pandas(series: Series) -> dict:
         def _convert(item):
             if item is None or item is NaT:
                 return None

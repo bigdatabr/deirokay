@@ -56,17 +56,17 @@ class BooleanTreater(Validator):
                          f'Expected values: {self.truthies | self.falsies}')
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
-        series = super().treat(series)
+    def _treat_pandas(self, series: Series) -> Series:
+        series = super()._treat_pandas(series)
         series = series.apply(self._evaluate).astype('boolean')
         # Validate again
-        super().treat(series)
+        super()._treat_pandas(series)
 
         return series
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def _serialize_pandas(series: Series) -> dict:
         def _convert(item):
             if item is NA:
                 return None

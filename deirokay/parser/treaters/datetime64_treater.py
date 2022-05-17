@@ -17,14 +17,14 @@ class DateTime64Treater(Validator):
         self.format = format
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
-        series = super().treat(series)
+    def _treat_pandas(self, series: Series) -> Series:
+        series = super()._treat_pandas(series)
 
         return to_datetime(series, format=self.format)
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def _serialize_pandas(series: Series) -> dict:
         def _convert(item):
             if item is None or item is NaT:
                 return None

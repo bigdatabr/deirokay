@@ -19,8 +19,8 @@ class FloatTreater(NumericTreater):
         self.decimal_sep = decimal_sep
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
-        series = super().treat(series)
+    def _treat_pandas(self, series: Series) -> Series:
+        series = super()._treat_pandas(series)
         series = self._treat_decimal_sep(series)
 
         return series.astype(float).astype('Float64')
@@ -41,7 +41,7 @@ class FloatTreater(NumericTreater):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def _serialize_pandas(series: Series) -> dict:
         def _convert(item):
             if item is NA:
                 return None

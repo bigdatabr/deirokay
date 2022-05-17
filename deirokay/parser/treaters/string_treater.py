@@ -19,8 +19,8 @@ class StringTreater(Validator):
         self.treat_null_as = treat_null_as
 
     # docstr-coverage:inherited
-    def treat(self, series: Series) -> Series:
-        series = super().treat(series)
+    def _treat_pandas(self, series: Series) -> Series:
+        series = super()._treat_pandas(series)
 
         if self.treat_null_as is not None:
             series = series.fillna(self.treat_null_as)
@@ -29,7 +29,7 @@ class StringTreater(Validator):
 
     # docstr-coverage:inherited
     @staticmethod
-    def serialize(series: Series) -> dict:
+    def _serialize_pandas(series: Series) -> dict:
         def _convert(item):
             if item is None:
                 return None

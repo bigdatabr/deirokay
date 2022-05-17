@@ -3,9 +3,12 @@ Classes and functions to treat column data types according to
 Deirokay data types.
 """
 
-from typing import Iterable
+from typing import Iterable, Union
 
+import dask.dataframe as dd
 from pandas import Series
+
+from deirokay.backend import Backend, detect_backend
 
 
 class Validator():
@@ -19,13 +22,38 @@ class Validator():
     def __call__(self, listlike: Iterable) -> Series:
         return self.treat(Series(listlike))
 
-    def treat(self, series: Series) -> Series:
+    def treat(self, series: Iterable) -> Union[Series, dd.Series]:
+        """Treat a raw Series to match data expectations for parsing
+        and formatting.
+
+        Calls the appropriate method for the detected backend
+
+        Parameters
+        ----------
+        series : Iterable
+            Raw series to be treated.
+
+        """
+
+        try:
+            backend = detect_backend(series)
+        except ValueError:
+            backend = Backend.PANDAS
+
+        try:
+            return getattr(self, f'_treat_{backend.value}')(series)
+        except AttributeError:
+            raise NotImplementedError(
+                f'Treater not implemented for backend {backend.value}'
+            )
+
+    def _treat_pandas(self, series: Iterable) -> Series:
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 
         Parameters
         ----------
-        series : Series
+        series : Iterable
             Raw pandas Series to be treated.
 
         Raises
@@ -36,6 +64,7 @@ class Validator():
             column has duplicate values when unique constraint was
             requested.
         """
+        series = Series(series)
         if not self.nullable and any(series.isnull()):
             null_indices = list(series[series.isnull()].index)
             null_indices_limit = null_indices[:min(len(null_indices), 30)]
@@ -57,8 +86,8 @@ class Validator():
 
         return series
 
-    @staticmethod
-    def serialize(series: Series) -> dict:
+    @classmethod
+    def serialize(cls, series: Series) -> dict:
         """Create a Deirokay-compatible serializable object that can
         be serialized (in JSON or YAML formats) and parsed back by
         Deirokay treaters.
@@ -79,4 +108,14 @@ class Validator():
         dict
             A Python dict containing the keys `values` and `parser`.
         """
-        raise NotImplementedError('No serializer for this treater.')
+        try:
+            backend = detect_backend(series)
+        except ValueError:
+            backend = Backend.PANDAS
+
+        try:
+            return getattr(cls, f'_serialize_{backend.value}')(series)
+        except AttributeError:
+            raise NotImplementedError(
+                f'Serializer not implemented for backend {backend.value}'
+            )
