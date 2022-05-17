@@ -12,7 +12,8 @@ from pandas import (DataFrame, Timestamp, read_csv, read_excel, read_parquet,
                     read_sql)
 
 from deirokay._typing import DeirokayOption, DeirokayOptionsDocument
-from deirokay.enums import DTypes
+from deirokay.backend import backend_from_str
+from deirokay.enums import Backend, DTypes
 from deirokay.fs import fs_factory
 from deirokay.utils import _check_columns_in_df_columns
 
@@ -21,7 +22,7 @@ from . import treaters
 
 def data_reader(data: Union[str, DataFrame],
                 options: Union[str, DeirokayOptionsDocument],
-                **kwargs) -> DataFrame:
+                backend='pandas', **kwargs) -> DataFrame:
     """Create a DataFrame from a file or an existing DataFrame and
     apply Deirokay treatments to correctly parse it and pre-validate
     its content.
@@ -32,6 +33,8 @@ def data_reader(data: Union[str, DataFrame],
         [description]
     options : Union[dict, str]
         Either a `dict` or a local/S3 path to an YAML/JSON file.
+    backend: str, default 'pandas'
+        Defines backend to use for tables.
 
     Returns
     -------
@@ -47,8 +50,14 @@ def data_reader(data: Union[str, DataFrame],
 
     columns = options_dict.pop('columns')
 
+    backend = backend_from_str(backend)
+    reader = {
+        Backend.PANDAS: pandas_read,
+        Backend.DASK: None
+    }[backend]
+
     if isinstance(data, str):
-        df = pandas_read(data, columns=list(columns), **options_dict)
+        df = reader(data, columns=list(columns), **options_dict)
     else:
         df = data.copy()[list(columns)]
     data_treater(df, columns)
