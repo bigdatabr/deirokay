@@ -56,24 +56,21 @@ def data_reader(data: Union[str, DataFrame],
         Backend.DASK: None
     }[backend]
 
-    if isinstance(data, str):
-        df = reader(data, columns=list(columns), **options_dict)
-    else:
-        df = data.copy()[list(columns)]
+    df = reader(data, columns=list(columns), **options_dict)
     data_treater(df, columns)
 
     return df
 
 
-def pandas_read(data: str, columns: List[str], sql: bool = False,
-                **kwargs) -> DataFrame:
+def pandas_read(data: Union[DataFrame, str], columns: List[str],
+                sql: bool = False, **kwargs) -> DataFrame:
     """Infer the file type by its extension and call the proper
     `pandas` method to parse it.
 
     Parameters
     ----------
-    data : str
-        Path to file or SQL query.
+    data : Union[DataFrame, str]
+        Path to file or SQL query, or DataFrame object
     columns : List[str]
         List of columns to be parsed.
     sql : bool, optional
@@ -87,6 +84,8 @@ def pandas_read(data: str, columns: List[str], sql: bool = False,
         The pandas DataFrame.
     """
     default_kwargs: Dict[str, Any]
+    if isinstance(data, DataFrame):
+        return data[columns]
     if sql:
         default_kwargs = {
             'columns': columns
