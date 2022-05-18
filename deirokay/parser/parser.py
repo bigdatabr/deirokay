@@ -156,7 +156,7 @@ def dask_read(data: Union[DataFrame, str], columns: List[str],
         The dask DataFrame.
     """
     if isinstance(data, DataFrame):
-        dd.from_pandas(data, npartitions=1)
+        return dd.from_pandas(data[columns], npartitions=1)
     default_kwargs: Dict[str, Any]
     if sql:
         raise NotImplementedError(
@@ -254,7 +254,7 @@ def get_treater_instance(option: DeirokayOption) -> treaters.Validator:
     return cls(**option)
 
 
-def data_treater(df: DataFrame, options: dict) -> None:
+def data_treater(df: Union[dd.DataFrame, DataFrame], options: dict) -> None:
     """Receive options dict and call the proper treater class for each
     Deirokay data type.
 
