@@ -20,7 +20,7 @@ class Validator():
         self.nullable = nullable
 
     def __call__(self, listlike: Iterable) -> Series:
-        return self.treat(Series(listlike))
+        return self.treat(listlike)
 
     def treat(self, series: Iterable) -> Union[Series, dd.Series]:
         """Treat a raw Series to match data expectations for parsing
