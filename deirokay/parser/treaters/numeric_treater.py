@@ -5,6 +5,7 @@ Deirokay data types.
 
 from typing import Optional
 
+import dask.dataframe as dd
 from pandas import Series
 
 from .validator import Validator
@@ -21,6 +22,13 @@ class NumericTreater(Validator):
     # docstr-coverage:inherited
     def _treat_pandas(self, series: Series) -> Series:
         series = super()._treat_pandas(series)
+        series = self._treat_thousand_sep(series)
+
+        return series
+
+    # docstr-coverage:inherited
+    def _treat_dask(self, series: dd.Series) -> dd.Series:
+        series = super()._treat_dask(series)
         series = self._treat_thousand_sep(series)
 
         return series

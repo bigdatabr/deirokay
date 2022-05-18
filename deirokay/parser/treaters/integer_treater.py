@@ -3,6 +3,7 @@ Classes and functions to treat column data types according to
 Deirokay data types.
 """
 
+import dask.dataframe as dd
 from pandas import NA, Series
 
 from .numeric_treater import NumericTreater
@@ -14,6 +15,10 @@ class IntegerTreater(NumericTreater):
     # docstr-coverage:inherited
     def _treat_pandas(self, series: Series) -> Series:
         return super()._treat_pandas(series).astype(float).astype('Int64')
+
+    # docstr-coverage:inherited
+    def _treat_dask(self, series: dd.Series) -> dd.Series:
+        return super()._treat_dask(series).astype(float).astype('Int64')
 
     # docstr-coverage:inherited
     @staticmethod

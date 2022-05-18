@@ -6,6 +6,7 @@ Deirokay data types.
 from decimal import Decimal
 from typing import Optional
 
+import dask.dataframe as dd
 from pandas import NA, Series
 
 from .float_treater import FloatTreater
@@ -25,6 +26,18 @@ class DecimalTreater(FloatTreater):
         series = NumericTreater._treat_pandas(self, series)
         series = self._treat_decimal_sep(series)
         series = series.map(lambda x: Decimal(x) if x is not None else None)
+        series = self._treat_decimal_places(series)
+
+        return series
+
+    # docstr-coverage:inherited
+    def _treat_dask(self, series: dd.Series) -> dd.Series:
+        series = NumericTreater._treat_dask(self, series)
+        series = self._treat_decimal_sep(series)
+        series = series.map(
+            lambda x: Decimal(x) if x is not None else None,
+            meta=(series.name, 'object')
+        )
         series = self._treat_decimal_places(series)
 
         return series

@@ -3,6 +3,7 @@ Classes and functions to treat column data types according to
 Deirokay data types.
 """
 
+import dask.dataframe as dd
 from pandas import NaT, Series, to_datetime
 
 from .validator import Validator
@@ -21,6 +22,12 @@ class DateTime64Treater(Validator):
         series = super()._treat_pandas(series)
 
         return to_datetime(series, format=self.format)
+
+    # docstr-coverage:inherited
+    def _treat_dask(self, series: Series) -> Series:
+        series = super()._treat_dask(series)
+
+        return dd.to_datetime(series, format=self.format)
 
     # docstr-coverage:inherited
     @staticmethod

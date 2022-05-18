@@ -5,6 +5,7 @@ Deirokay data types.
 
 from typing import List, Optional, Union
 
+import dask.dataframe as dd
 from numpy import nan
 from pandas import NA, Series
 
@@ -63,6 +64,14 @@ class BooleanTreater(Validator):
         super()._treat_pandas(series)
 
         return series
+
+    # docstr-coverage:inherited
+    def _treat_dask(self, series: dd.Series) -> dd.Series:
+        series = super()._treat_dask(series)
+        series = series.apply(self._evaluate, meta=(series.name, 'object'))\
+            .astype('boolean')
+        # Validate again
+        super()._treat_dask(series)
 
     # docstr-coverage:inherited
     @staticmethod
