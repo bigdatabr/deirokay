@@ -33,7 +33,7 @@ class FloatTreater(NumericTreater):
 
         return series.astype(float).astype('Float64')
 
-    def _treat_decimal_sep(self, series: Series) -> Series:
+    def _treat_decimal_sep(self, series: Series, **kwargs) -> Series:
         if self.decimal_sep is not None and self.decimal_sep != '.':
             try:
                 series = series.str.replace(self.decimal_sep, '.', regex=False)

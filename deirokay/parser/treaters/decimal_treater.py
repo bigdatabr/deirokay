@@ -33,20 +33,22 @@ class DecimalTreater(FloatTreater):
     # docstr-coverage:inherited
     def _treat_dask(self, series: dd.Series) -> dd.Series:
         series = NumericTreater._treat_dask(self, series)
-        series = self._treat_decimal_sep(series)
+        series = self._treat_decimal_sep(series, meta=(series.name, 'object'))
         series = series.map(
             lambda x: Decimal(x) if x is not None else None,
             meta=(series.name, 'object')
         )
-        series = self._treat_decimal_places(series)
+        series = self._treat_decimal_places(series,
+                                            meta=(series.name, 'object'))
 
         return series
 
-    def _treat_decimal_places(self, series: Series) -> Series:
+    def _treat_decimal_places(self, series: Series, **kwargs) -> Series:
         if self.decimal_places is not None:
             q = Decimal(10) ** -self.decimal_places
             series = series.apply(
-                lambda x: x.quantize(q) if x is not None else None
+                lambda x: x.quantize(q) if x is not None else None,
+                **kwargs
             )
         return series
 
