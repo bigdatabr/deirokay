@@ -37,8 +37,8 @@ def detect_backend(df: Union[DataFrame, DaskDataFrame]) -> Backend:
         return _mapping[type(df)]
     except KeyError:
         raise ValueError(
-            f'Unknown backend for {type(df)}.'
-            f' Supported backends: {[b.value for b in _mapping.values()]}.'
+            f'Unknown backend for {type(df)}. '
+            f'Supported backends: {set([b.value for b in _mapping.values()])}.'
         )
 
 
