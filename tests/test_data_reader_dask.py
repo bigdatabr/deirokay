@@ -1,3 +1,4 @@
+import dask.dataframe as dd
 import pytest
 from pandas import read_csv
 
@@ -118,6 +119,42 @@ def test_data_reader_parquet_dask():
 def test_data_reader_from_dataframe_dask():
     df = read_csv('tests/transactions_sample.csv', sep=';',
                   thousands='.', decimal=',')
+
+    options = {
+        'encoding': 'iso-8859-1',
+        'sep': ';',
+        'columns': {
+            'WERKS01': {'dtype': DTypes.INT64, 'nullable': False,
+                        'unique': False},
+            'DT_OPERACAO01': {'dtype': DTypes.DATETIME, 'format': '%Y%m%d'},
+            'NUM_TRANSACAO01': {'dtype': DTypes.INT64, 'nullable': False,
+                                'unique': False},
+            'HR_TRANSACAO01': {'dtype': DTypes.TIME, 'format': '%H:%M:%S'},
+            'TIPO_PDV': {'dtype': DTypes.STR},
+            'PROD_VENDA': {'dtype': DTypes.INT64},
+            'COD_MERC_SERV02': {'dtype': DTypes.INT64},
+            'COD_SETVENDAS':  {'dtype': DTypes.INT64},
+            'NUMERO_PDV_ORIGIN': {'dtype': DTypes.INT64},
+            'TIPO_PDV_ORIGIN': {'dtype': DTypes.STR},
+            'TIPO_PDV_ORIGIN_GRP': {'dtype': DTypes.STR},
+            'QTD_VENDIDA02': {'dtype': DTypes.INT64, 'nullable': False},
+            'VLR_TOT_VD_ITM02': {'dtype': DTypes.FLOAT64, 'nullable': False},
+            'VLR_DESCONTO02': {'dtype': DTypes.FLOAT64, 'nullable': False},
+            'VLR_LIQUIDO02': {'dtype': DTypes.DECIMAL, 'nullable': True},
+            'ACTIVE': {'dtype': DTypes.BOOL, 'truthies': ['active'],
+                       'falsies': ['inactive']},
+        }
+    }
+    df = data_reader(df, options=options, backend='dask')
+
+    print(df)
+    print(df.dtypes)
+
+
+def test_data_reader_from_dask_dataframe_dask():
+    df = read_csv('tests/transactions_sample.csv', sep=';',
+                  thousands='.', decimal=',')
+    df = dd.from_pandas(df, npartitions=1)
 
     options = {
         'encoding': 'iso-8859-1',

@@ -20,7 +20,7 @@ from deirokay.utils import _check_columns_in_df_columns
 from . import treaters
 
 
-def data_reader(data: Union[str, DataFrame],
+def data_reader(data: Union[str, DataFrame, dd.DataFrame],
                 options: Union[str, DeirokayOptionsDocument],
                 backend='pandas', **kwargs) -> DataFrame:
     """Create a DataFrame from a file or an existing DataFrame and
@@ -29,7 +29,7 @@ def data_reader(data: Union[str, DataFrame],
 
     Parameters
     ----------
-    data : Union[str, DataFrame]
+    data : Union[str, DataFrame, dd.DataFrame]
         [description]
     options : Union[dict, str]
         Either a `dict` or a local/S3 path to an YAML/JSON file.
@@ -62,14 +62,14 @@ def data_reader(data: Union[str, DataFrame],
     return df
 
 
-def pandas_read(data: Union[DataFrame, str], columns: List[str],
+def pandas_read(data: Union[DataFrame, str, dd.DataFrame], columns: List[str],
                 sql: bool = False, **kwargs) -> DataFrame:
     """Infer the file type by its extension and call the proper
     `pandas` method to parse it.
 
     Parameters
     ----------
-    data : Union[DataFrame, str]
+    data : Union[DataFrame, dd.DataFrame, str]
         Path to file or SQL query, or DataFrame object
     columns : List[str]
         List of columns to be parsed.
@@ -86,6 +86,8 @@ def pandas_read(data: Union[DataFrame, str], columns: List[str],
     default_kwargs: Dict[str, Any]
     if isinstance(data, DataFrame):
         return data[columns]
+    if isinstance(data, dd.DataFrame):
+        return data[columns].compute()
     if sql:
         default_kwargs = {
             'columns': columns
@@ -131,7 +133,7 @@ def pandas_read(data: Union[DataFrame, str], columns: List[str],
         return read_(data, **kwargs)[columns]
 
 
-def dask_read(data: Union[DataFrame, str], columns: List[str],
+def dask_read(data: Union[DataFrame, dd.DataFrame, str], columns: List[str],
               sql: bool = False, **kwargs) -> DataFrame:
     """Infer the file type by its extension and call the proper
     `dask.dataframe` method to parse it.
@@ -156,6 +158,8 @@ def dask_read(data: Union[DataFrame, str], columns: List[str],
     """
     if isinstance(data, DataFrame):
         return dd.from_pandas(data[columns], npartitions=1)
+    if isinstance(data, dd.DataFrame):
+        return data[columns]
     default_kwargs: Dict[str, Any]
     if sql:
         raise NotImplementedError(
