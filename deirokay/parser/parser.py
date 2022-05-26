@@ -13,7 +13,6 @@ from pandas import (DataFrame, Timestamp, read_csv, read_excel, read_parquet,
                     read_sql)
 
 from deirokay._typing import DeirokayOption, DeirokayOptionsDocument
-from deirokay.backend import backend_from_str
 from deirokay.enums import Backend, DTypes
 from deirokay.fs import fs_factory
 from deirokay.utils import _check_columns_in_df_columns
@@ -51,7 +50,7 @@ def data_reader(data: Union[str, DataFrame],
 
     columns = options_dict.pop('columns')
 
-    backend = backend_from_str(backend)
+    backend = Backend(backend)
     reader = {
         Backend.PANDAS: pandas_read,
         Backend.DASK: dask_read

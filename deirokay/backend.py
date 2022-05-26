@@ -40,35 +40,3 @@ def detect_backend(df: Union[DataFrame, DaskDataFrame]) -> Backend:
             f'Unknown backend for {type(df)}. '
             f'Supported backends: {set([b.value for b in _mapping.values()])}.'
         )
-
-
-def backend_from_str(backend: str) -> Backend:
-    """Map a backend name to the proper backend value.
-
-    Parameters
-    ----------
-    backend: str
-        Backend name
-
-    Returns
-    -------
-    Backend
-        Instance of `Backend` enum.
-
-    Raises
-    ------
-    ValueError
-        Unknown backend for the specified object type
-
-    """
-    _mapping = {
-        'pandas': Backend.PANDAS,
-        'dask': Backend.DASK
-    }
-    try:
-        return _mapping[backend.strip().lower()]
-    except KeyError:
-        raise ValueError(
-            f'No backend {backend}.\n'
-            f'Select one of {", ".join(_mapping.keys())}'
-        )
