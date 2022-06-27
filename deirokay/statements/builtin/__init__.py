@@ -1,3 +1,6 @@
+"""
+Implementation of builtin Deirokay statements.
+"""
 from deirokay._utils import recursive_subclass_generator
 
 from .base_statement import BaseStatement

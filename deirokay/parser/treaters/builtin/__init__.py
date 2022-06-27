@@ -1,3 +1,6 @@
+"""
+Implementation of builtin Deirokay treaters.
+"""
 from deirokay._utils import recursive_subclass_generator
 
 from .base_treater import BaseTreater

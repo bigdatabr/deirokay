@@ -1,5 +1,6 @@
 """
-Module for BaseStatement and builtin Deirokay statements.
+Classes and methods to build and load builtin or custom Deirokay
+statements.
 """
 from deirokay._utils import recursive_subclass_generator
 

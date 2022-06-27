@@ -6,8 +6,8 @@ import re
 from decimal import Decimal
 from typing import List
 
-import numpy
-import pandas
+import numpy  # lazy module
+import pandas  # lazy module
 
 from deirokay.enums import Backend
 
@@ -102,7 +102,6 @@ class ColumnExpression(BaseStatement):
             if not any([x in expr for x in self.valid_expressions]):
                 raise SyntaxError('Expression comparison operand not found')
 
-    # docstr-coverage:inherited
     @report(Backend.PANDAS)
     def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
         report = {}

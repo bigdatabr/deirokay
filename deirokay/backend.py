@@ -16,6 +16,13 @@ BACKEND_2_MODULE = {v: k for k, v in MODULE_2_BACKEND.items()}
 
 
 class MultiBackendMixin:
+    """Mixin class from which all multi-backend resources in Deirokay
+    derives from.
+
+    Together with the `register_backend_method` decorator, the methods
+    of its subclasses can be marked to be active when a particular
+    backend is active.
+    """
     supported_backends: List[Backend] = []
     """List[Backend]: Backends supported by this resource."""
     _backend_methods: Dict[Backend, Dict[str, AnyCallable]] = {}
@@ -25,6 +32,19 @@ class MultiBackendMixin:
                                 alias_for: str,
                                 func: AnyCallable,
                                 backend: Backend) -> None:
+        """Proxy for `register_backend_method` to register an existing
+        function as a backend-specific method.
+
+        Parameters
+        ----------
+        alias_for : str
+            The name of the method to be substituted with a
+            backend-specific version.
+        func : AnyCallable
+            Existing function to be registered as a method.
+        backend : Backend
+            Backend for the method.
+        """
         backend_method = register_backend_method(alias_for, backend)(func)
         method_name = f'_registered_{alias_for}_{backend.value}'
         setattr(cls, method_name, backend_method)
@@ -48,6 +68,26 @@ def register_backend_method(
     method (`alias_for`) when the specified backend is active.
     Should be used as an decorator as in:
     `@register_backend_method('method_name', <Backend object>)`.
+
+    It could be handful to declare helper decorators using this one for
+    common methods for a given resource. For instance, if a hierarchy
+    of classes should implement a `do_it` method to work with different
+    backend, we could implement a `do_it` decorator and use it to
+    decorate backend-specific methods.
+
+    .. code-block:: python
+
+        def do_it(backend):
+            register_backend_method('do_it', backend)
+
+        class MultiBackendClass(MultiBackendMixin):
+            @do_it(Backend.TYPE1)
+            def _do_it_1(...):
+                ...
+
+            @do_it(Backend.TYPE2)
+            def _do_it_2(...):
+                ...
 
     Parameters
     ----------

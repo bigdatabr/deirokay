@@ -3,7 +3,7 @@ Statement to check the number of rows in a scope.
 """
 from typing import List
 
-import pandas
+import pandas  # lazy module
 
 from deirokay._typing import DeirokayStatement
 from deirokay.enums import Backend
@@ -126,7 +126,6 @@ class RowCount(BaseStatement):
         self.max = self.options.get('max', None)
         self.distinct = self.options.get('distinct', False)
 
-    # docstr-coverage:inherited
     @report(Backend.PANDAS)
     def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
         row_count = len(df)
@@ -153,7 +152,6 @@ class RowCount(BaseStatement):
                 return False
         return True
 
-    # docstr-coverage:inherited
     @profile(Backend.PANDAS)
     @staticmethod
     def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:

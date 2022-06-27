@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict, List, Literal, TypeVar, Union, get_args
 
-import dask.dataframe
-import pandas
+import dask.dataframe  # lazy module
+import pandas  # lazy module
 
 from .enums import Backend
 

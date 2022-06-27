@@ -1,3 +1,7 @@
+"""
+Classes and methods to load data from several sources into Deirokay.
+"""
+
 from typing import List, Type
 
 from deirokay.backend import MultiBackendMixin, multibackend_class_factory
@@ -8,6 +12,8 @@ from .pandas_reader import read as read_pandas
 
 
 class DataReader(MultiBackendMixin):
+    """Helper class to load data from a data source in function of the
+    backend."""
     supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
 
 

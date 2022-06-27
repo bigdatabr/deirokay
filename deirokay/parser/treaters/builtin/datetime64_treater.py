@@ -5,8 +5,8 @@ Deirokay data types.
 
 import datetime
 
-import dask.dataframe
-import pandas
+import dask.dataframe  # lazy module
+import pandas  # lazy module
 
 from deirokay._typing import DeirokaySerializedSeries
 from deirokay.enums import Backend, DTypes

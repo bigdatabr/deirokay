@@ -1,7 +1,7 @@
 from posixpath import splitext
 from typing import Any, Dict, List, Union
 
-import dask.dataframe
+import dask.dataframe  # lazy module
 
 
 def read(data: Union[str, 'dask.dataframe.DataFrame'],
@@ -16,13 +16,15 @@ def read(data: Union[str, 'dask.dataframe.DataFrame'],
 
     Parameters
     ----------
-    data : Union[DataFrame, str]
+    data : Union[str, dask.dataframe.DataFrame]
         Path to file or SQL query, or DataFrame object
     columns : List[str]
         List of columns to be parsed.
     sql : bool, optional
         Whether or not `data` should be interpreted as a path to a file
         or a SQL query.
+    **kwargs : dict
+        Arguments to be passed to `dask.dataframe` methods when reading.
 
     Returns
     -------

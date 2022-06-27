@@ -12,7 +12,7 @@ class BaseTreater(MultiBackendMixin, ABC):
     supported_dtype: Optional[DTypes] = None
     """Optional[DTypes]: DType treated by this treater."""
     supported_primitives: List[Any] = []
-    """List[Any]: Primitive supported by this treater."""
+    """List[Any]: List of primitives supported by this treater."""
 
     def __call__(self, series: DeirokayDataSeries, /) -> DeirokayDataSeries:
         """Proxy for `treat`."""

@@ -1,5 +1,5 @@
 """
-Gather main Deirokay methods to be easile accessible `from deirokay`.
+Deirokay's main set of classes and functions.
 """
 
 from typing import TYPE_CHECKING

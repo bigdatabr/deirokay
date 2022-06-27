@@ -3,7 +3,7 @@ Statement to check the number unique rows in a scope.
 """
 from typing import List
 
-import pandas
+import pandas  # lazy module
 
 from deirokay._typing import DeirokayStatement
 from deirokay.enums import Backend
@@ -50,7 +50,6 @@ class Unique(BaseStatement):
 
         self.at_least_perc = self.options.get('at_least_%', 100.0)
 
-    # docstr-coverage:inherited
     @report(Backend.PANDAS)
     def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
         unique = ~df.duplicated(keep=False)
@@ -65,7 +64,6 @@ class Unique(BaseStatement):
     def result(self, report: dict) -> bool:
         return report.get('unique_rows_%') >= self.at_least_perc
 
-    # docstr-coverage:inherited
     @profile(Backend.PANDAS)
     @staticmethod
     def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:

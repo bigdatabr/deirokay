@@ -5,9 +5,9 @@ Deirokay data types.
 
 from typing import List, Optional, Union
 
-import dask.dataframe
-import numpy
-import pandas
+import dask.dataframe  # lazy module
+import numpy  # lazy module
+import pandas  # lazy module
 
 from deirokay._typing import DeirokaySerializedSeries
 from deirokay.enums import Backend, DTypes
@@ -83,7 +83,6 @@ class BooleanTreater(Validator):
         # Validate again
         super()._treat_dask(series)
 
-    # docstr-coverage:inherited
     @serialize(Backend.PANDAS)
     @staticmethod
     def _serialize_pandas(

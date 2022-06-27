@@ -2,8 +2,8 @@
 Classes and functions to treat column data types according to
 Deirokay data types.
 """
-import dask.dataframe
-import pandas
+import dask.dataframe  # lazy module
+import pandas  # lazy module
 
 from deirokay.enums import Backend
 

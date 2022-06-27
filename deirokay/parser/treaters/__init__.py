@@ -1,3 +1,8 @@
+"""
+Classes and methods to treat data immediately after being loaded
+into Deirokay.
+"""
+
 from typing import Any, Type
 
 from deirokay._typing import DeirokayOption

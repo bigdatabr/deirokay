@@ -1,7 +1,7 @@
 from posixpath import splitext
 from typing import Any, Dict, List, Union
 
-import pandas
+import pandas  # lazy module
 
 from deirokay.fs import fs_factory
 
@@ -22,11 +22,13 @@ def read(data: Union[str, 'pandas.DataFrame'],
     sql : bool, optional
         Whether or not `data` should be interpreted as a path to a file
         or a SQL query.
+    **kwargs : dict
+        Arguments to be passed to `pandas` methods when reading.
 
 
     Returns
     -------
-    DataFrame
+    pandas.DataFrame
         The pandas DataFrame.
     """
     default_kwargs: Dict[str, Any]

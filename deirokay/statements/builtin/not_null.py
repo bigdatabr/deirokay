@@ -1,7 +1,7 @@
 """
 Statement to check the number of not-null rows in a scope.
 """
-import pandas
+import pandas  # lazy module
 
 from deirokay._typing import DeirokayStatement
 from deirokay.enums import Backend
@@ -130,7 +130,6 @@ class NotNull(BaseStatement):
             return False
         return True
 
-    # docstr-coverage:inherited
     @profile(Backend.PANDAS)
     @staticmethod
     def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:

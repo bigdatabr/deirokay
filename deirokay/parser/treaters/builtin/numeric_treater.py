@@ -5,8 +5,8 @@ Deirokay data types.
 
 from typing import Optional
 
-import dask.dataframe
-import pandas
+import dask.dataframe  # lazy module
+import pandas  # lazy module
 
 from deirokay._typing import DeirokayDataSeries
 from deirokay.enums import Backend

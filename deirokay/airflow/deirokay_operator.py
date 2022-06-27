@@ -35,6 +35,8 @@ class DeirokayOperator(BaseOperator):
     against : Union[dict, str]
         A dict or a local/S3 path to a YAML/JSON validation
         document file.
+    backend : Optional[Backend]
+        Backend to use when processing data.
     template : Optional[dict]
         Map of templates to be passed to Deirokay validation.
     save_to : Optional[str], optional

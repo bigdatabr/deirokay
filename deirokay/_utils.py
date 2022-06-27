@@ -7,12 +7,41 @@ C = TypeVar('C', bound=type)
 
 
 def recursive_subclass_generator(cls: C) -> Generator[C, None, None]:
+    """Iterate over all subclasses of `cls` recursively (including
+    itself).
+
+    Parameters
+    ----------
+    cls : C
+        Class to iterate over.
+
+    Yields
+    ------
+    Generator[C, None, None]
+        Each of its subclasses, recursively.
+    """
     yield cls
     for subclass in cls.__subclasses__():
         yield from recursive_subclass_generator(subclass)
 
 
-def check_columns_in_df_columns(columns: Iterable, df_columns: Iterable):
+def check_columns_in_df_columns(columns: Iterable,
+                                df_columns: Iterable) -> None:
+    """Raise an exception if any of the elements from `columns` is not
+    present in `df_columns`.
+
+    Parameters
+    ----------
+    columns : Iterable
+        List of requested elements.
+    df_columns : Iterable
+        List of available elements.
+
+    Raises
+    ------
+    KeyError
+        Element not found.
+    """
     miss = {}
     for col in columns:
         if col not in df_columns:

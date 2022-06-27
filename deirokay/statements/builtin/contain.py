@@ -3,8 +3,8 @@ Statement to check the presence (or absence) of values in a scope.
 """
 from typing import List
 
-import numpy
-import pandas
+import numpy  # lazy module
+import pandas  # lazy module
 
 from deirokay._typing import DeirokayStatement
 from deirokay.enums import Backend
@@ -240,7 +240,6 @@ class Contain(BaseStatement):
         assert self.min_occurrences >= 0
         assert self.max_occurrences >= 0
 
-    # docstr-coverage:inherited
     @report(Backend.PANDAS)
     def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
         # Concat all columns
@@ -407,7 +406,6 @@ class Contain(BaseStatement):
             return False
         return True
 
-    # docstr-coverage:inherited
     @profile(Backend.PANDAS)
     @staticmethod
     def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:
