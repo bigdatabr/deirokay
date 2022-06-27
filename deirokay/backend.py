@@ -95,7 +95,7 @@ def register_backend_method(
     return _decorator
 
 
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def multibackend_class_factory(cls: _AnyMultiBackendClass,
                                backend: Backend) -> _AnyMultiBackendClass:
     """Create an execution subclass for use with the specified backend.

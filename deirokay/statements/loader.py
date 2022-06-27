@@ -11,7 +11,7 @@ from deirokay.statements import BaseStatement
 from . import STATEMENTS_MAP
 
 
-@functools.lru_cache(maxsize=32)
+@functools.lru_cache(maxsize=None)
 def _cached_import_file_as_module(file_path: str) -> ModuleType:
     """Import a file as a module, caching the result.
     This prevents the need to read the same file multiple times.
