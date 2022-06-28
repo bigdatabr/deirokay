@@ -3,7 +3,8 @@ from datetime import datetime
 import pytest
 
 from deirokay import data_reader, validate
-from deirokay.fs import split_s3_path
+from deirokay.fs import fs_factory, split_s3_path
+from deirokay.history_template import series_from_fs
 
 
 def test_data_validation_with_jinja(prepare_history_folder):
@@ -105,3 +106,29 @@ def test_data_validation_with_jinja_using_s3(monkeypatch, prepare_history_s3):
                    current_date=datetime(1999, 1, 3))
     assert doc['items'][0]['statements'][0]['min'] == pytest.approx(19.0)
     assert doc['items'][0]['statements'][0]['max'] == pytest.approx(21.0)
+
+
+@pytest.fixture
+def _create_files_with_same_prefixes(require_s3_test_bucket):
+    import boto3
+    s3 = boto3.client('s3')
+    bucket = require_s3_test_bucket
+    s3.put_object(Bucket=bucket, Key='path/file.json', Body='{"a":"b"}')
+    s3.put_object(Bucket=bucket, Key='path_2/file.json', Body='{"c":"d"}')
+    yield
+    s3.delete_object(Bucket=bucket, Key='path_2/file.json')
+    s3.delete_object(Bucket=bucket, Key='path/file.json')
+
+
+def test_s3_paths_with_same_prefixes(require_s3_test_bucket,
+                                     _create_files_with_same_prefixes):
+    """Tests the problem of paths with same prefix (one being the
+    prefix of another).
+
+    Ref: https://github.com/bigdatabr/deirokay/issues/37
+    """
+    bucket = require_s3_test_bucket
+
+    folder = fs_factory(f's3://{bucket}/')
+    files = series_from_fs('path', 10, folder)
+    assert len(files) == 1
