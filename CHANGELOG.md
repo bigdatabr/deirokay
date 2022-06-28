@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0](https://github.com/bigdatabr/deirokay/compare/0.7.2...0.8.0) (2022-06-28)
+
+
+### Features
+
+* Minor changes to exception message ([0e00b38](https://github.com/bigdatabr/deirokay/commit/0e00b3838170135692c359ef476bc0c5c9aad308))
+* Rewords list-like alias requirement exception ([e526258](https://github.com/bigdatabr/deirokay/commit/e52625813ee2c57d9d2651521483d26d55c46a04))
+
+
+### Bug Fixes
+
+* Bug when reading S3 logs with same prefix ([969cc7d](https://github.com/bigdatabr/deirokay/commit/969cc7da11344a696405ec92f761f267d0e340a6)), closes [#37](https://github.com/bigdatabr/deirokay/issues/37)
+
 ### [0.7.2](https://github.com/bigdatabr/deirokay/compare/0.7.1...0.7.2) (2022-04-07)
 
 
