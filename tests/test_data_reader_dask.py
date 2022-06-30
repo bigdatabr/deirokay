@@ -1,9 +1,9 @@
 import dask.dataframe as dd
+import pandas as pd
 import pytest
-from pandas import read_csv
 
 from deirokay import data_reader
-from deirokay.enums import DTypes
+from deirokay.enums import Backend, DTypes
 
 
 def test_data_reader_with_json_options_dask():
@@ -11,7 +11,7 @@ def test_data_reader_with_json_options_dask():
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json',
-        backend='dask'
+        backend=Backend.DASK
     )
     assert len(df.compute()) == 20
 
@@ -24,7 +24,7 @@ def test_data_reader_with_yaml_options_dask():
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.yaml',
-        backend='dask'
+        backend=Backend.DASK
     )
     assert len(df.compute()) == 20
 
@@ -67,7 +67,7 @@ def test_data_reader_with_dict_options_dask():
     df = data_reader(
         'tests/transactions_sample.csv',
         options=options,
-        backend='dask'
+        backend=Backend.DASK
     )
     assert len(df) == 20
 
@@ -90,7 +90,7 @@ def test_data_reader_with_dict_options_only_a_few_columns_dask():
     df = data_reader(
         'tests/transactions_sample.csv',
         options=options,
-        backend='dask'
+        backend=Backend.DASK
     )
     assert len(df) == 20
     assert len(df.columns) == 2
@@ -101,7 +101,7 @@ def test_data_reader_without_options_exception_dask():
     with pytest.raises(TypeError):
         data_reader(
             'tests/transactions_sample.csv',
-            backend='dask'
+            backend=Backend.DASK
         )
 
 
@@ -109,7 +109,7 @@ def test_data_reader_parquet_dask():
     df = data_reader(
         'tests/sample_parquet.parquet',
         options='tests/sample_parquet.json',
-        backend='dask'
+        backend=Backend.DASK
     )
 
     print(df)
@@ -117,8 +117,8 @@ def test_data_reader_parquet_dask():
 
 
 def test_data_reader_from_dataframe_dask():
-    df = read_csv('tests/transactions_sample.csv', sep=';',
-                  thousands='.', decimal=',')
+    df = dd.read_csv('tests/transactions_sample.csv', sep=';',
+                     thousands='.', decimal=',')
 
     options = {
         'encoding': 'iso-8859-1',
@@ -145,15 +145,15 @@ def test_data_reader_from_dataframe_dask():
                        'falsies': ['inactive']},
         }
     }
-    df = data_reader(df, options=options, backend='dask')
+    df = data_reader(df, options=options, backend=Backend.DASK)
 
     print(df)
     print(df.dtypes)
 
 
 def test_data_reader_from_dask_dataframe_dask():
-    df = read_csv('tests/transactions_sample.csv', sep=';',
-                  thousands='.', decimal=',')
+    df = pd.read_csv('tests/transactions_sample.csv', sep=';',
+                     thousands='.', decimal=',')
     df = dd.from_pandas(df, npartitions=1)
 
     options = {
@@ -181,7 +181,7 @@ def test_data_reader_from_dask_dataframe_dask():
                        'falsies': ['inactive']},
         }
     }
-    df = data_reader(df, options=options, backend='dask')
+    df = data_reader(df, options=options, backend=Backend.DASK)
 
     print(df)
     print(df.dtypes)
@@ -200,7 +200,7 @@ def test_data_reader_from_sql_file_dask():
     with pytest.raises(NotImplementedError):
         data_reader('tests/data_reader_from_sql_file.sql',
                     options,
-                    backend='dask')
+                    backend=Backend.DASK)
 
 
 def test_data_reader_from_sql_query_dask():
@@ -215,4 +215,4 @@ def test_data_reader_from_sql_query_dask():
     }
     with pytest.raises(NotImplementedError):
         data_reader('select * from deirokay.test;', options,
-                    sql=True, backend='dask')
+                    sql=True, backend=Backend.DASK)
