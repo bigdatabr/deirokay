@@ -90,28 +90,29 @@ class Validator(BaseTreater):
             requested.
         """
         if not self.nullable and any(series.isnull()):
-            null_indices = list(series[series.isnull()].index)
-            null_indices_limit = null_indices[:min(
+            null_indices = series[series.isnull()].index
+            null_indices_display_limit = list(null_indices[:min(
                 len(null_indices), self.DISPLAY_NULL_INDICES_LIMIT
-            )]
+            )])
             raise ValueError(
                 f"The '{series.name}' column has {len(null_indices)} null"
                 " values, but it shouldn't.\n"
                 "Here are the indices of some null values:\n"
-                f"{null_indices_limit}..."
+                f"{null_indices_display_limit}..."
             )
 
-        if self.unique and not series.is_unique:
-            duplicated = list(series[series.duplicated(keep='first')])
-            duplicated_limit = duplicated[:min(
-                len(duplicated), self.DISPLAY_DUPL_INDICES_LIMIT
-            )]
+        duplicated_bool = (series.value_counts() > 1)
+        if self.unique and any(duplicated_bool):
+            duplicated_values = duplicated_bool[duplicated_bool].index
+            duplicated_display_limit = list(duplicated_values[:min(
+                len(duplicated_values), self.DISPLAY_DUPL_INDICES_LIMIT
+            )])
             raise ValueError(
                 f"The '{series.name}' column values are not unique, as"
                 " requested.\n"
-                f"There are {len(duplicated)} non unique values, and here are"
-                " some of them:\n"
-                f"{duplicated_limit}..."
+                f"There are {len(duplicated_values)} non unique values, and"
+                " here are some of them:\n"
+                f"{duplicated_display_limit}..."
             )
 
         return series
