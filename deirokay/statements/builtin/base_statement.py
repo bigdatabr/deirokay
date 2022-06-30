@@ -34,10 +34,10 @@ class BaseStatement(MultiBackendMixin, ABC):
         self._validate_options(options)
         self.options = options
 
-    def _validate_options(self, options: DeirokayOption) -> None:
+    @classmethod
+    def _validate_options(cls, options: DeirokayOption) -> None:
         """Make sure all provided statement parameters are expected
         by statement classes"""
-        cls = type(self)
         unexpected_parameters = [
             option for option in options
             if option not in (cls.expected_parameters +
