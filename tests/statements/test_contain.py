@@ -1,6 +1,7 @@
 import pytest
 
 from deirokay import data_reader, validate
+from deirokay.enums import Backend
 from deirokay.statements.builtin import Contain
 
 
@@ -124,7 +125,8 @@ def test_profile():
     df = data_reader('tests/statements/test_contain.csv',
                      options='tests/statements/test_contain_options.yaml')
 
-    generated_prof = Contain.profile(df[['test_maxmin']])
+    contain = Contain.attach_backend(Backend.PANDAS)
+    generated_prof = contain.profile(df[['test_maxmin']])
 
     expected_profile = {
         'type': 'contain',

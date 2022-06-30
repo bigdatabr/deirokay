@@ -205,7 +205,8 @@ class Contain(BaseStatement):
         super().__init__(*args, **kwargs)
 
         self.rule = self.options['rule']
-        self.treater = get_treater_instance(self.options['parser'])
+        self.treater = get_treater_instance(self.options['parser'],
+                                            backend=self.get_backend())
         self.values = self.treater(self.options['values'])
 
         self.min_occurrences = self.options.get('min_occurrences', None)
@@ -431,7 +432,8 @@ class Contain(BaseStatement):
         try:
             statement_template.update(
                 get_dtype_treater(unique_series.map(type).mode()[0])
-                .serialize(unique_series)
+                .attach_backend(Backend.PANDAS)
+                .serialize(unique_series)  # type: ignore
             )
         except TypeError:
             raise NotImplementedError("Can't handle mixed types")

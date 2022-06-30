@@ -1,9 +1,9 @@
 import functools
-from typing import Dict, List, TypeVar
+from typing import Callable, Dict, List, Optional, Type, TypeVar, Union
 
 from deirokay.exceptions import InvalidBackend, UnsupportedBackend
 
-from ._typing import AnyCallable, DeirokayDataSource, GeneralDecorator
+from ._typing import AnyCallable, DeirokayDataSource
 from .enums import Backend
 
 MODULE_2_BACKEND = {
@@ -13,6 +13,10 @@ MODULE_2_BACKEND = {
 assert sorted(Backend) == sorted(MODULE_2_BACKEND.values())
 
 BACKEND_2_MODULE = {v: k for k, v in MODULE_2_BACKEND.items()}
+
+
+_AnyMultiBackendClass = TypeVar('_AnyMultiBackendClass',
+                                bound='MultiBackendMixin')
 
 
 class MultiBackendMixin:
@@ -25,6 +29,9 @@ class MultiBackendMixin:
     """
     supported_backends: List[Backend] = []
     """List[Backend]: Backends supported by this resource."""
+    _current_backend: Optional[Backend] = None
+    """Optional[Backend]: Current active backend
+    (only valid during runtime)."""
     _backend_methods: Dict[Backend, Dict[str, AnyCallable]] = {}
 
     @classmethod
@@ -51,19 +58,98 @@ class MultiBackendMixin:
         # When the decorator is not called from inside a class scope,
         # the __set_name__ hook should be invoked manually.
         # See: https://docs.python.org/3/reference/datamodel.html?highlight=__set_name__#object.__set_name__  # noqa: E501
-        backend_method.__set_name__(cls, method_name)
+        backend_method.__set_name__(cls, method_name)  # type: ignore  # The decorator replaces itself in the owner class with the original method  # noqa: E501
+
+    @classmethod
+    @functools.lru_cache(maxsize=None)
+    def attach_backend(cls: Type['MultiBackendMixin'],
+                       backend: Backend
+                       ) -> Type['_AnyMultiBackendClass']:
+        """Generate a subclass that concretizes multibackend backend
+        methods into their intended name. The methods marked with the
+        given `backend` will compose the returned class.
+
+        Parameters
+        ----------
+        cls : type
+            Class to be subclassed with the given backend.
+        backend : Backend
+            Backend to be selected.
+
+        Returns
+        -------
+        Type[MultiBackendMixin]
+            Subclass of the current class with methods filtered for the
+            given backend.
+        """
+        if backend not in cls.supported_backends:
+            raise UnsupportedBackend(
+                f"The `{cls.__name__}` class does not support the '{backend}'"
+                f' backend, only the following ones: {cls.supported_backends}.'
+                f' If you are using a custom class, be sure to provide a'
+                f' `supported_backends` attribute.'
+            )
+
+        execution_name = f'{cls.__name__}-{backend.value.capitalize()}Backend'
+        execution_attrs = dict(vars(cls))
+        execution_subclass = type(
+            execution_name,
+            (cls,),
+            execution_attrs
+        )  # type: Type[_AnyMultiBackendClass]
+        execution_subclass._current_backend = backend
+
+        _merged_backend_methods = {}
+        for _cls in reversed(cls.mro()):
+            if not issubclass(_cls, MultiBackendMixin):
+                continue
+            try:
+                _merged_backend_methods.update(_cls._backend_methods[backend])
+            except KeyError:
+                continue
+
+        for alias_for, method in _merged_backend_methods.items():
+            if alias_for in vars(execution_subclass):
+                raise InvalidBackend(
+                    f'You cannot declare the alias method `{method.__name__}`'
+                    f' in the class `{cls}` when the original method'
+                    f' `{alias_for}` already exists or has already been'
+                    ' replaced by another alias.'
+                    f' Either remove `{alias_for}` or make sure only'
+                    f' one alias of `{alias_for}` exists for the'
+                    f" '{backend.value}' backend to continue."
+                )
+            setattr(execution_subclass, alias_for, method)
+
+        return execution_subclass
+
+    @classmethod
+    def get_backend(cls) -> Backend:
+        """Get current active backend for this class.
+
+        Returns
+        -------
+        Backend
+            The current active backend.
+
+        Raises
+        ------
+        InvalidBackend
+            Backend not set or not a valid execution class.
+        """
+        if cls._current_backend is None:
+            raise InvalidBackend('Backend not set for current execution')
+        return cls._current_backend
 
 
-_AnyMultiBackendClass = TypeVar(
-    '_AnyMultiBackendClass', bound=MultiBackendMixin
-)
+DecoratorClass = Union[Callable, Type]
 
 
 def register_backend_method(
     alias_for: str,
     /,
     backend: Backend
-) -> GeneralDecorator:
+) -> DecoratorClass:
     """Modify a method to make it an alternative (alias) for another
     method (`alias_for`) when the specified backend is active.
     Should be used as an decorator as in:
@@ -133,67 +219,6 @@ def register_backend_method(
             owner._backend_methods[backend][alias_for] = method
 
     return _decorator
-
-
-@functools.lru_cache(maxsize=None)
-def multibackend_class_factory(cls: _AnyMultiBackendClass,
-                               backend: Backend) -> _AnyMultiBackendClass:
-    """Create an execution subclass for use with the specified backend.
-    The methods marked with the given `backend` will compose the
-    returned class.
-
-    Parameters
-    ----------
-    cls : type
-        Class to be subclassed with the given backend.
-    backend : Backend
-        Backend to filter marked methods.
-
-    Returns
-    -------
-    type
-        Subclass with methods filtered for the given backend.
-    """
-    if not issubclass(cls, MultiBackendMixin):
-        raise InvalidBackend(
-            f'`{cls.__name__}` should be a subclass of `{MultiBackendMixin}`'
-        )
-
-    if backend not in cls.supported_backends:
-        raise UnsupportedBackend(
-            f"The `{cls.__name__}` class does not support the '{backend}'"
-            f' backend, only the following ones: {cls.supported_backends}.'
-            f' If you are using a custom class, be sure to provide a'
-            f' `supported_backends` attribute.'
-        )
-
-    execution_name = f'{cls.__name__}-{backend.value.capitalize()}Backend'
-    execution_attrs = dict(vars(cls))
-    execution_subclass = type(execution_name, (cls,), execution_attrs)
-
-    _merged_backend_methods = {}
-    for _cls in reversed(cls.mro()):
-        if not issubclass(_cls, MultiBackendMixin):
-            continue
-        try:
-            _merged_backend_methods.update(_cls._backend_methods[backend])
-        except KeyError:
-            continue
-
-    for alias_for, method in _merged_backend_methods.items():
-        if alias_for in vars(execution_subclass):
-            raise InvalidBackend(
-                f'You cannot declare the alias method `{method.__name__}`'
-                f' in the class `{cls}` when the original method'
-                f' `{alias_for}` already exists or has already been'
-                ' replaced by another alias.'
-                f' Either remove `{alias_for}` or make sure only'
-                f' one alias of `{alias_for}` exists for the'
-                f" '{backend.value}' backend to continue."
-            )
-        setattr(execution_subclass, alias_for, method)
-
-    return execution_subclass
 
 
 def _detect_backend_from_type(object_type: type) -> Backend:

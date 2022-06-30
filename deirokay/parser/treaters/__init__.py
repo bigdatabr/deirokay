@@ -7,7 +7,6 @@ from typing import Any, Type
 
 from deirokay._typing import DeirokayOption
 from deirokay._utils import recursive_subclass_generator
-from deirokay.backend import multibackend_class_factory
 from deirokay.enums import Backend, DTypes
 
 from .builtin import BaseTreater
@@ -58,4 +57,4 @@ def get_treater_instance(option: DeirokayOption,
     dtype = option.pop('dtype')
 
     cls = get_dtype_treater(dtype)
-    return multibackend_class_factory(cls, backend)(**option)
+    return cls.attach_backend(backend)(**option)

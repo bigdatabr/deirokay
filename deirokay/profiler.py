@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from pandas import DataFrame
 
-from deirokay.backend import detect_backend, multibackend_class_factory
+from deirokay.backend import detect_backend
 from deirokay.enums import Backend
 from deirokay.exceptions import UnsupportedBackend
 
@@ -26,7 +26,7 @@ def _generate_statements(df_scope: DataFrame,
 
     for stmt_cls in STATEMENTS_MAP.values():
         try:
-            execution_cls = multibackend_class_factory(stmt_cls, backend)
+            execution_cls = stmt_cls.attach_backend(backend)
             statement = execution_cls.profile(df_scope)
             statements.append(statement)
         except UnsupportedBackend:

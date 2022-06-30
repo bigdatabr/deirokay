@@ -4,7 +4,7 @@ import pytest
 from numpy import nan
 from pandas.testing import assert_series_equal
 
-from deirokay.enums import DTypes
+from deirokay.enums import Backend, DTypes
 from deirokay.parser import get_dtype_treater, get_treater_instance
 
 
@@ -83,7 +83,8 @@ def test_dtype_parsing_for_Python_types(dtype, params, values):
 
     # Test for replication
     parsed_from_serialized = (
-        get_treater_instance(json_parse['parser'])(json_parse['values'])
+        get_treater_instance(json_parse['parser'],
+                             backend=Backend.PANDAS)(json_parse['values'])
     )
     print(serialized)
     assert_series_equal(parsed, parsed_from_serialized)

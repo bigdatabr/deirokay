@@ -4,7 +4,7 @@ Classes and methods to load data from several sources into Deirokay.
 
 from typing import List, Type
 
-from deirokay.backend import MultiBackendMixin, multibackend_class_factory
+from deirokay.backend import MultiBackendMixin
 from deirokay.enums import Backend
 
 from .dask_reader import read as read_dask
@@ -38,7 +38,7 @@ def reader_factory(backend: Backend) -> Type[DataReader]:
     Type[DataReader]
         Subclass of DataReader containing a `read` staticmethod.
     """
-    return multibackend_class_factory(DataReader, backend)
+    return DataReader.attach_backend(backend)
 
 
 __all__ = (

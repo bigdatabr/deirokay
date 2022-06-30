@@ -3,7 +3,6 @@ from types import ModuleType
 from typing import Type
 
 from deirokay._typing import DeirokayStatement
-from deirokay.backend import multibackend_class_factory
 from deirokay.enums import Backend
 from deirokay.fs import fs_factory
 from deirokay.statements import BaseStatement
@@ -83,7 +82,7 @@ def statement_factory(statement: DeirokayStatement,
             ' or `custom` for your own statements.'
         )
 
-    execution_class = multibackend_class_factory(cls, backend)
-    statement_instance: BaseStatement = execution_class(statement)
+    execution_class = cls.attach_backend(backend)
+    statement_instance = execution_class(statement)  # type: BaseStatement
 
     return statement_instance
