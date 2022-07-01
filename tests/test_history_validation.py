@@ -3,6 +3,7 @@ from datetime import datetime
 import pytest
 
 from deirokay import data_reader, validate
+from deirokay.enums import Backend
 from deirokay.fs import split_s3_path
 
 
@@ -10,7 +11,8 @@ def test_data_validation_with_jinja(prepare_history_folder):
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
 
     assertions = {
@@ -70,7 +72,8 @@ def test_data_validation_with_jinja_using_s3(monkeypatch, prepare_history_s3):
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
 
     assertions = {

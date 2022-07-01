@@ -14,7 +14,8 @@ from deirokay.statements.builtin import Contain
                           ('only', 'test_rule_3', 'pass')])
 def test_rules(rule, scope, result):
     df = data_reader('tests/statements/test_contain.csv',
-                     options='tests/statements/test_contain_options.yaml')
+                     options='tests/statements/test_contain_options.yaml',
+                     backend=Backend.PANDAS)
     assertions = {
         'name': 'all_test_rule',
         'items': [
@@ -64,7 +65,8 @@ def test_max_min(occurrences, result):
     and the `occurrences_per_value` parameter also.
     """
     df = data_reader('tests/statements/test_contain.csv',
-                     options='tests/statements/test_contain_options.yaml')
+                     options='tests/statements/test_contain_options.yaml',
+                     backend=Backend.PANDAS)
 
     assertions = {
         'name': 'max_min_global_test',
@@ -94,7 +96,8 @@ def test_rule_not_contain():
     by combining `rule = 'all'` and `max_occurrences = 0`
     """
     df = data_reader('tests/statements/test_contain.csv',
-                     options='tests/statements/test_contain_options.yaml')
+                     options='tests/statements/test_contain_options.yaml',
+                     backend=Backend.PANDAS)
     assertions = {
         'name': 'all_not_contain_test_rule',
         'items': [
@@ -123,7 +126,8 @@ def test_profile():
     Tests if `profile` method outputs the expected value
     """
     df = data_reader('tests/statements/test_contain.csv',
-                     options='tests/statements/test_contain_options.yaml')
+                     options='tests/statements/test_contain_options.yaml',
+                     backend=Backend.PANDAS)
 
     contain = Contain.attach_backend(Backend.PANDAS)
     generated_prof = contain.profile(df[['test_maxmin']])

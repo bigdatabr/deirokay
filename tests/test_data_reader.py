@@ -4,14 +4,15 @@ import pytest
 from pandas import read_csv
 
 from deirokay import data_reader
-from deirokay.enums import DTypes
+from deirokay.enums import Backend, DTypes
 
 
 def test_data_reader_with_json_options():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
     assert len(df) == 20
 
@@ -23,7 +24,8 @@ def test_data_reader_with_yaml_options():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.yaml'
+        options='tests/options.yaml',
+        backend=Backend.PANDAS
     )
     assert len(df) == 20
 
@@ -65,7 +67,8 @@ def test_data_reader_with_dict_options():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options=options
+        options=options,
+        backend=Backend.PANDAS
     )
     assert len(df) == 20
 
@@ -87,7 +90,8 @@ def test_data_reader_with_dict_options_only_a_few_columns():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options=options
+        options=options,
+        backend=Backend.PANDAS
     )
     assert len(df) == 20
     assert len(df.columns) == 2
@@ -104,7 +108,8 @@ def test_data_reader_without_options_exception():
 def test_data_reader_parquet():
     df = data_reader(
         'tests/sample_parquet.parquet',
-        options='tests/sample_parquet.json'
+        options='tests/sample_parquet.json',
+        backend=Backend.PANDAS
     )
 
     print(df)
@@ -140,7 +145,7 @@ def test_data_reader_from_dataframe():
                        'falsies': ['inactive']},
         }
     }
-    df = data_reader(df, options=options)
+    df = data_reader(df, options=options, backend=Backend.PANDAS)
 
     print(df)
     print(df.dtypes)
@@ -176,7 +181,7 @@ def test_data_reader_from_dask_dataframe():
                        'falsies': ['inactive']},
         }
     }
-    df = data_reader(df, options=options)
+    df = data_reader(df, options=options, backend=Backend.DASK)
 
     print(df)
     print(df.dtypes)
@@ -234,7 +239,8 @@ def test_data_reader_from_sql_file(create_db):
     }
     with psycopg.connect(**db_credentials) as con:
         df = data_reader('tests/data_reader_from_sql_file.sql', options,
-                         con=con)
+                         con=con,
+                         backend=Backend.PANDAS)
 
     print(df)
     print(df.dtypes)
@@ -253,7 +259,7 @@ def test_data_reader_from_sql_query(create_db):
     }
     with psycopg.connect(**db_credentials) as con:
         df = data_reader('select * from deirokay.test;', options,
-                         sql=True, con=con)
+                         sql=True, con=con, backend=Backend.PANDAS)
 
     print(df)
     print(df.dtypes)

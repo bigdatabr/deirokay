@@ -1,9 +1,11 @@
+from deirokay.enums import Backend
 from deirokay.statements import BaseStatement
 
 
 class ThereAreValuesGreaterThanX(BaseStatement):
     name = 'there_are_values_greater_than_x'
     expected_parameters = ['x']
+    supported_backends = [Backend.PANDAS]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1,12 +1,14 @@
 from pprint import pprint
 
 from deirokay import data_reader, profile, validate
+from deirokay.enums import Backend
 
 
 def test_not_null_statement():
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
 
     assertions = {
@@ -40,7 +42,8 @@ def test_profile_wont_generate_useless_statement():
     """Prevent statement generation when `at_least_%` is 0."""
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
 
     validation_doc = profile(df, 'sample')

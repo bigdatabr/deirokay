@@ -1,6 +1,7 @@
 import pytest
 
 from deirokay import data_reader, validate
+from deirokay.enums import Backend
 from deirokay.statements.builtin import RowCount
 
 
@@ -18,7 +19,8 @@ from deirokay.statements.builtin import RowCount
 )
 def test_row_count(scope, params, result):
     df = data_reader('tests/transactions_sample.csv',
-                     options='tests/options.yaml')
+                     options='tests/options.yaml',
+                     backend=Backend.PANDAS)
     assertions = {
         'name': 'test_row_count',
         'items': [
@@ -40,8 +42,9 @@ def test_row_count(scope, params, result):
 
 def test_profile_over_multi_columns():
     df = data_reader('tests/transactions_sample.csv',
-                     options='tests/options.yaml')
-    doc = RowCount.profile(df)
+                     options='tests/options.yaml',
+                     backend=Backend.PANDAS)
+    doc = RowCount.attach_backend(Backend.PANDAS).profile(df)
     assert doc == {
         'type': 'row_count',
         'min': 20,
@@ -74,6 +77,7 @@ def test_profile_over_multi_columns():
 )
 def test_profile_over_single_column(column, expected):
     df = data_reader('tests/transactions_sample.csv',
-                     options='tests/options.yaml')
-    doc = RowCount.profile(df[[column]])
+                     options='tests/options.yaml',
+                     backend=Backend.PANDAS)
+    doc = RowCount.attach_backend(Backend.PANDAS).profile(df[[column]])
     assert doc == expected

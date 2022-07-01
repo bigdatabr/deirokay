@@ -1,6 +1,7 @@
 import pytest
 
 from deirokay import data_reader, validate
+from deirokay.enums import Backend
 
 
 @pytest.mark.parametrize(
@@ -32,7 +33,8 @@ from deirokay import data_reader, validate
 def test_column_expression(scope, expressions, at_least, at_most, result):
     df = data_reader(
         'tests/statements/test_column_expression.csv',
-        options='tests/statements/test_column_expression_options.yaml'
+        options='tests/statements/test_column_expression_options.yaml',
+        backend=Backend.PANDAS
     )
     assertions = {
         'name': 'expressions_test',
@@ -73,7 +75,8 @@ def test_column_expression(scope, expressions, at_least, at_most, result):
 def test_isclose_expression(scope, expressions, at_least, at_most, result):
     df = data_reader(
         'tests/statements/test_column_expression.csv',
-        options='tests/statements/test_column_expression_options.yaml'
+        options='tests/statements/test_column_expression_options.yaml',
+        backend=Backend.PANDAS
     )
     assertions = {
         'name': 'expressions_isclose_test',

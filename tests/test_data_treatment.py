@@ -71,7 +71,7 @@ from deirokay.parser import get_dtype_treater, get_treater_instance
     )
 ])
 def test_dtype_parsing_for_Python_types(dtype, params, values):
-    treater_cls = get_dtype_treater(dtype)
+    treater_cls = get_dtype_treater(dtype).attach_backend(Backend.PANDAS)
     treater_instance = treater_cls(**params)
 
     # Use Deirokay to treat Python types

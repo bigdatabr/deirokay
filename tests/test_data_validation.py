@@ -1,7 +1,7 @@
 import pytest
 
 from deirokay import data_reader, validate
-from deirokay.enums import SeverityLevel
+from deirokay.enums import Backend, SeverityLevel
 from deirokay.exceptions import ValidationError
 from deirokay.fs import split_s3_path
 
@@ -10,7 +10,8 @@ def test_data_invalidation_from_dict():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
 
     assertions = {
@@ -36,7 +37,8 @@ def test_data_validation_from_yaml():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.yaml'
+        options='tests/options.yaml',
+        backend=Backend.PANDAS
     )
 
     validate(df, against='tests/assertions.yml')
@@ -46,7 +48,8 @@ def test_data_validation_from_json():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
 
     validate(df, against='tests/assertions.json')
@@ -55,7 +58,8 @@ def test_data_validation_from_json():
 def test_custom_statement():
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
 
     assertions = {
@@ -94,7 +98,8 @@ def prepare_s3_custom_statement(require_s3_test_bucket):
 def test_custom_statement_from_s3(prepare_s3_custom_statement):
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
 
     assertions = {
@@ -123,7 +128,8 @@ def test_data_validation_with_jinja():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
 
     assertions = {
@@ -156,7 +162,8 @@ def test_data_validation_with_levels():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.json'
+        options='tests/options.json',
+        backend=Backend.PANDAS
     )
 
     assertions = {
