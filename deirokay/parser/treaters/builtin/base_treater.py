@@ -1,14 +1,19 @@
 from abc import ABC
-from typing import Any, List, Optional
+from typing import Any, Iterable, List, Optional
+
+import dask.dataframe  # lazy module
+import pandas  # lazy module
 
 from deirokay._typing import DeirokayDataSeries, DeirokaySerializedSeries
 from deirokay.backend import MultiBackendMixin
-from deirokay.enums import DTypes
+from deirokay.enums import Backend, DTypes
+
+from ..multibackend import treat as treat_
 
 
 class BaseTreater(MultiBackendMixin, ABC):
     """Base class for all data treaters."""
-    supported_backends = []
+    supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
     supported_dtype: Optional[DTypes] = None
     """Optional[DTypes]: DType treated by this treater."""
     supported_primitives: List[Any] = []
@@ -18,7 +23,7 @@ class BaseTreater(MultiBackendMixin, ABC):
         """Proxy for `treat`."""
         return self.treat(series)
 
-    def treat(self, series: DeirokayDataSeries, /) -> DeirokayDataSeries:
+    def treat(self, series: Iterable, /) -> DeirokayDataSeries:
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 
@@ -30,6 +35,23 @@ class BaseTreater(MultiBackendMixin, ABC):
             Raw series to be treated.
         """
         raise NotImplementedError
+
+    @treat_(Backend.PANDAS, force=True)
+    def _treat_pandas(self, series: Iterable, /) -> 'pandas.Series':
+        if isinstance(series, pandas.Series):
+            return series
+        return pandas.Series(series)
+
+    @treat_(Backend.DASK, force=True)
+    def _treat_dask(self, series: Iterable, /) -> 'dask.dataframe.Series':
+        if isinstance(series, dask.dataframe.Series):
+            return series
+
+        # Assumption: When treating a general Iterable, we assume
+        # it fits entirely in memory
+        # TODO: let user propose a max partition size,
+        # instead of assuming a single partition
+        return dask.dataframe.from_pandas(pandas.Series(series), npartitions=1)
 
     @staticmethod
     def serialize(series: DeirokayDataSeries,

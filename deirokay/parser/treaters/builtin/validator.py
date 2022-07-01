@@ -2,6 +2,8 @@
 Classes and functions to treat column data types according to
 Deirokay data types.
 """
+from typing import Iterable
+
 import dask.dataframe  # lazy module
 import pandas  # lazy module
 
@@ -25,7 +27,7 @@ class Validator(BaseTreater):
         self.nullable = nullable
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: 'pandas.Series', /) -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable, /) -> 'pandas.Series':
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 
@@ -42,6 +44,8 @@ class Validator(BaseTreater):
             column has duplicate values when unique constraint was
             requested.
         """
+        series = super()._treat_pandas(series)
+
         if not self.nullable and any(series.isnull()):
             null_indices = list(series[series.isnull()].index)
             null_indices_limit = null_indices[:min(
@@ -71,7 +75,7 @@ class Validator(BaseTreater):
 
     @treat(Backend.DASK)
     def _treat_dask(
-        self, series: 'dask.dataframe.Series'
+        self, series: Iterable
     ) -> 'dask.dataframe.Series':
         """Treat a raw Series to match data expectations for parsing
         and formatting.
@@ -89,6 +93,8 @@ class Validator(BaseTreater):
             column has duplicate values when unique constraint was
             requested.
         """
+        series = super()._treat_dask(series)
+
         if not self.nullable and any(series.isnull()):
             null_indices = series[series.isnull()].index
             null_indices_display_limit = list(null_indices[:min(

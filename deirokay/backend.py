@@ -20,7 +20,7 @@ _AnyMultiBackendClass = TypeVar('_AnyMultiBackendClass',
 
 
 class MultiBackendMixin:
-    """Mixin class from which all multi-backend resources in Deirokay
+    """Mixin class which all multi-backend resources in Deirokay
     derives from.
 
     Together with the `register_backend_method` decorator, the methods
@@ -87,7 +87,7 @@ class MultiBackendMixin:
                 f"The `{cls.__name__}` class does not support the '{backend}'"
                 f' backend, only the following ones: {cls.supported_backends}.'
                 f' If you are using a custom class, be sure to provide a'
-                f' `supported_backends` attribute.'
+                f' `supported_backends` attribute containing {backend!s}.'
             )
 
         execution_name = f'{cls.__name__}-{backend.value.capitalize()}Backend'
@@ -97,7 +97,6 @@ class MultiBackendMixin:
             (cls,),
             execution_attrs
         )  # type: Type[_AnyMultiBackendClass]
-        execution_subclass._current_backend = backend
 
         _merged_backend_methods = {}
         for _cls in reversed(cls.mro()):
@@ -108,8 +107,8 @@ class MultiBackendMixin:
             except KeyError:
                 continue
 
-        for alias_for, method in _merged_backend_methods.items():
-            if alias_for in vars(execution_subclass):
+        for alias_for, (method, force) in _merged_backend_methods.items():
+            if not force and alias_for in vars(execution_subclass):
                 raise InvalidBackend(
                     f'You cannot declare the alias method `{method.__name__}`'
                     f' in the class `{cls}` when the original method'
@@ -117,11 +116,23 @@ class MultiBackendMixin:
                     ' replaced by another alias.'
                     f' Either remove `{alias_for}` or make sure only'
                     f' one alias of `{alias_for}` exists for the'
-                    f" '{backend.value}' backend to continue."
+                    f" '{backend.value}' backend to continue.\n"
+                    "Alternatively, you may set the flag `force=True`"
+                    " when calling"
                 )
             setattr(execution_subclass, alias_for, method)
 
+        # Save backend for future reference (via `get_backend`)
+        execution_subclass._current_backend = backend
+        # Call overwritable user method
+        execution_subclass.__post_attach_backend__()
         return execution_subclass
+
+    @classmethod
+    def __post_attach_backend__(cls):
+        """This classmethod can be optionally overwritten to serve as a
+        callback function for when the `attach_backend()` method is
+        called."""
 
     @classmethod
     def get_backend(cls) -> Backend:
@@ -148,7 +159,9 @@ DecoratorClass = Union[Callable, Type]
 def register_backend_method(
     alias_for: str,
     /,
-    backend: Backend
+    backend: Backend,
+    *,
+    force: bool = False
 ) -> DecoratorClass:
     """Modify a method to make it an alternative (alias) for another
     method (`alias_for`) when the specified backend is active.
@@ -182,6 +195,9 @@ def register_backend_method(
         backend-specific version.
     backend : Backend
         The backend to use when running the method.
+    force : bool, optional
+        Force overwrite target method when it already exists.
+        Defaults to False.
     """
     assert isinstance(backend, Backend), (
         'Make sure this decorator declares a `backend` argument'
@@ -216,7 +232,7 @@ def register_backend_method(
             # We use `vars()` to get method since `getattr()` would resolve
             # existing descriptors (notably, staticmethod and classmethod)
             method = vars(owner)[method_name]
-            owner._backend_methods[backend][alias_for] = method
+            owner._backend_methods[backend][alias_for] = (method, force)
 
     return _decorator
 

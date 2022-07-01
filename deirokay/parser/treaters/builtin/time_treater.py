@@ -3,6 +3,7 @@ Classes and functions to treat column data types according to
 Deirokay data types.
 """
 import datetime
+from typing import Any, Iterable, List
 
 import dask.dataframe  # lazy module
 import pandas  # lazy module
@@ -18,18 +19,18 @@ class TimeTreater(DateTime64Treater):
     """Treater for time-only variables"""
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.TIME
-    supported_primitives = [datetime.time]
+    supported_primitives: List[Any] = [datetime.time]
 
     def __init__(self, format: str = '%H:%M:%S', **kwargs):
         super().__init__(format, **kwargs)
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: 'pandas.Series') -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
         return super()._treat_pandas(series).dt.time
 
     @treat(Backend.DASK)
     def _treat_dask(
-        self, series: 'dask.dataframe.Series'
+        self, series: Iterable
     ) -> 'dask.dataframe.Series':
         return super()._treat_dask(series).dt.time
 

@@ -3,7 +3,7 @@ Classes and functions to treat column data types according to
 Deirokay data types.
 """
 
-from typing import Optional
+from typing import Iterable, Optional
 
 import dask.dataframe  # lazy module
 import pandas  # lazy module
@@ -39,7 +39,7 @@ class NumericTreater(Validator):
         return series
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: 'pandas.Series') -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
         series = super()._treat_pandas(series)
         series = self._treat_thousand_sep(series)
 
@@ -47,7 +47,7 @@ class NumericTreater(Validator):
 
     @treat(Backend.DASK)
     def _treat_dask(
-        self, series: 'dask.dataframe.Series'
+        self, series: Iterable
     ) -> 'dask.dataframe.Series':
         series = super()._treat_dask(series)
         series = self._treat_thousand_sep(series)

@@ -5,7 +5,7 @@ Deirokay data types.
 
 import decimal
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Iterable, List, Optional
 
 import dask.dataframe  # lazy module
 import pandas  # lazy module
@@ -22,7 +22,7 @@ class DecimalTreater(FloatTreater):
     """Treater for decimal variables"""
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.DECIMAL
-    supported_primitives = [decimal.Decimal]
+    supported_primitives: List[Any] = [decimal.Decimal]
 
     def __init__(self, decimal_places: Optional[int] = None, **kwargs):
         super().__init__(**kwargs)
@@ -41,7 +41,7 @@ class DecimalTreater(FloatTreater):
         return series
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: 'pandas.Series') -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
         series = NumericTreater._treat_pandas(self, series)
         series = self._treat_decimal_sep(series)
         series = series.map(lambda x: Decimal(x) if x is not None else None)
@@ -51,7 +51,7 @@ class DecimalTreater(FloatTreater):
 
     @treat(Backend.DASK)
     def _treat_dask(
-        self, series: 'dask.dataframe.Series'
+        self, series: Iterable
     ) -> 'dask.dataframe.Series':
         series = NumericTreater._treat_dask(self, series)
         series = self._treat_decimal_sep(series, meta=(series.name, 'object'))

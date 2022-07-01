@@ -4,6 +4,7 @@ Deirokay data types.
 """
 
 import datetime
+from typing import Iterable
 
 import dask.dataframe  # lazy module
 import pandas  # lazy module
@@ -33,14 +34,14 @@ class DateTime64Treater(Validator):
         self.format = format
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: 'pandas.Series') -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
         series = super()._treat_pandas(series)
 
         return pandas.to_datetime(series, format=self.format)
 
     @treat(Backend.DASK)
     def _treat_dask(
-        self, series: 'dask.dataframe.Series'
+        self, series: Iterable
     ) -> 'dask.dataframe.Series':
         series = super()._treat_dask(series)
 

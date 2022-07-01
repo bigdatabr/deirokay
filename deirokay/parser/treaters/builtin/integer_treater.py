@@ -2,6 +2,8 @@
 Classes and functions to treat column data types according to
 Deirokay data types.
 """
+from typing import Iterable
+
 import dask.dataframe  # lazy module
 import pandas  # lazy module
 
@@ -18,12 +20,12 @@ class IntegerTreater(NumericTreater):
     supported_dtype = DTypes.INT64
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: 'pandas.Series') -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
         return super()._treat_pandas(series).astype(float).astype('Int64')
 
     @treat(Backend.DASK)
     def _treat_dask(
-        self, series: 'dask.dataframe.Series'
+        self, series: Iterable
     ) -> 'dask.dataframe.Series':
         return super()._treat_dask(series).astype(float).astype('Int64')
 

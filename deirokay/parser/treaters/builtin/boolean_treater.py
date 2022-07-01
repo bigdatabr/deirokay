@@ -3,7 +3,7 @@ Classes and functions to treat column data types according to
 Deirokay data types.
 """
 
-from typing import List, Optional, Union
+from typing import Iterable, List, Optional, Union
 
 import dask.dataframe  # lazy module
 import numpy  # lazy module
@@ -64,7 +64,7 @@ class BooleanTreater(Validator):
                          f'Expected values: {self.truthies | self.falsies}')
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: 'pandas.Series', /) -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable, /) -> 'pandas.Series':
         series = super()._treat_pandas(series)
         series = series.apply(self._evaluate).astype('boolean')
         # Validate again
@@ -74,7 +74,7 @@ class BooleanTreater(Validator):
 
     @treat(Backend.DASK)
     def _treat_dask(
-        self, series: 'dask.dataframe.Series'
+        self, series: Iterable
     ) -> 'dask.dataframe.Series':
         series = super()._treat_dask(series)
         series = series.apply(

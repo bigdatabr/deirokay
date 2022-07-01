@@ -3,7 +3,7 @@ from deirokay.backend import register_backend_method
 from deirokay.enums import Backend
 
 
-def treat(backend: Backend) -> GeneralDecorator:
+def treat(backend: Backend, *, force: bool = False) -> GeneralDecorator:
     """Define a decorator that turns any method into an alias for the
     `treat` method when executed using a given `backend`.
 
@@ -16,11 +16,14 @@ def treat(backend: Backend) -> GeneralDecorator:
     -------
     GeneralDecorator
         A decorator for the alias method of `treat`.
+    force : bool, optional
+        Force overwrite target method when it already exists.
+        Defaults to False.
     """
-    return register_backend_method('treat', backend)
+    return register_backend_method('treat', backend, force=force)
 
 
-def serialize(backend: Backend) -> GeneralDecorator:
+def serialize(backend: Backend, *, force: bool = False) -> GeneralDecorator:
     """Define a decorator that turns any method into an alias for the
     `serialize` method when executed using a given `backend`.
 
@@ -33,5 +36,8 @@ def serialize(backend: Backend) -> GeneralDecorator:
     -------
     GeneralDecorator
         A decorator for the alias method of `serialize`.
+    force : bool, optional
+        Force overwrite target method when it already exists.
+        Defaults to False.
     """
-    return register_backend_method('serialize', backend)
+    return register_backend_method('serialize', backend, force=force)
