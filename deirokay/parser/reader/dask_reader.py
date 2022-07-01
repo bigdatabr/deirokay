@@ -34,6 +34,8 @@ def read(data: Union[str, 'dask.dataframe.DataFrame'],
     default_kwargs: Dict[str, Any]
     if isinstance(data, dask.dataframe.DataFrame):
         return data[columns]
+    if not isinstance(data, str):
+        raise TypeError(f'Unexpected type for `data` ({data.__class__})')
     if sql:
         raise NotImplementedError(
             "Reading SQL queries into Dask dataframes is not supported."
