@@ -17,10 +17,6 @@ class InvalidBackend(ValueError):
     """Error in backend definition."""
 
 
-class InvalidBackend(InvalidBackend):
-    """Invalid backend selection."""
-
-
 class UnsupportedBackend(InvalidBackend):
     """Backend is not supported for this resource."""
 

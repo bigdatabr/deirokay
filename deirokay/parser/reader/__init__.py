@@ -4,6 +4,7 @@ Classes and methods to load data from several sources into Deirokay.
 
 from typing import List, Type
 
+from deirokay._typing import DeirokayReadCallable
 from deirokay.backend import MultiBackendMixin
 from deirokay.enums import Backend
 
@@ -15,13 +16,14 @@ class DataReader(MultiBackendMixin):
     """Helper class to load data from a data source in function of the
     backend."""
     supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
+    read: DeirokayReadCallable
 
 
 DataReader.register_backend_method('read',
-                                   staticmethod(read_dask),
+                                   staticmethod(read_dask),  # type: ignore  # Staticmethod is Callable # noqa: E501
                                    Backend.DASK)
 DataReader.register_backend_method('read',
-                                   staticmethod(read_pandas),
+                                   staticmethod(read_pandas),  # type: ignore  # Staticmethod is Callable # noqa: E501
                                    Backend.PANDAS)
 
 

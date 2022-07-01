@@ -437,6 +437,7 @@ class Contain(BaseStatement):
             )
         except TypeError:
             raise NotImplementedError("Can't handle mixed types")
+        # Sort allowing `None` values, which will appear last
         statement_template['values'].sort(key=lambda x: (x is None, x))
 
         if min_occurrences != 1:
