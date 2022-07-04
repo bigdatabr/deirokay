@@ -72,14 +72,14 @@ several additional parameters, and they can be optional or not.
 Special Parameters for Statements
 =================================
 
-There are special parameter names, which are actually directives to 
+There are special parameter names, which actually are directives to 
 pass attributes regarding the statement itself, and not the statement 
 type. They are:
 
 - **type**: It defines the statement type itself, so it cannot be used 
   as a parameter name. Should be set to *custom* in case of custom 
-  statements, and the statement class location should be declared in 
-  **location**.
+  statements. In this case, the statement class location should be
+  declared using the **location** attribute.
 
 - **severity**: Set a severity level for a statement in case of failure.
   It must be an integer value, conventionally from 1 (minimal) to 5 
@@ -98,7 +98,9 @@ For a statement to be processed, its type, as declared in the
 validation document, must match a statement class name (the *name* 
 attribute of a statement class).
 
-The native statement classes are all declared in :ref:`deirokay.statements`. See an example:
+The native statement classes are all declared in
+:ref:`deirokay.statements`. See a simplified version of the `not_null`
+statement:
 
 .. code-block:: python
 
@@ -139,7 +141,7 @@ The native statement classes are all declared in :ref:`deirokay.statements`. See
             return True
 
         @staticmethod
-        def _profile_pandas(df):
+        def profile(df):
             not_nulls = ~df.isnull().all(axis=1)
 
             statement = {
@@ -150,36 +152,100 @@ The native statement classes are all declared in :ref:`deirokay.statements`. See
             }
             return statement
 
-When processing statements, Deirokay will list all class names in 
-this module and look for a class whose name matches the *type* key from 
-the validation document. It means it is enough to create a class in 
-this module to make it available to use.
+When processing statements, Deirokay will decide which statement class
+to load based on the `type` parameter declared in the Validation
+Document. This parameter should coincide with the `name` attribute of
+one of the native statement classes. Custom statement classes should
+still have a `name` class attribute, but, as previously stated, they
+should be signaled as an external dependency to Deirokay by declaring
+`type: 'custom'` and a valid `location` parameter in the Validation
+Document.
 
-The *expected_parameters* is a mandatory argument to identify all valid 
-parameters for the current class. Any parameter that is neither special 
-nor listed as expected will raise an exception.
+The `expected_parameters` is a mandatory attribute for Deirokay to
+identify all valid parameters for the current class. Any parameter that
+is neither special nor listed as expected will raise an exception.
+Ideally, the statement class should validate each of its custom
+parameters during initialization (`__init__` method).
 
-Ideally, the statement class could validate the parameters it accepts 
-in the *__init__* method.
-
-The *report* method is intended to report statistics that may be useful 
+The `report` method is intended to report statistics that may be useful 
 for the current statement. Thinking of the validation process also as a 
 form of logging (when the validation result is saved), the metrics 
 reported by the statement could be useful in a numerous use cases. 
-Ideally, the *report* method should also summarize all calculations 
+Ideally, the `report` method should also summarize all calculations 
 that will be logically evaluated by the next method.
 
-The *result* method has only one purpose: return either True (for a 
-successful test) or False (for a failed test). A failure can be a 
+The `result` method has only one purpose: return either `True` (for a 
+successful test) or `False` (for a failed test). A failure can be a 
 consequence of several reasons, since a statement is able to evaluate a 
 series of parameters passed by the user and a set of metrics reported 
-by the *report* method.
+by the `report` method.
 
-The *profile* is a static method used to generate a default statement 
+The `profile` is a static method used to generate a default statement 
 object for the current class. It is not called during the validation 
 process, but when profiling the data. When the user calls the 
-*deirokay.profile* function, all native statement classes having a 
-*profile* method are iterated to generate a default statement. By 
+`deirokay.profile` function, all native statement classes having a 
+`profile` method are iterated over to generate a default statement. By 
 default, statement objects are generated for the entire template 
 DataFrame (the entire set of columns), and then for each of its columns 
 individually.
+
+Dealing with multi-backend resources
+====================================
+
+Since Deirokay 1.0, statement classes also support multiple engines for
+statement evaluation. Every class should declare a `supported_backends`
+attribute containing the objects from the `Backend` enum corresponding
+to the backends it supports.
+
+Currently, only two methods support "overloading" for distinct backends:
+`report` and `profile`.
+Two homonymous decorators used to indicate the implementation for each
+supported backend are
+`@deirokay.statements.multibackend.report` and
+`@deirokay.statements.multibackend.profile`. 
+
+See an example:
+
+.. code-block:: python
+
+    from deirokay.statements import BaseStatement
+    from deirokay.statements.multibackend import report, profile
+    from deirokay.enums import Backend
+
+
+    class DummyMultibackendStatement(BaseStatement):
+        name = 'dummy'
+        expected_parameters = []
+        supported_backends = [Backend.PANDAS, Backend.DASK]
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+        @report(Backend.PANDAS)
+        def _report_method_for_pandas_backend(self, df):
+            ...
+
+        @report(Backend.DASK)
+        def _report_method_for_dask_backend(self, df):
+            ...
+
+        def result(self, report):
+            ...
+
+        @profile(Backend.PANDAS)
+        @staticmethod
+        def _profile_for_pandas(df):
+            ...
+
+        @profile(Backend.DASK)
+        @staticmethod
+        def _profile_for_dask(df):
+            ...
+
+
+Make notice both `report`-decorated should generate the exact outputs,
+as the `result` method cannot be overloaded for distinct backends (this
+is done on purpose). Also remark that the `@profile` decorator should
+be on top of `@staticmethod`, as the `staticmethod` descriptor will
+also be copied to the target `profile` method during the statement
+evaluation phase.
