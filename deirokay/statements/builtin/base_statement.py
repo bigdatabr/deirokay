@@ -50,7 +50,7 @@ class BaseStatement(MultiBackendMixin, ABC):
                 f'The valid parameters are: {cls.expected_parameters}'
             )
 
-    def __call__(self, df: DeirokayDataSource, /) -> dict:
+    def __call__(self, df: DeirokayDataSource) -> dict:
         """Run statement instance."""
         internal_report = self.report(df)
         result = self.result(internal_report)
@@ -61,7 +61,7 @@ class BaseStatement(MultiBackendMixin, ABC):
         }
         return final_report
 
-    def report(self, df: DeirokayDataSource, /) -> dict:
+    def report(self, df: DeirokayDataSource) -> dict:
         """Receive a DataFrame containing only columns on the scope of
         validation and returns a report of related metrics that can
         be used later to declare this Statement as fulfilled or
@@ -81,7 +81,7 @@ class BaseStatement(MultiBackendMixin, ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def result(self, report: dict, /) -> bool:
+    def result(self, report: dict) -> bool:
         """Receive the report previously generated and declare this
         statement as either fulfilled (True) or failed (False).
 
@@ -99,7 +99,7 @@ class BaseStatement(MultiBackendMixin, ABC):
         """
 
     @staticmethod
-    def profile(df: DeirokayDataSource, /) -> DeirokayStatement:
+    def profile(df: DeirokayDataSource) -> DeirokayStatement:
         """Given a template data table, generate a statement dict
         from it.
 

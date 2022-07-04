@@ -158,7 +158,6 @@ DecoratorClass = Union[Callable, Type]
 
 def register_backend_method(
     alias_for: str,
-    /,
     backend: Backend,
     *,
     force: bool = False
@@ -204,7 +203,7 @@ def register_backend_method(
     )
 
     class _decorator():
-        def __init__(self, decorated_method: AnyCallable, /) -> None:
+        def __init__(self, decorated_method: AnyCallable) -> None:
             self.decorated_method = decorated_method
 
         def __set_name__(self, owner: type, method_name: str) -> None:

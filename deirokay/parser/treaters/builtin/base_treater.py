@@ -19,11 +19,11 @@ class BaseTreater(MultiBackendMixin, ABC):
     supported_primitives: List[Any] = []
     """List[Any]: List of primitives supported by this treater."""
 
-    def __call__(self, series: DeirokayDataSeries, /) -> DeirokayDataSeries:
+    def __call__(self, series: DeirokayDataSeries) -> DeirokayDataSeries:
         """Proxy for `treat`."""
         return self.treat(series)
 
-    def treat(self, series: Iterable, /) -> DeirokayDataSeries:
+    def treat(self, series: Iterable) -> DeirokayDataSeries:
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 
@@ -37,13 +37,13 @@ class BaseTreater(MultiBackendMixin, ABC):
         raise NotImplementedError
 
     @treat_(Backend.PANDAS, force=True)
-    def _treat_pandas(self, series: Iterable, /) -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
         if isinstance(series, pandas.Series):
             return series
         return pandas.Series(series)
 
     @treat_(Backend.DASK, force=True)
-    def _treat_dask(self, series: Iterable, /) -> 'dask.dataframe.Series':
+    def _treat_dask(self, series: Iterable) -> 'dask.dataframe.Series':
         if isinstance(series, dask.dataframe.Series):
             return series
 
@@ -54,8 +54,7 @@ class BaseTreater(MultiBackendMixin, ABC):
         return dask.dataframe.from_pandas(pandas.Series(series), npartitions=1)
 
     @staticmethod
-    def serialize(series: DeirokayDataSeries,
-                  /) -> DeirokaySerializedSeries:
+    def serialize(series: DeirokayDataSeries) -> DeirokaySerializedSeries:
         """Create a Deirokay-compatible serializable object that can
         be serialized (in JSON or YAML formats) and parsed back by
         Deirokay treaters.

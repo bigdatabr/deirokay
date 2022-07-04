@@ -64,7 +64,7 @@ class BooleanTreater(Validator):
                          f'Expected values: {self.truthies | self.falsies}')
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: Iterable, /) -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
         series = super()._treat_pandas(series)
         series = series.apply(self._evaluate).astype('boolean')
         # Validate again

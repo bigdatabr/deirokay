@@ -27,7 +27,7 @@ class Validator(BaseTreater):
         self.nullable = nullable
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: Iterable, /) -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 

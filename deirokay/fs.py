@@ -15,9 +15,10 @@ from os.path import splitext
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from types import ModuleType
-from typing import IO, Generator, Iterable, Literal, Optional, Sequence
+from typing import IO, Generator, Iterable, Optional, Sequence
 
 import yaml
+from typing_extensions import Literal
 
 boto3_import_error = None
 try:

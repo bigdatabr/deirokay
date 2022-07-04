@@ -1,8 +1,14 @@
-from typing import Any, Callable, Dict, List, Literal, TypeVar, Union, get_args
+from typing import Any, Callable, Dict, List, TypeVar, Union
 
 import dask.dataframe  # lazy module
 import pandas  # lazy module
-from typing_extensions import Protocol
+from typing_extensions import Literal, get_args
+
+try:
+    from typing_extensions import Protocol
+except ModuleNotFoundError:
+    # Protocol exists only since Python 3.8
+    Protocol = object
 
 from .enums import Backend
 
