@@ -11,6 +11,7 @@ from .builtin import BaseStatement
 STATEMENTS_MAP: Dict[str, Type[BaseStatement]] = {
     cls.name: cls
     for cls in recursive_subclass_generator(BaseStatement)
+    if cls is not BaseStatement
 }
 
 __all__ = tuple(
