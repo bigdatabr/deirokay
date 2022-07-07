@@ -2,6 +2,7 @@ import pytest
 from airflow.exceptions import AirflowSkipException
 
 from deirokay.airflow import DeirokayOperator
+from deirokay.enums import Backend
 
 
 def test_deirokay_operator(prepare_history_folder):
@@ -10,6 +11,7 @@ def test_deirokay_operator(prepare_history_folder):
         data='tests/transactions_sample.csv',
         options='tests/options.json',
         against='tests/assertions_with_history.json',
+        backend=Backend.PANDAS,
         template={'forty': 40},
         save_to=prepare_history_folder
     )
@@ -51,6 +53,7 @@ def test_deirokay_operator_with_severity(prepare_history_folder):
         data='tests/transactions_sample.csv',
         options='tests/options.json',
         against=assertions,
+        backend=Backend.PANDAS,
         save_to=prepare_history_folder
     )
 
