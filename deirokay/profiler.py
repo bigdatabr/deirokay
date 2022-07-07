@@ -6,20 +6,18 @@ Documents.
 import warnings
 from typing import List, Optional
 
-from pandas import DataFrame
-
 from deirokay.backend import detect_backend
 from deirokay.enums import Backend
 from deirokay.exceptions import UnsupportedBackend
 
 from .__version__ import __version__
-from ._typing import (DeirokayStatement, DeirokayValidationDocument,
-                      DeirokayValidationItem)
+from ._typing import (DeirokayDataSource, DeirokayStatement,
+                      DeirokayValidationDocument, DeirokayValidationItem)
 from .fs import fs_factory
 from .statements import STATEMENTS_MAP
 
 
-def _generate_statements(df_scope: DataFrame,
+def _generate_statements(df_scope: DeirokayDataSource,
                          backend: Backend) -> List[DeirokayStatement]:
 
     statements: List[DeirokayStatement] = []
@@ -45,7 +43,7 @@ def _generate_statements(df_scope: DataFrame,
     return statements
 
 
-def _generate_items(df: DataFrame,
+def _generate_items(df: DeirokayDataSource,
                     backend: Backend) -> List[DeirokayValidationItem]:
     items: List[DeirokayValidationItem] = []
 
@@ -65,7 +63,7 @@ def _generate_items(df: DataFrame,
     return items
 
 
-def profile(df: DataFrame,
+def profile(df: DeirokayDataSource,
             document_name: str,
             save_to: Optional[str] = None) -> DeirokayValidationDocument:
     """Generate a validation document from a given template DataFrame
