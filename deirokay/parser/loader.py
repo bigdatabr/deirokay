@@ -53,12 +53,13 @@ def data_reader(data: Union[str, DeirokayDataSource],
         if __comp_version__ < (2,):
             warnings.warn(
                 'To preserve backward compatibility, the `backend` attribute'
-                " is assumed to be PANDAS when reading data from a file or"
-                " SQL query. In future, this behavior will change and"
-                " an exception will be raise when the backend cannot be"
-                " inferred from the `data` attribute. To prevent this error"
-                " in future and suppress this warning in current version,"
-                " set the `backend` attribute explicitely.",
+                ' is assumed to be `Backend.PANDAS` when reading data from a'
+                ' file or SQL query.\n'
+                'In future, this behavior will change and an exception will'
+                ' be raised whenever the backend cannot be inferred from the'
+                ' `data` attribute. To prevent this error in future and'
+                ' suppress this warning in the current version,'
+                ' set the `backend` attribute explicitely in `data_reader()`.',
                 FutureWarning
             )
             backend = Backend.PANDAS

@@ -1,8 +1,10 @@
 import functools
+import warnings
 from typing import Callable, Dict, List, Optional, Type, TypeVar, Union
 
 from deirokay.exceptions import InvalidBackend, UnsupportedBackend
 
+from .__version__ import __comp_version__
 from ._typing import AnyCallable, DeirokayDataSource
 from .enums import Backend
 
@@ -82,6 +84,25 @@ class MultiBackendMixin:
             Subclass of the current class with methods filtered for the
             given backend.
         """
+        if (
+            __comp_version__ < (2,)
+            and cls.supported_backends == []
+            and 'supported_backends' not in vars(cls)
+        ):
+            warnings.warn(
+                'To preserve backward compatibility, the'
+                f' `supported_backends` attribute from `{cls.__name__}`'
+                ' is assumed to be `[Backend.PANDAS]` when not declared.'
+                ' In future, this behavior will change and an exception'
+                ' will be raised whenever a multibackend class does not'
+                ' specify this attribute explicitely.\n'
+                'To prevent this error in future and suppress this'
+                ' warning in the current version, please set the'
+                ' `supported_backends` class attribute explicitely.',
+                FutureWarning
+            )
+            cls.supported_backends = [Backend.PANDAS]
+
         if backend not in cls.supported_backends:
             raise UnsupportedBackend(
                 f"The `{cls.__name__}` class does not support the '{backend}'"
