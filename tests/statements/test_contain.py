@@ -5,6 +5,7 @@ from deirokay.enums import Backend
 from deirokay.statements.builtin import Contain
 
 
+@pytest.mark.parametrize('backend', list(Backend))
 @pytest.mark.parametrize('rule, scope, result',
                          [('all', 'test_rule_1', 'pass'),
                           ('all', 'test_rule_2', 'fail'),
@@ -12,10 +13,10 @@ from deirokay.statements.builtin import Contain
                           ('only', 'test_rule_1', 'fail'),
                           ('only', 'test_rule_2', 'pass'),
                           ('only', 'test_rule_3', 'pass')])
-def test_rules(rule, scope, result):
+def test_rules(rule, scope, result, backend):
     df = data_reader('tests/statements/test_contain.csv',
                      options='tests/statements/test_contain_options.yaml',
-                     backend=Backend.PANDAS)
+                     backend=backend)
     assertions = {
         'name': 'all_test_rule',
         'items': [
@@ -38,6 +39,7 @@ def test_rules(rule, scope, result):
     ) == result
 
 
+@pytest.mark.parametrize('backend', list(Backend))
 @pytest.mark.parametrize('occurrences, result',
                          [({'min_occurrences': 3}, 'fail'),
                           ({'min_occurrences': 1}, 'pass'),
@@ -57,7 +59,7 @@ def test_rules(rule, scope, result):
                                   {'values': ['SP'], 'min_occurrences': 2}
                               ]
                           }, 'pass')])
-def test_max_min(occurrences, result):
+def test_max_min(occurrences, result, backend):
     """
     Tests if statement `contain`'s checks about minimum
     and maximum quantities for each column/value are correct.
@@ -66,7 +68,7 @@ def test_max_min(occurrences, result):
     """
     df = data_reader('tests/statements/test_contain.csv',
                      options='tests/statements/test_contain_options.yaml',
-                     backend=Backend.PANDAS)
+                     backend=backend)
 
     assertions = {
         'name': 'max_min_global_test',
@@ -90,14 +92,15 @@ def test_max_min(occurrences, result):
     ) == result
 
 
-def test_rule_not_contain():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_rule_not_contain(backend):
     """
     Tests the extremal case of not containing some values, obtained
     by combining `rule = 'all'` and `max_occurrences = 0`
     """
     df = data_reader('tests/statements/test_contain.csv',
                      options='tests/statements/test_contain_options.yaml',
-                     backend=Backend.PANDAS)
+                     backend=backend)
     assertions = {
         'name': 'all_not_contain_test_rule',
         'items': [
@@ -121,15 +124,16 @@ def test_rule_not_contain():
     ) == 'pass'
 
 
-def test_profile():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_profile(backend):
     """
     Tests if `profile` method outputs the expected value
     """
     df = data_reader('tests/statements/test_contain.csv',
                      options='tests/statements/test_contain_options.yaml',
-                     backend=Backend.PANDAS)
+                     backend=backend)
 
-    contain = Contain.attach_backend(Backend.PANDAS)
+    contain = Contain.attach_backend(backend)
     generated_prof = contain.profile(df[['test_maxmin']])
 
     expected_profile = {

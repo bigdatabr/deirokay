@@ -6,12 +6,13 @@ from deirokay.exceptions import ValidationError
 from deirokay.fs import split_s3_path
 
 
-def test_data_invalidation_from_dict():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_invalidation_from_dict(backend):
 
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json',
-        backend=Backend.PANDAS
+        backend=backend
     )
 
     assertions = {
@@ -33,33 +34,36 @@ def test_data_invalidation_from_dict():
         validate(df, against=assertions)
 
 
-def test_data_validation_from_yaml():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_validation_from_yaml(backend):
 
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.yaml',
-        backend=Backend.PANDAS
+        backend=backend
     )
 
     validate(df, against='tests/assertions.yml')
 
 
-def test_data_validation_from_json():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_validation_from_json(backend):
 
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json',
-        backend=Backend.PANDAS
+        backend=backend
     )
 
     validate(df, against='tests/assertions.json')
 
 
-def test_custom_statement():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_custom_statement(backend):
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json',
-        backend=Backend.PANDAS
+        backend=backend
     )
 
     assertions = {
@@ -95,11 +99,12 @@ def prepare_s3_custom_statement(require_s3_test_bucket):
     s3.delete_object(Bucket=bucket, Key=key)
 
 
-def test_custom_statement_from_s3(prepare_s3_custom_statement):
+@pytest.mark.parametrize('backend', list(Backend))
+def test_custom_statement_from_s3(prepare_s3_custom_statement, backend):
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json',
-        backend=Backend.PANDAS
+        backend=backend
     )
 
     assertions = {
@@ -124,12 +129,13 @@ def test_custom_statement_from_s3(prepare_s3_custom_statement):
     validate(df, against=assertions)
 
 
-def test_data_validation_with_jinja():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_validation_with_jinja(backend):
 
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json',
-        backend=Backend.PANDAS
+        backend=backend
     )
 
     assertions = {
@@ -158,12 +164,13 @@ def test_data_validation_with_jinja():
     validate(df, against=assertions, template={'today': '20210816'})
 
 
-def test_data_validation_with_levels():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_validation_with_levels(backend):
 
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json',
-        backend=Backend.PANDAS
+        backend=backend
     )
 
     assertions = {

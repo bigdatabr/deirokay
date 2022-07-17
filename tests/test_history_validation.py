@@ -7,12 +7,13 @@ from deirokay.enums import Backend
 from deirokay.fs import split_s3_path
 
 
-def test_data_validation_with_jinja(prepare_history_folder):
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_validation_with_jinja(prepare_history_folder, backend):
 
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json',
-        backend=Backend.PANDAS
+        backend=backend
     )
 
     assertions = {
@@ -66,14 +67,16 @@ def prepare_history_s3(require_s3_test_bucket):
     delete_s3_prefix(bucket, prefix)
 
 
-def test_data_validation_with_jinja_using_s3(monkeypatch, prepare_history_s3):
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_validation_with_jinja_using_s3(monkeypatch, prepare_history_s3,
+                                             backend):
     # Reduce the number of retrieved objects to test pagination
     monkeypatch.setattr('deirokay.fs.S3FileSystem.LIST_OBJECTS_MAX_KEYS', 1)
 
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json',
-        backend=Backend.PANDAS
+        backend=backend
     )
 
     assertions = {
