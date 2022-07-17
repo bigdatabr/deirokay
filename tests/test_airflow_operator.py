@@ -5,13 +5,14 @@ from deirokay.airflow import DeirokayOperator
 from deirokay.enums import Backend
 
 
-def test_deirokay_operator(prepare_history_folder):
+@pytest.mark.parametrize('backend', list(Backend))
+def test_deirokay_operator(prepare_history_folder, backend):
     operator = DeirokayOperator(
         task_id='deirokay_validate',
         data='tests/transactions_sample.csv',
         options='tests/options.json',
         against='tests/assertions_with_history.json',
-        backend=Backend.PANDAS,
+        backend=backend,
         template={'forty': 40},
         save_to=prepare_history_folder
     )
@@ -21,7 +22,8 @@ def test_deirokay_operator(prepare_history_folder):
     operator.execute({'ts_nodash': '20001231T101012'})
 
 
-def test_deirokay_operator_with_severity(prepare_history_folder):
+@pytest.mark.parametrize('backend', list(Backend))
+def test_deirokay_operator_with_severity(prepare_history_folder, backend):
 
     assertions = {
         "name": "VENDAS",
@@ -53,7 +55,7 @@ def test_deirokay_operator_with_severity(prepare_history_folder):
         data='tests/transactions_sample.csv',
         options='tests/options.json',
         against=assertions,
-        backend=Backend.PANDAS,
+        backend=backend,
         save_to=prepare_history_folder
     )
 

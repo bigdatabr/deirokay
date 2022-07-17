@@ -4,6 +4,7 @@ from deirokay import data_reader, validate
 from deirokay.enums import Backend
 
 
+@pytest.mark.parametrize('backend', list(Backend))
 @pytest.mark.parametrize(
     'scope, expressions, at_least, at_most, result',
     [
@@ -30,11 +31,12 @@ from deirokay.enums import Backend
         (['c1', 'c9'], 'c1 + 0.1 == c9', 60, 100, 'pass'),
         (['c1', 'c9'], 'c1 + 0.1 == c9', 61, 100, 'fail')
     ])
-def test_column_expression(scope, expressions, at_least, at_most, result):
+def test_column_expression(scope, expressions, at_least, at_most, result,
+                           backend):
     df = data_reader(
         'tests/statements/test_column_expression.csv',
         options='tests/statements/test_column_expression_options.yaml',
-        backend=Backend.PANDAS
+        backend=backend
     )
     assertions = {
         'name': 'expressions_test',
@@ -58,6 +60,7 @@ def test_column_expression(scope, expressions, at_least, at_most, result):
     ) == result
 
 
+@pytest.mark.parametrize('backend', list(Backend))
 @pytest.mark.parametrize(
     'scope, expressions, at_least, at_most, result',
     [
@@ -72,11 +75,12 @@ def test_column_expression(scope, expressions, at_least, at_most, result):
         (['c1', 'c8'], 'c1 =~ c8', 100, 100, 'pass'),
         (['c1', 'c9'], 'c1 =~ c9', 60, 100, 'pass')
     ])
-def test_isclose_expression(scope, expressions, at_least, at_most, result):
+def test_isclose_expression(scope, expressions, at_least, at_most, result,
+                            backend):
     df = data_reader(
         'tests/statements/test_column_expression.csv',
         options='tests/statements/test_column_expression_options.yaml',
-        backend=Backend.PANDAS
+        backend=backend
     )
     assertions = {
         'name': 'expressions_isclose_test',

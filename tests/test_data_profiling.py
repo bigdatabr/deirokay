@@ -1,15 +1,18 @@
 from pprint import pprint
 
+import pytest
+
 from deirokay import data_reader, profile, validate
 from deirokay.enums import Backend
 
 
-def test_profiling():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_profiling(backend):
 
     df = data_reader(
         'tests/transactions_sample.csv',
         options='tests/options.json',
-        backend=Backend.PANDAS
+        backend=backend
     )
 
     validation_document = profile(df, 'transactions_sample')
