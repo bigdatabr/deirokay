@@ -1,4 +1,4 @@
-import dask.dataframe
+import dask.dataframe as dd
 import pandas
 import psycopg2
 import pytest
@@ -111,7 +111,7 @@ def test_data_reader_from_dataframe(backend):
 
     read_csv = {
         Backend.PANDAS: pandas.read_csv,
-        Backend.DASK: dask.dataframe.read_csv,
+        Backend.DASK: dd.read_csv,
     }[backend]
 
     df = read_csv('tests/transactions_sample.csv',
@@ -215,6 +215,6 @@ def test_data_reader_from_sql_query(create_db, backend):
     }
     df = data_reader('select * from deirokay.test', options,
                      sql=True, con=create_db,
-                     backend=backend, index_col='column1')
+                     backend=backend)
 
     assert len(df) == 4
