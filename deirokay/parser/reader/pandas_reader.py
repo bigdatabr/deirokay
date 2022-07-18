@@ -31,51 +31,50 @@ def read(data: Union[str, 'pandas.DataFrame'],
     pandas.DataFrame
         The pandas DataFrame.
     """
-    default_kwargs: Dict[str, Any]
+    default_kwargs: Dict[str, Any] = {}
+
     if isinstance(data, pandas.DataFrame):
         return data[columns]
+
     if not isinstance(data, str):
         raise TypeError(f'Unexpected type for `data` ({data.__class__})')
+
     if sql:
-        default_kwargs = {
-            'columns': columns
-        }
-        default_kwargs.update(kwargs)
-        return pandas.read_sql(data, **default_kwargs)
+        read_ = pandas.read_sql
 
-    file_extension = splitext(data)[1].lstrip('.')
-
-    if file_extension == 'sql':
-        default_kwargs = {
-            'columns': columns
-        }
-        default_kwargs.update(kwargs)
-        query = fs_factory(data).read()
-        return pandas.read_sql(query, **default_kwargs)
-
-    elif file_extension == 'csv':
-        default_kwargs = {
-            'dtype': str,
-            'skipinitialspace': True,
-            'usecols': columns
-        }
-        default_kwargs.update(kwargs)
-        return pandas.read_csv(data, **default_kwargs)
-
-    elif file_extension == 'parquet':
-        default_kwargs = {
-            'columns': columns
-        }
-        default_kwargs.update(kwargs)
-        return pandas.read_parquet(data, **default_kwargs)
-
-    elif file_extension in ('xls', 'xlsx'):
-        default_kwargs = {
-            'usecols': columns
-        }
-        return pandas.read_excel(data, **kwargs)
     else:
+        file_extension = splitext(data)[1].lstrip('.').lower()
+
+        if file_extension == 'sql':
+            query = fs_factory(data).read()
+            return read(query, columns, sql=True, **kwargs)
+
+        if file_extension in ('xls', 'xlsx'):
+            file_extension = 'excel'
+
+        if file_extension == 'csv':
+            default_kwargs.update({
+                'dtype': str,
+                'skipinitialspace': True,
+            })
+
         read_ = getattr(pandas, f'read_{file_extension}', None)
         if read_ is None:
             raise TypeError(f'File type "{file_extension}" not supported')
-        return read_(data, **kwargs)[columns]
+
+    default_kwargs.update(kwargs)
+
+    # try `columns` argument
+    try:
+        return read_(data, columns=columns, **default_kwargs)
+    except TypeError as e:
+        if 'columns' not in str(e):
+            raise e
+    # try `usecols` argument
+    try:
+        return read_(data, usecols=columns, **default_kwargs)
+    except TypeError as e:
+        if 'usecols' not in str(e):
+            raise e
+    # give up, read everything, filter columns later
+    return read_(data, **default_kwargs)[columns]

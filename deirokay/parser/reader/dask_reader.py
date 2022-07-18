@@ -11,9 +11,6 @@ def read(data: Union[str, 'dask.dataframe.DataFrame'],
     """Infer the file type by its extension and call the proper
     `dask.dataframe` method to parse it.
 
-    Currently, parsing xlsx files or reading from databases is
-    not supported.
-
     Parameters
     ----------
     data : Union[str, dask.dataframe.DataFrame]
@@ -31,45 +28,43 @@ def read(data: Union[str, 'dask.dataframe.DataFrame'],
     dask.dataframe.DataFrame
         The dask DataFrame.
     """
-    default_kwargs: Dict[str, Any]
+    default_kwargs: Dict[str, Any] = {}
+
     if isinstance(data, dask.dataframe.DataFrame):
         return data[columns]
+
     if not isinstance(data, str):
         raise TypeError(f'Unexpected type for `data` ({data.__class__})')
+
     if sql:
-        raise NotImplementedError(
-            "Reading SQL queries into Dask dataframes is not supported."
-        )
+        read_ = dask.dataframe.read_sql
 
-    file_extension = splitext(data)[1].lstrip('.')
-
-    if file_extension == 'sql':
-        raise NotImplementedError(
-            "Reading SQL queries into Dask dataframes is not supported."
-        )
-
-    elif file_extension == 'csv':
-        default_kwargs = {
-            'dtype': str,
-            'skipinitialspace': True,
-            'usecols': columns
-        }
-        default_kwargs.update(kwargs)
-        return dask.dataframe.read_csv(data, **default_kwargs)
-
-    elif file_extension == 'parquet':
-        default_kwargs = {
-            'columns': columns
-        }
-        default_kwargs.update(kwargs)
-        return dask.dataframe.read_parquet(data, **default_kwargs)
-
-    elif file_extension in ('xls', 'xlsx'):
-        raise NotImplementedError(
-            "Not able to read XLSX files as Dask dataframes"
-        )
     else:
+        file_extension = splitext(data)[1].lstrip('.').lower()
+
+        if file_extension == 'csv':
+            default_kwargs.update({
+                'dtype': str,
+                'skipinitialspace': True,
+            })
+
         read_ = getattr(dask.dataframe, f'read_{file_extension}', None)
         if read_ is None:
             raise TypeError(f'File type "{file_extension}" not supported')
-        return read_(data, **kwargs)[columns]
+
+    default_kwargs.update(kwargs)
+
+    # try `columns` argument
+    try:
+        return read_(data, columns=columns, **default_kwargs)
+    except TypeError as e:
+        if 'columns' not in str(e):
+            raise e
+    # try `usecols` argument
+    try:
+        return read_(data, usecols=columns, **default_kwargs)
+    except TypeError as e:
+        if 'usecols' not in str(e):
+            raise e
+    # give up, read everything, filter columns later
+    return read_(data, **default_kwargs)[columns]
