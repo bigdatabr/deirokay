@@ -83,6 +83,8 @@ class BooleanTreater(Validator):
         # Validate again
         super()._treat_dask(series)
 
+        return series
+
     @staticmethod
     def _serialize_common(series):
         def _convert(item):
