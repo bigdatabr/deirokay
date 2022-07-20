@@ -34,7 +34,7 @@ def read(data: Union[str, 'pandas.DataFrame'],
     default_kwargs: Dict[str, Any] = {}
 
     if isinstance(data, pandas.DataFrame):
-        return data[columns]
+        return data[columns].copy()
 
     if not isinstance(data, str):
         raise TypeError(f'Unexpected type for `data` ({data.__class__})')
