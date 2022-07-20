@@ -204,6 +204,9 @@ def test_data_reader_from_sql_file_pandas(create_db):  # pandas only
 
 @pytest.mark.parametrize('backend', list(Backend))
 def test_data_reader_from_sql_query(create_db, backend):
+    if backend == Backend.DASK:
+        pytest.xfail('Test for Dask backend not implemented')
+
     options = {
         'columns': {
             'column1': {'dtype': 'string'},

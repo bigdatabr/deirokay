@@ -81,11 +81,16 @@ def test_dtype_parsing_for_Python_types(dtype, params, values, backend):
     # Serialize with Deirokay
     serialized = json.dumps(treater_cls.serialize(parsed))
     json_parse = json.loads(serialized)
+    print(serialized)
 
     # Test for replication
-    parsed_from_serialized = (
-        get_treater_instance(json_parse['parser'],
-                             backend=backend)(json_parse['values'])
-    )
-    print(serialized)
+    parsed_from_serialized = get_treater_instance(
+        json_parse['parser'],
+        backend=backend
+    )(json_parse['values'])
+
+    if backend == Backend.DASK:
+        parsed = parsed.compute()
+        parsed_from_serialized = parsed_from_serialized.compute()
+
     assert_series_equal(parsed, parsed_from_serialized)
