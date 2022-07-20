@@ -64,9 +64,8 @@ class DecimalTreater(FloatTreater):
 
         return series
 
-    @serialize(Backend.PANDAS)
     @staticmethod
-    def _serialize_pandas(series: 'pandas.Series') -> DeirokaySerializedSeries:
+    def _serialize_common(series):
         def _convert(item):
             if item is None or item is pandas.NA:
                 return None
@@ -77,3 +76,17 @@ class DecimalTreater(FloatTreater):
                 'dtype': DecimalTreater.supported_dtype.value
             }
         }
+
+    @serialize(Backend.PANDAS)
+    @staticmethod
+    def _serialize_pandas(
+        series: 'pandas.Series'
+    ) -> DeirokaySerializedSeries:
+        return DecimalTreater._serialize_common(series)
+
+    @serialize(Backend.DASK)
+    @staticmethod
+    def _serialize_dask(
+        series: 'dask.dataframe.Series'
+    ) -> DeirokaySerializedSeries:
+        return DecimalTreater._serialize_common(series)

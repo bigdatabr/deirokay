@@ -47,11 +47,8 @@ class DateTime64Treater(Validator):
 
         return dask.dataframe.to_datetime(series, format=self.format)
 
-    @serialize(Backend.PANDAS)
     @staticmethod
-    def _serialize_pandas(
-        series: 'pandas.Series'
-    ) -> DeirokaySerializedSeries:
+    def _serialize_common(series):
         def _convert(item):
             if item is None or item is pandas.NaT:
                 return None
@@ -62,3 +59,17 @@ class DateTime64Treater(Validator):
                 'dtype': DateTime64Treater.supported_dtype.value
             }
         }
+
+    @serialize(Backend.PANDAS)
+    @staticmethod
+    def _serialize_pandas(
+        series: 'pandas.Series'
+    ) -> DeirokaySerializedSeries:
+        return DateTime64Treater._serialize_common(series)
+
+    @serialize(Backend.DASK)
+    @staticmethod
+    def _serialize_dask(
+        series: 'dask.dataframe.Series'
+    ) -> DeirokaySerializedSeries:
+        return DateTime64Treater._serialize_common(series)

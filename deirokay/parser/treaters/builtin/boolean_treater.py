@@ -83,11 +83,8 @@ class BooleanTreater(Validator):
         # Validate again
         super()._treat_dask(series)
 
-    @serialize(Backend.PANDAS)
     @staticmethod
-    def _serialize_pandas(
-        series: 'pandas.Series'
-    ) -> DeirokaySerializedSeries:
+    def _serialize_common(series):
         def _convert(item):
             if item is pandas.NA:
                 return None
@@ -98,3 +95,17 @@ class BooleanTreater(Validator):
                 'dtype': BooleanTreater.supported_dtype.value
             }
         }
+
+    @serialize(Backend.PANDAS)
+    @staticmethod
+    def _serialize_pandas(
+        series: 'pandas.Series'
+    ) -> DeirokaySerializedSeries:
+        return BooleanTreater._serialize_common(series)
+
+    @serialize(Backend.DASK)
+    @staticmethod
+    def _serialize_dask(
+        series: 'dask.dataframe.Series'
+    ) -> DeirokaySerializedSeries:
+        return BooleanTreater._serialize_common(series)

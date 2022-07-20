@@ -34,9 +34,8 @@ class DateTreater(DateTime64Treater):
     ) -> 'dask.dataframe.Series':
         return super()._treat_dask(series).dt.date
 
-    @serialize(Backend.PANDAS)
     @staticmethod
-    def _serialize_pandas(series: 'pandas.Series') -> DeirokaySerializedSeries:
+    def _serialize_common(series):
         def _convert(item):
             if item is None or item is pandas.NaT:
                 return None
@@ -47,3 +46,17 @@ class DateTreater(DateTime64Treater):
                 'dtype': DateTreater.supported_dtype.value
             }
         }
+
+    @serialize(Backend.PANDAS)
+    @staticmethod
+    def _serialize_pandas(
+        series: 'pandas.Series'
+    ) -> DeirokaySerializedSeries:
+        return DateTreater._serialize_common(series)
+
+    @serialize(Backend.DASK)
+    @staticmethod
+    def _serialize_dask(
+        series: 'dask.dataframe.Series'
+    ) -> DeirokaySerializedSeries:
+        return DateTreater._serialize_common(series)

@@ -6,6 +6,7 @@ Deirokay data types.
 from typing import Iterable, Optional
 
 import dask.dataframe  # lazy module
+import numpy  # lazy module
 import pandas  # lazy module
 
 from deirokay._typing import DeirokaySerializedSeries
@@ -46,11 +47,10 @@ class StringTreater(Validator):
 
         return series
 
-    @serialize(Backend.PANDAS)
     @staticmethod
-    def _serialize_pandas(series: 'pandas.Series') -> DeirokaySerializedSeries:
+    def _serialize_common(series):
         def _convert(item):
-            if item is None:
+            if item is None or item is pandas.NA or item is numpy.NaN:
                 return None
             return str(item)
         return {
@@ -59,3 +59,14 @@ class StringTreater(Validator):
                 'dtype': StringTreater.supported_dtype.value
             }
         }
+
+    @serialize(Backend.PANDAS)
+    @staticmethod
+    def _serialize_pandas(series: 'pandas.Series') -> DeirokaySerializedSeries:
+        return StringTreater._serialize_common(series)
+
+    @serialize(Backend.DASK)
+    @staticmethod
+    def _serialize_dask(series: 'dask.dataframe.Series'
+                        ) -> DeirokaySerializedSeries:
+        return StringTreater._serialize_common(series)
