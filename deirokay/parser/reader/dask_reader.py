@@ -56,15 +56,20 @@ def read(data: Union[str, 'dask.dataframe.DataFrame'],
 
     # try `columns` argument
     try:
-        return read_(data, columns=columns, **default_kwargs)
+        read_data = read_(data, columns=columns, **default_kwargs)
     except TypeError as e:
         if 'columns' not in str(e):
             raise e
     # try `usecols` argument
     try:
-        return read_(data, usecols=columns, **default_kwargs)
+        read_data = read_(data, usecols=columns, **default_kwargs)
     except TypeError as e:
         if 'usecols' not in str(e):
             raise e
     # give up, read everything, filter columns later
-    return read_(data, **default_kwargs)[columns]
+    read_data = read_(data, **default_kwargs)[columns]
+
+    if sql:
+        read_data = read_data.reset_index()
+
+    return read_data
