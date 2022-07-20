@@ -2,10 +2,10 @@ test_rule_1;test_rule_2;test_rule_3;test_maxmin;test_not_contain
 RJ;RJ;RJ;RJ;RJ
 ES;ES;ES;RJ;ES
 SC;SC;SC;RJ;SP
-AC;AC;AC;SP;MG
-SP;;SP;SP;MG
-AB;;AC;ES;SP
-XY;;;ES;SP
-hello_world;;;ES;SP
-hello_deirokay;;;ES;BA
-hello_life;;;ES;BA
+AC;SC;AC;SP;MG
+SP;RJ;;SP;MG
+;ES;AC;ES;SP
+;SC;AC;ES;SP
+;SC;AC;ES;SP
+;SC;AC;ES;BA
+;SC;;ES;BA

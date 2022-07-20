@@ -1,5 +1,5 @@
 from difflib import get_close_matches
-from typing import Generator, Iterable, TypeVar
+from typing import Generator, Iterable, TypeVar, Union
 
 from jinja2.nativetypes import Environment
 
@@ -77,3 +77,14 @@ def render_dict(env: Environment, dict_: dict, template: dict):
             render_dict(env, value, template)
         elif isinstance(value, list):
             render_list(env, value, template)
+
+
+T = TypeVar('T')
+
+
+def noneor(*operands: T) -> Union[T, None]:
+    """Return the first non-None element."""
+    for item in operands:
+        if item is not None:
+            return item
+    return None

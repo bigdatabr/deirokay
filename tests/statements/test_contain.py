@@ -9,10 +9,10 @@ from deirokay.statements.builtin import Contain
 @pytest.mark.parametrize('rule, scope, result',
                          [('all', 'test_rule_1', 'pass'),
                           ('all', 'test_rule_2', 'fail'),
-                          ('all', 'test_rule_3', 'pass'),
+                          ('all', 'test_rule_3', 'fail'),
                           ('only', 'test_rule_1', 'fail'),
                           ('only', 'test_rule_2', 'pass'),
-                          ('only', 'test_rule_3', 'pass')])
+                          ('only', 'test_rule_3', 'fail')])
 def test_rules(rule, scope, result, backend):
     df = data_reader('tests/statements/test_contain.csv',
                      options='tests/statements/test_contain_options.yaml',
@@ -157,3 +157,73 @@ def test_profile(backend):
         validate(df, against=assertions, raise_exception=False)
         ['items'][0]['statements'][0]['report']['result']
     ) == 'pass'
+
+
+@pytest.mark.parametrize('backend', list(Backend))
+def test_multicolumn(backend):
+    df = data_reader('tests/statements/test_contain.csv',
+                     options='tests/statements/test_contain_options.yaml',
+                     backend=backend)
+    assertions = {
+        'name': 'all_test_rule',
+        'items': [
+            {
+                'scope': ['test_rule_1', 'test_rule_2'],
+                'statements': [
+                    {
+                        'type': 'contain',
+                        'rule': 'all',
+                        'values': [
+                            ['RJ', 'RJ'],
+                            ['ES', 'ES']
+                        ],
+                        'multicolumn': True,
+                        'parsers': 2*[{'dtype': 'string'}],
+                        'occurrences_per_value': [
+                            {
+                                'values': [('RJ', 'RJ'), ('ES', 'ES')],
+                                'min_occurrences': 1,
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+    assert (
+        validate(df, against=assertions, raise_exception=False)
+        ['items'][0]['statements'][0]['report']['result']
+    ) == 'pass'
+
+
+@pytest.mark.parametrize('backend', list(Backend))
+@pytest.mark.parametrize('scope, rule, result, values', [
+    ('test_rule_1', 'all', 'pass', ['AC', 'SP', None]),
+    ('test_rule_1', 'only', 'fail', [None]),
+    ('test_rule_2', 'all', 'fail', [None]),
+    ('test_not_contain', 'all', 'fail', ['RJ', 'SP', 'ES', None]),
+])
+def test_null_values(scope, rule, result, values, backend):
+    df = data_reader('tests/statements/test_contain.csv',
+                     options='tests/statements/test_contain_options.yaml',
+                     backend=backend)
+    assertions = {
+        'name': 'all_test_rule',
+        'items': [
+            {
+                'scope': scope,
+                'statements': [
+                    {
+                        'type': 'contain',
+                        'rule': rule,
+                        'values': values,
+                        'parser': {'dtype': 'string'}
+                    }
+                ]
+            }
+        ]
+    }
+    assert (
+        validate(df, against=assertions, raise_exception=False)
+        ['items'][0]['statements'][0]['report']['result']
+    ) == result
