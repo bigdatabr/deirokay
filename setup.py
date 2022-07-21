@@ -37,6 +37,6 @@ setup(
         'dev': requirements_dev,
         's3': ['boto3', 's3fs'],
         'pandas': ['pandas<2,>=1.3'],
-        'dask': ['dask>=2022.1.1'],
+        'dask': ['dask[dataframe]>=2022.1.1'],
     }
 )
