@@ -1,22 +1,20 @@
 """
-Module for BaseStatement and builtin Deirokay statements.
+Classes and methods to build and load builtin or custom Deirokay
+statements.
 """
+from typing import Dict, Type
 
-import inspect
+from deirokay._utils import recursive_subclass_generator
 
-from .base_statement import BaseStatement
-from .column_expression import ColumnExpression  # noqa F401
-from .contain import Contain  # noqa F401
-from .not_null import NotNull  # noqa F401
-from .row_count import RowCount  # noqa F401
-from .unique import Unique  # noqa F401
+from .builtin import BaseStatement
 
-STATEMENTS_MAP = {
+STATEMENTS_MAP: Dict[str, Type[BaseStatement]] = {
     cls.name: cls
-    for _, cls in locals().items()
-    if inspect.isclass(cls) and issubclass(cls, BaseStatement)
+    for cls in recursive_subclass_generator(BaseStatement)
+    if cls is not BaseStatement
 }
 
 __all__ = tuple(
-    cls.__name__ for cls in STATEMENTS_MAP.values()
+    cls.__name__
+    for cls in recursive_subclass_generator(BaseStatement)
 )

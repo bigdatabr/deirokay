@@ -163,9 +163,9 @@ Once you have correctly use `deirokay.data_reader` to parse your data into a Dat
 .. code-block:: python
 
     from deirokay import data_reader, profile
+    from deirokay.enums import Backend
 
-
-    df = data_reader('file.csv', options='options.json')
+    df = data_reader('file.csv', options='options.json', backend=Backend.PANDAS)
 
     profile(df, 'CUSTOMERS', save_to='validation_doc.json')
 

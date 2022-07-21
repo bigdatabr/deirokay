@@ -15,9 +15,10 @@ from os.path import splitext
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from types import ModuleType
-from typing import IO, Optional, Sequence
+from typing import IO, Generator, Iterable, Optional, Sequence
 
 import yaml
+from typing_extensions import Literal
 
 boto3_import_error = None
 try:
@@ -211,13 +212,13 @@ class FileSystem():
         """Import file as a Python module."""
         raise NotImplementedError
 
-    def open(self, *args, **kwargs) -> IO:
+    def open(self, mode: Literal['r', 'w'], *args, **kwargs) -> IO:
         """Open file."""
         raise NotImplementedError
 
     def read(self, *args, **kwargs) -> str:
         """Read a file as text."""
-        with self.open(*args, **kwargs) as fp:
+        with self.open(*args, mode='r', **kwargs) as fp:
             return fp.read()
 
     def __truediv__(self, rest: str) -> 'FileSystem':
@@ -289,8 +290,8 @@ class LocalFileSystem(FileSystem):
         return Path(self.path).mkdir(*args, **kwargs)
 
     # docstr-coverage:inherited
-    def open(self, *args, **kwargs) -> IO:
-        return open(self.path, *args, **kwargs)
+    def open(self, mode: Literal['r', 'w'], *args, **kwargs) -> IO:
+        return open(self.path, mode, *args, **kwargs)
 
 
 class S3FileSystem(FileSystem):
@@ -342,6 +343,7 @@ class S3FileSystem(FileSystem):
             Prefix=self.prefix_or_key,
             PaginationConfig={'PageSize': max_keys}
         )
+        chained_items: Iterable
         if not reverse:
             chained_items = (
                 item['Key']
@@ -384,13 +386,13 @@ class S3FileSystem(FileSystem):
             return module
 
     # docstr-coverage:inherited
-    def open(self, mode, *args, **kwargs) -> IO:
+    def open(self, mode: Literal['r', 'w'], *args, **kwargs) -> IO:
         if mode == 'r':
             body = self.client.get_object(Bucket=self.bucket,
                                           Key=self.prefix_or_key)['Body']
-            return contextlib.closing(body)
+            return contextlib.closing(body)  # type: ignore
         elif mode == 'w':
-            def _writable():
+            def _writable() -> Generator[IO, None, None]:
                 with NamedTemporaryFile(mode, *args, **kwargs) as tmp_fp:
                     yield tmp_fp
                     tmp_fp.flush()
@@ -399,7 +401,7 @@ class S3FileSystem(FileSystem):
                         self.bucket,
                         self.prefix_or_key
                     )
-            return contextlib.contextmanager(_writable)()
+            return contextlib.contextmanager(_writable)()  # type: ignore
         raise NotImplementedError(f"Mode '{mode}' not supported.")
 
 

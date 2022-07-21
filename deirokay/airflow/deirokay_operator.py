@@ -7,7 +7,9 @@ from airflow.exceptions import AirflowSkipException
 from airflow.models.baseoperator import BaseOperator
 
 import deirokay
-from deirokay.enums import SeverityLevel
+from deirokay._typing import (DeirokayDataSource, DeirokayOptionsDocument,
+                              DeirokayValidationDocument)
+from deirokay.enums import Backend, SeverityLevel
 from deirokay.exceptions import ValidationError
 from deirokay.validator import raise_validation
 
@@ -33,6 +35,8 @@ class DeirokayOperator(BaseOperator):
     against : Union[dict, str]
         A dict or a local/S3 path to a YAML/JSON validation
         document file.
+    backend : Optional[Backend]
+        Backend to use when processing data.
     template : Optional[dict]
         Map of templates to be passed to Deirokay validation.
     save_to : Optional[str], optional
@@ -71,10 +75,12 @@ class DeirokayOperator(BaseOperator):
     def __init__(
         self,
         *,
-        data: Optional[str] = None,
-        path_to_file: Optional[str] = None,  # Deprecated
-        options: Union[dict, str],
-        against: Union[dict, str],
+        data: Optional[Union[str, DeirokayDataSource]] = None,
+        # `path_to_file` is Deprecated
+        path_to_file: Optional[Union[str, DeirokayDataSource]] = None,
+        options: Union[str, DeirokayOptionsDocument],
+        against: Union[str, DeirokayValidationDocument],
+        backend: Optional[Backend] = None,
         template: Optional[dict] = None,
         save_to: Optional[str] = None,
         soft_fail_level: Union[SeverityLevel, int] = SeverityLevel.MINIMAL,
@@ -94,11 +100,12 @@ class DeirokayOperator(BaseOperator):
                 ' removed in next major release. Use `data` instead.',
                 DeprecationWarning
             )
-        assert options
-        assert against
+        assert options, 'You should provide an `options` attribute.'
+        assert against, 'You should provide an `against` attribute.'
         self.data = data or path_to_file
         self.options = options
         self.against = against
+        self.backend = backend
         self.template = template
         self.save_to = save_to
         self.soft_fail_level = soft_fail_level
@@ -112,6 +119,7 @@ class DeirokayOperator(BaseOperator):
         df = deirokay.data_reader(
             self.data,
             options=self.options,
+            backend=self.backend,
             **self.reader_kwargs
         )
 

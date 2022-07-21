@@ -2,110 +2,39 @@
 Set of functions related to Deirokay validation.
 """
 
-import functools
 import json
 import warnings
 from copy import deepcopy
 from datetime import datetime
 from os.path import splitext
-from types import ModuleType
 from typing import Optional, Union
 
-import pandas
 from jinja2 import BaseLoader
 from jinja2 import StrictUndefined as strict
 from jinja2.nativetypes import NativeEnvironment
 
+from deirokay._utils import check_columns_in_df_columns, render_dict
+from deirokay.backend import detect_backend
 from deirokay.enums import SeverityLevel
 from deirokay.exceptions import ValidationError
 from deirokay.fs import FileSystem, LocalFileSystem, fs_factory
 from deirokay.history_template import get_series
-from deirokay.statements import STATEMENTS_MAP, BaseStatement
-from deirokay.utils import _check_columns_in_df_columns, _render_dict
+from deirokay.statements.loader import statement_factory
+
+from ._typing import (DeirokayDataSource, DeirokayValidationDocument,
+                      DeirokayValidationResultDocument)
 
 
-@functools.lru_cache(maxsize=32)
-def _cached_import_file_as_module(file_path: str) -> ModuleType:
-    """Import a file as a module, caching the result.
-    This prevents the need to import the same file multiple times.
-    """
-    fs = fs_factory(file_path)
-    module = fs.import_as_python_module()
-    return module
-
-
-def _load_custom_statement(location: str):
-    """Load a custom statement from a .py file"""
-    if '::' not in location:
-        raise ValueError('You should pass your class location using the'
-                         ' following pattern:\n'
-                         '<.py file location>::<class name>')
-
-    file_path, class_name = location.split('::')
-
-    module = _cached_import_file_as_module(file_path)
-    cls = getattr(module, class_name)
-
-    if not issubclass(cls, BaseStatement):
-        raise ImportError('Your custom statement should be a subclass of '
-                          'BaseStatement')
-
-    return cls
-
-
-def _process_stmt(statement: dict) -> BaseStatement:
-    """Receive statement dict and call the proper statement class.
-    The `name` attribute of the class is used to bind the statement
-    type to its class.
-
-    Parameters
-    ----------
-    statement : dict
-        Dict from Validation Document representing statement and its
-        parameters.
-
-    Returns
-    -------
-    BaseStatement
-        Instance of Statement class.
-
-    Raises
-    ------
-    KeyError
-        Custom statement should present a `location` default parameter.
-    NotImplementedError
-        Declared statement type does not exist.
-    """
-    stmt_type = statement.get('type')
-
-    if stmt_type == 'custom':
-        location = statement.get('location')
-        if not location:
-            raise KeyError('A custom statement must define a `location`'
-                           ' parameter.')
-        cls = _load_custom_statement(location)
-    elif stmt_type in STATEMENTS_MAP:
-        cls = STATEMENTS_MAP[stmt_type]
-    else:
-        raise NotImplementedError(
-            f'Statement type "{stmt_type}" not implemented.\n'
-            f'The available types are {list(STATEMENTS_MAP)}'
-            ' or `custom` for your own statements.'
-        )
-
-    statement_instance: BaseStatement = cls(statement)
-
-    return statement_instance
-
-
-def validate(df: pandas.DataFrame, *,
-             against: Union[str, dict],
-             save_to: Optional[str] = None,
-             save_format: str = None,
-             current_date: Optional[datetime] = None,
-             raise_exception: bool = True,
-             exception_level: SeverityLevel = SeverityLevel.CRITICAL,
-             template: Optional[dict] = None) -> dict:
+def validate(
+    df: DeirokayDataSource, *,
+    against: Union[str, DeirokayValidationDocument],
+    save_to: Optional[str] = None,
+    save_format: str = None,
+    current_date: Optional[datetime] = None,
+    raise_exception: bool = True,
+    exception_level: SeverityLevel = SeverityLevel.CRITICAL,
+    template: Optional[dict] = None
+) -> DeirokayValidationResultDocument:
     """Validate a Deirokay DataFrame against a well-defined Validation
     Document.
 
@@ -157,8 +86,8 @@ def validate(df: pandas.DataFrame, *,
 
     Returns
     -------
-    dict
-        Validation Result Document.
+    DeirokayValidationResultDocument
+        Validation Result Document dict.
 
     Raises
     ------
@@ -168,6 +97,7 @@ def validate(df: pandas.DataFrame, *,
         Validation failed for at least one statement whose severity is
         greater or equal to `exception_level`.
     """
+    backend = detect_backend(df)
 
     if save_to:
         save_to_fs = fs_factory(save_to)
@@ -190,19 +120,19 @@ def validate(df: pandas.DataFrame, *,
         series=lambda x, y: get_series(x, y, read_from=save_to_fs),
         **(template or {})
     )
-    _render_dict(NativeEnvironment(loader=BaseLoader(), undefined=strict),
-                 dict_=validation_document,
-                 template=template)
+    render_dict(NativeEnvironment(loader=BaseLoader(), undefined=strict),
+                dict_=validation_document,
+                template=template)
 
     for item in validation_document['items']:
-        scope = item.get('scope')
+        scope = item['scope']
         scope = [scope] if not isinstance(scope, list) else scope
-        _check_columns_in_df_columns(scope, df.columns)
+        check_columns_in_df_columns(scope, df.columns)
 
         df_scope = df[scope]
 
         for stmt in item.get('statements'):
-            report = _process_stmt(stmt)(df_scope)
+            report = statement_factory(stmt, backend)(df_scope)
             if report['result'] is True:
                 report['result'] = 'pass'
             else:
@@ -241,9 +171,9 @@ def raise_validation(validation_result_document: dict,
     highest_level = None
     for item in validation_result_document['items']:
         scope = item['scope']
-        for stmt in item.get('statements'):
+        for stmt in item['statements']:
             severity = stmt.get('severity', SeverityLevel.CRITICAL)
-            result = stmt.get('report').get('result')
+            result = stmt['report']['result']
 
             if result == 'fail':
                 if severity >= exception_level:

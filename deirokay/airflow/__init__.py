@@ -1,5 +1,5 @@
 """
-Airflow extension using Deirokay.
+Airflow extensions using Deirokay.
 """
 
 from .deirokay_operator import DeirokayOperator

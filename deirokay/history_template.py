@@ -7,7 +7,7 @@ import warnings
 from typing import Callable, List
 
 import jq
-from pandas import Series
+import pandas  # lazy module
 
 from ._typing import DeirokayValidationDocument
 from .fs import FileSystem
@@ -59,7 +59,7 @@ class StatementNode():
                 jq.compile(f'.[].report.detail["{att}"]')
                 .input(statements).all()
             )
-            setattr(self, att, Series(child))
+            setattr(self, att, pandas.Series(child))
 
     def __getattr__(self, name: str) -> NullCallableNode:
         return NullCallableNode()
