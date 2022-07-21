@@ -25,12 +25,12 @@ Deirokay comes with several features to help you in your daily
 data quality problems. The main tools that facilitate your job
 are *Data Reader*, *Data Validation* and *Data Profiling*.
 
-The :ref:`Data Reader` is responsible for parsing and transforming your source data into a trustable DataFrame before it gets validated. You may get a DataFrame from a file, a database or an existing Pandas DataFrame that has not been treated yet, all you need to do is to provide a Deirokay Options Document specifying the parsing options.
-Deirokay Data Reader can also be imported and used in your project to improve your analysis and data manipulation when using Pandas.
+The :ref:`Data Reader` is responsible for parsing and transforming your source data into a trustable DataFrame before it gets validated. You may get a DataFrame from a file, a database or an existing DataFrame that has not been treated yet; all you need to do is to provide a Deirokay Options Document specifying the parsing options.
+Deirokay Data Reader can also be imported and used in your project to improve your analysis and data manipulation when using Pandas or any of the supported backends.
 
 
 Data validation is performed by the :ref:`Data Validator` and works with the help of :ref:`Deirokay Validation Documents<Validation Document>`. The latter must be created for each data file and they gather all the validation (using native or custom statements) to be executed against the data. 
-Every validation results in a *Validation Result Document*, which you may choose to log for reference or later use.
+Every validation results in a *Validation Result Document*, which you may choose to log for reference or later use. As for the Data Reader, the validation may use different backends, such as Pandas and Dask. 
 
 :ref:`Data Profiling<Data Profiling: Auto-generated Validation Document>` is provided by the :ref:`deirokay.profile<deirokay.profiler.profile>` method and is here to help you with automatically generating Validation Documents based on template data. 
 The user is encouraged to modify and supplement the generated document to better meet their requirements.

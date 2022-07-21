@@ -1,9 +1,15 @@
 """
 Statement to check the number unique rows in a scope.
 """
-from pandas import DataFrame
+from typing import List
 
-from .._typing import DeirokayStatement
+import dask.dataframe  # lazy module
+import pandas  # lazy module
+
+from deirokay._typing import DeirokayStatement
+from deirokay.enums import Backend
+
+from ..multibackend import profile, report
 from .base_statement import BaseStatement
 
 
@@ -38,36 +44,47 @@ class Unique(BaseStatement):
 
     name = 'unique'
     expected_parameters = ['at_least_%']
+    supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.at_least_perc = self.options.get('at_least_%', 100.0)
 
-    # docstr-coverage:inherited
-    def report(self, df: DataFrame) -> dict:
-        unique = ~df.duplicated(keep=False)
+    @staticmethod
+    def _unique_rows(df):
+        """Get number of unique rows in DataFrame"""
+        _cols = df.columns.tolist()
+        value_counts = df.groupby(_cols, dropna=False)[_cols[0]].size()
+        return int(sum(value_counts == 1))
 
-        report = {
-            'unique_rows': int(unique.sum()),
-            'unique_rows_%': float(100.0*unique.sum()/len(unique)),
+    def _report_common(self, df):
+        unique_rows = Unique._unique_rows(df)
+        return {
+            'unique_rows': unique_rows,
+            'unique_rows_%': 100.0*unique_rows/len(df),
         }
-        return report
+
+    @report(Backend.PANDAS)
+    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
+        return self._report_common(df)
+
+    @report(Backend.DASK)
+    def _report_dask(self, df: 'dask.dataframe.DataFrame') -> dict:
+        return self._report_common(df)
 
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
         return report.get('unique_rows_%') >= self.at_least_perc
 
-    # docstr-coverage:inherited
     @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
-        unique = ~df.duplicated(keep=False)
-
+    def _profile_common(df):
         statement = {
             'type': 'unique',
         }  # type: DeirokayStatement
 
-        at_least_perc = float(100.0*unique.sum()/len(unique))
+        unique_rows = Unique._unique_rows(df)
+        at_least_perc = 100.0*unique_rows/len(df)
 
         if at_least_perc == 0.0:
             raise NotImplementedError(
@@ -78,3 +95,13 @@ class Unique(BaseStatement):
             statement['at_least_%'] = at_least_perc
 
         return statement
+
+    @profile(Backend.PANDAS)
+    @staticmethod
+    def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:
+        return Unique._profile_common(df)
+
+    @profile(Backend.DASK)
+    @staticmethod
+    def _profile_dask(df: 'dask.dataframe.DataFrame') -> DeirokayStatement:
+        return Unique._profile_common(df)

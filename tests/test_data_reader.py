@@ -1,36 +1,36 @@
-import psycopg
+import dask.dataframe as dd
+import pandas
+import psycopg2
 import pytest
-from pandas import read_csv
 
 from deirokay import data_reader
-from deirokay.enums import DTypes
+from deirokay.enums import Backend, DTypes
 
 
-def test_data_reader_with_json_options():
-
-    df = data_reader(
-        'tests/transactions_sample.csv',
-        options='tests/options.json'
-    )
-    assert len(df) == 20
-
-    print(df)
-    print(df.dtypes)
-
-
-def test_data_reader_with_yaml_options():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_reader_with_json_options(backend):
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options='tests/options.yaml'
+        options='tests/options.json',
+        backend=backend
     )
     assert len(df) == 20
 
-    print(df)
-    print(df.dtypes)
+
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_reader_with_yaml_options(backend):
+
+    df = data_reader(
+        'tests/transactions_sample.csv',
+        options='tests/options.yaml',
+        backend=backend
+    )
+    assert len(df) == 20
 
 
-def test_data_reader_with_dict_options():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_reader_with_dict_options(backend):
 
     options = {
         'encoding': 'iso-8859-1',
@@ -64,7 +64,8 @@ def test_data_reader_with_dict_options():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options=options
+        options=options,
+        backend=backend
     )
     assert len(df) == 20
 
@@ -72,7 +73,8 @@ def test_data_reader_with_dict_options():
     print(df.dtypes)
 
 
-def test_data_reader_with_dict_options_only_a_few_columns():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_reader_with_dict_options_only_a_few_columns(backend):
 
     options = {
         'encoding': 'iso-8859-1',
@@ -86,33 +88,34 @@ def test_data_reader_with_dict_options_only_a_few_columns():
 
     df = data_reader(
         'tests/transactions_sample.csv',
-        options=options
+        options=options,
+        backend=backend
     )
     assert len(df) == 20
     assert len(df.columns) == 2
     assert all(col in ('WERKS01', 'DT_OPERACAO01') for col in df.columns)
 
 
-def test_data_reader_without_options_exception():
-    with pytest.raises(TypeError):
-        data_reader(
-            'tests/transactions_sample.csv'
-        )
-
-
-def test_data_reader_parquet():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_reader_parquet(backend):
     df = data_reader(
         'tests/sample_parquet.parquet',
-        options='tests/sample_parquet.json'
+        options='tests/sample_parquet.json',
+        backend=backend
     )
-
-    print(df)
-    print(df.dtypes)
+    assert len(df) == 3
 
 
-def test_data_reader_from_dataframe():
-    df = read_csv('tests/transactions_sample.csv', sep=';',
-                  thousands='.', decimal=',')
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_reader_from_dataframe(backend):
+
+    read_csv = {
+        Backend.PANDAS: pandas.read_csv,
+        Backend.DASK: dd.read_csv,
+    }[backend]
+
+    df = read_csv('tests/transactions_sample.csv',
+                  sep=';', thousands='.', decimal=',')
 
     options = {
         'encoding': 'iso-8859-1',
@@ -139,24 +142,21 @@ def test_data_reader_from_dataframe():
                        'falsies': ['inactive']},
         }
     }
-    df = data_reader(df, options=options)
+    df = data_reader(df, options=options, backend=backend)
 
-    print(df)
-    print(df.dtypes)
+    assert len(df) == 20
 
 
 @pytest.fixture(scope='module')
 def create_db(postgresql_proc):
-    db_credentials = {
-        'dbname': 'postgres',
-        'user': postgresql_proc.user,
-        'password': postgresql_proc.password,
-        'host': postgresql_proc.host,
-        'port': postgresql_proc.port,
-        'options': postgresql_proc.options
-    }
+    uri = ('postgresql://{user}:{password}@{host}:{port}/{dbname}'
+           .format(dbname='postgres',
+                   user=postgresql_proc.user,
+                   password=postgresql_proc.password,
+                   host=postgresql_proc.host,
+                   port=postgresql_proc.port))
 
-    with psycopg.connect(**db_credentials) as db_connection:
+    with psycopg2.connect(uri) as db_connection:
         with db_connection.cursor() as cursor:
             cursor.execute('''
                 CREATE SCHEMA deirokay;
@@ -176,16 +176,15 @@ def create_db(postgresql_proc):
             ''')
         db_connection.commit()
 
-    yield db_credentials
+    yield uri
 
-    with psycopg.connect(**db_credentials) as db_connection:
+    with psycopg2.connect(uri) as db_connection:
         with db_connection.cursor() as cursor:
             cursor.execute('DROP SCHEMA deirokay CASCADE;')
         db_connection.commit()
 
 
-def test_data_reader_from_sql_file(create_db):
-    db_credentials = create_db
+def test_data_reader_from_sql_file_pandas(create_db):  # pandas only
     options = {
         'columns': {
             'column1': {'dtype': 'string'},
@@ -195,16 +194,19 @@ def test_data_reader_from_sql_file(create_db):
             'column5': {'dtype': 'boolean'},
         }
     }
-    with psycopg.connect(**db_credentials) as con:
-        df = data_reader('tests/data_reader_from_sql_file.sql', options,
-                         con=con)
 
-    print(df)
-    print(df.dtypes)
+    df = data_reader('tests/data_reader_from_sql_file.sql', options,
+                     con=create_db,
+                     backend=Backend.PANDAS)
+
+    assert len(df) == 4
 
 
-def test_data_reader_from_sql_query(create_db):
-    db_credentials = create_db
+@pytest.mark.parametrize('backend', list(Backend))
+def test_data_reader_from_sql_query(create_db, backend):
+    if backend == Backend.DASK:
+        pytest.xfail('Test for Dask backend not implemented')
+
     options = {
         'columns': {
             'column1': {'dtype': 'string'},
@@ -214,9 +216,8 @@ def test_data_reader_from_sql_query(create_db):
             'column5': {'dtype': 'boolean'},
         }
     }
-    with psycopg.connect(**db_credentials) as con:
-        df = data_reader('select * from deirokay.test;', options,
-                         sql=True, con=con)
+    df = data_reader('select * from deirokay.test', options,
+                     sql=True, con=create_db,
+                     backend=backend)
 
-    print(df)
-    print(df.dtypes)
+    assert len(df) == 4

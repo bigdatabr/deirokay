@@ -6,50 +6,55 @@ Documents.
 import warnings
 from typing import List, Optional
 
-from pandas import DataFrame
+from deirokay.backend import detect_backend
+from deirokay.enums import Backend
+from deirokay.exceptions import UnsupportedBackend
 
 from .__version__ import __version__
-from ._typing import (DeirokayStatement, DeirokayValidationDocument,
-                      DeirokayValidationItem)
+from ._typing import (DeirokayDataSource, DeirokayStatement,
+                      DeirokayValidationDocument, DeirokayValidationItem)
 from .fs import fs_factory
 from .statements import STATEMENTS_MAP
 
 
-def _generate_statements(df_scope: DataFrame,
-                         table_only: bool) -> List[DeirokayStatement]:
+def _generate_statements(df_scope: DeirokayDataSource,
+                         backend: Backend) -> List[DeirokayStatement]:
 
     statements: List[DeirokayStatement] = []
 
     for stmt_cls in STATEMENTS_MAP.values():
-        if table_only and stmt_cls.table_only or not stmt_cls.table_only:
-            try:
-                statement = stmt_cls.profile(df_scope)
-                statements.append(statement)
-            except NotImplementedError:
-                pass
-            except Exception as e:
-                columns = list(df_scope.columns)
-                warnings.warn(
-                    f'Unexpected error when profiling scope {columns}'
-                    f' using {stmt_cls.__name__} statement: {e}\n\n'
-                    'Please, consider reporting this issue to the '
-                    'developers.',
-                    RuntimeWarning
-                )
+        try:
+            execution_cls = stmt_cls.attach_backend(backend)
+            statement = execution_cls.profile(df_scope)
+            statements.append(statement)
+        except UnsupportedBackend:
+            pass
+        except NotImplementedError:
+            pass
+        except Exception as e:
+            columns = list(df_scope.columns)
+            warnings.warn(
+                f'Unexpected error when profiling scope {columns}'
+                f' using {stmt_cls.__name__} statement: {e}\n\n'
+                'Please, consider reporting this issue to the '
+                'developers.',
+                RuntimeWarning
+            )
     return statements
 
 
-def _generate_items(df: DataFrame) -> List[DeirokayValidationItem]:
+def _generate_items(df: DeirokayDataSource,
+                    backend: Backend) -> List[DeirokayValidationItem]:
     items: List[DeirokayValidationItem] = []
 
     df_columns = list(df.columns)
-    scope__table_stmt = zip([df_columns] + df_columns,
-                            [True] + [False]*len(df_columns))
-    for scope, table_only in scope__table_stmt:
+    scope__table_stmt = [df_columns] + df_columns
+
+    for scope in scope__table_stmt:
         df_scope = df[scope] if isinstance(scope, list) else df[[scope]]
         item = {
             'scope': scope,
-            'statements': _generate_statements(df_scope, table_only=table_only)
+            'statements': _generate_statements(df_scope, backend)
         }  # type: DeirokayValidationItem
 
         if item['statements']:
@@ -58,7 +63,7 @@ def _generate_items(df: DataFrame) -> List[DeirokayValidationItem]:
     return items
 
 
-def profile(df: DataFrame,
+def profile(df: DeirokayDataSource,
             document_name: str,
             save_to: Optional[str] = None) -> DeirokayValidationDocument:
     """Generate a validation document from a given template DataFrame
@@ -89,10 +94,11 @@ def profile(df: DataFrame,
     dict
         The auto-generated validation document as Python `dict`.
     """
+    backend = detect_backend(df)
     validation_document = {
         'name': document_name,
         'description': f'Auto generated using Deirokay {__version__}',
-        'items': _generate_items(df)
+        'items': _generate_items(df, backend)
     }  # type: DeirokayValidationDocument
 
     if save_to:

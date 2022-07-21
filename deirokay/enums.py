@@ -2,7 +2,16 @@
 Deirokay enumeration classes.
 """
 
-from enum import Enum
+from enum import Enum, IntEnum, unique
+
+
+@unique
+class Backend(str, Enum):
+    """
+    The backend that the statement will be generated for.
+    """
+    PANDAS = 'pandas'
+    DASK = 'dask'
 
 
 class DTypes(str, Enum):
@@ -44,7 +53,8 @@ class DTypes(str, Enum):
     :ref:`DecimalTreater<deirokay.parser.treaters.DecimalTreater>`."""
 
 
-class SeverityLevel(int, Enum):
+@unique
+class SeverityLevel(IntEnum):
     """Deirokay named Severity levels."""
 
     MINIMAL = 1

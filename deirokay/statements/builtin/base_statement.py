@@ -2,13 +2,14 @@
 The base statement that all other statements inherit from.
 """
 from abc import ABC, abstractmethod
+from typing import List
 
-from pandas import DataFrame
+from deirokay._typing import (DeirokayDataSource, DeirokayOption,
+                              DeirokayStatement)
+from deirokay.backend import MultiBackendMixin
 
-from .._typing import DeirokayStatement
 
-
-class BaseStatement(ABC):
+class BaseStatement(MultiBackendMixin, ABC):
     """Base abstract statement class for all Deirokay statements.
 
     Attributes
@@ -17,23 +18,26 @@ class BaseStatement(ABC):
         Statement parameters provided by user.
     """
 
-    name = 'base_statement'
+    name: str = 'base_statement'
     """str: Statement name when referred in Validation Documents
     (only valid for Deirokay built-in statements)."""
-    expected_parameters = ['type', 'severity', 'location']
+    expected_parameters: List[str] = ['type', 'severity', 'location']
     """List[str]: Parameters expected for this statement."""
-    table_only = False
-    """bool: Whether or not this statement in applicable only to the
-    entire table, instead of scoped columns."""
 
-    def __init__(self, options: dict) -> None:
+    def __init_subclass__(cls) -> None:
+        """Validate subclassed statement."""
+        assert cls.name != BaseStatement.name, (
+            'You should specify a `name` attribute for your statement class.'
+        )
+
+    def __init__(self, options: DeirokayOption) -> None:
         self._validate_options(options)
         self.options = options
 
-    def _validate_options(self, options: dict) -> None:
+    @classmethod
+    def _validate_options(cls, options: DeirokayOption) -> None:
         """Make sure all provided statement parameters are expected
         by statement classes"""
-        cls = type(self)
         unexpected_parameters = [
             option for option in options
             if option not in (cls.expected_parameters +
@@ -46,7 +50,7 @@ class BaseStatement(ABC):
                 f'The valid parameters are: {cls.expected_parameters}'
             )
 
-    def __call__(self, df: DataFrame) -> dict:
+    def __call__(self, df: DeirokayDataSource) -> dict:
         """Run statement instance."""
         internal_report = self.report(df)
         result = self.result(internal_report)
@@ -57,8 +61,7 @@ class BaseStatement(ABC):
         }
         return final_report
 
-    @abstractmethod
-    def report(self, df: DataFrame) -> dict:
+    def report(self, df: DeirokayDataSource) -> dict:
         """Receive a DataFrame containing only columns on the scope of
         validation and returns a report of related metrics that can
         be used later to declare this Statement as fulfilled or
@@ -75,6 +78,7 @@ class BaseStatement(ABC):
         dict
             A dictionary of useful statistics about the target columns.
         """
+        raise NotImplementedError
 
     @abstractmethod
     def result(self, report: dict) -> bool:
@@ -95,7 +99,7 @@ class BaseStatement(ABC):
         """
 
     @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
+    def profile(df: DeirokayDataSource) -> DeirokayStatement:
         """Given a template data table, generate a statement dict
         from it.
 

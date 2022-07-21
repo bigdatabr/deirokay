@@ -1,9 +1,15 @@
 """
 Statement to check the number of rows in a scope.
 """
-from pandas import DataFrame
+from typing import List
 
-from .._typing import DeirokayStatement
+import dask.dataframe  # lazy module
+import pandas  # lazy module
+
+from deirokay._typing import DeirokayStatement
+from deirokay.enums import Backend
+
+from ..multibackend import profile, report
 from .base_statement import BaseStatement
 
 
@@ -112,6 +118,7 @@ class RowCount(BaseStatement):
 
     name = 'row_count'
     expected_parameters = ['min', 'max', 'distinct']
+    supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -120,16 +127,22 @@ class RowCount(BaseStatement):
         self.max = self.options.get('max', None)
         self.distinct = self.options.get('distinct', False)
 
-    # docstr-coverage:inherited
-    def report(self, df: DataFrame) -> dict:
+    def _report_common(self, df):
         row_count = len(df)
         distinct_count = len(df.drop_duplicates())
 
-        report = {
+        return {
             'rows': row_count,
             'distinct_rows': distinct_count,
         }
-        return report
+
+    @report(Backend.PANDAS)
+    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
+        return self._report_common(df)
+
+    @report(Backend.DASK)
+    def _report_dask(self, df: 'dask.dataframe.DataFrame') -> dict:
+        return self._report_common(df)
 
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
@@ -146,9 +159,8 @@ class RowCount(BaseStatement):
                 return False
         return True
 
-    # docstr-coverage:inherited
     @staticmethod
-    def profile(df: DataFrame) -> DeirokayStatement:
+    def _profile_common(df):
         statement: DeirokayStatement
 
         if len(df.columns) > 1:
@@ -167,3 +179,13 @@ class RowCount(BaseStatement):
                 'max': count
             }
         return statement
+
+    @profile(Backend.PANDAS)
+    @staticmethod
+    def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:
+        return RowCount._profile_common(df)
+
+    @profile(Backend.DASK)
+    @staticmethod
+    def _profile_dask(df: 'dask.dataframe.DataFrame') -> DeirokayStatement:
+        return RowCount._profile_common(df)

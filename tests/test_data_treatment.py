@@ -4,10 +4,11 @@ import pytest
 from numpy import nan
 from pandas.testing import assert_series_equal
 
-from deirokay.enums import DTypes
+from deirokay.enums import Backend, DTypes
 from deirokay.parser import get_dtype_treater, get_treater_instance
 
 
+@pytest.mark.parametrize('backend', list(Backend))
 @pytest.mark.parametrize('dtype, params, values', [
     (
         DTypes.INTEGER,
@@ -70,8 +71,8 @@ from deirokay.parser import get_dtype_treater, get_treater_instance
         ['on', 'off', None, True, False]
     )
 ])
-def test_dtype_parsing_for_Python_types(dtype, params, values):
-    treater_cls = get_dtype_treater(dtype)
+def test_dtype_parsing_for_Python_types(dtype, params, values, backend):
+    treater_cls = get_dtype_treater(dtype).attach_backend(backend)
     treater_instance = treater_cls(**params)
 
     # Use Deirokay to treat Python types
@@ -80,10 +81,16 @@ def test_dtype_parsing_for_Python_types(dtype, params, values):
     # Serialize with Deirokay
     serialized = json.dumps(treater_cls.serialize(parsed))
     json_parse = json.loads(serialized)
+    print(serialized)
 
     # Test for replication
-    parsed_from_serialized = (
-        get_treater_instance(json_parse['parser'])(json_parse['values'])
-    )
-    print(serialized)
+    parsed_from_serialized = get_treater_instance(
+        json_parse['parser'],
+        backend=backend
+    )(json_parse['values'])
+
+    if backend == Backend.DASK:
+        parsed = parsed.compute()
+        parsed_from_serialized = parsed_from_serialized.compute()
+
     assert_series_equal(parsed, parsed_from_serialized)

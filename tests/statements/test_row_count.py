@@ -1,9 +1,11 @@
 import pytest
 
 from deirokay import data_reader, validate
-from deirokay.statements import RowCount
+from deirokay.enums import Backend
+from deirokay.statements.builtin import RowCount
 
 
+@pytest.mark.parametrize('backend', list(Backend))
 @pytest.mark.parametrize(
     'scope, params, result',
     [
@@ -16,9 +18,10 @@ from deirokay.statements import RowCount
         ('COD_MERC_SERV02', {'distinct': True, 'min': 9, 'max': 9}, 'fail'),
     ]
 )
-def test_row_count(scope, params, result):
+def test_row_count(scope, params, result, backend):
     df = data_reader('tests/transactions_sample.csv',
-                     options='tests/options.yaml')
+                     options='tests/options.yaml',
+                     backend=backend)
     assertions = {
         'name': 'test_row_count',
         'items': [
@@ -38,10 +41,12 @@ def test_row_count(scope, params, result):
     ) == result
 
 
-def test_profile_over_multi_columns():
+@pytest.mark.parametrize('backend', list(Backend))
+def test_profile_over_multi_columns(backend):
     df = data_reader('tests/transactions_sample.csv',
-                     options='tests/options.yaml')
-    doc = RowCount.profile(df)
+                     options='tests/options.yaml',
+                     backend=backend)
+    doc = RowCount.attach_backend(backend).profile(df)
     assert doc == {
         'type': 'row_count',
         'min': 20,
@@ -49,6 +54,7 @@ def test_profile_over_multi_columns():
     }
 
 
+@pytest.mark.parametrize('backend', list(Backend))
 @pytest.mark.parametrize(
     'column, expected',
     [
@@ -72,8 +78,9 @@ def test_profile_over_multi_columns():
         })
     ]
 )
-def test_profile_over_single_column(column, expected):
+def test_profile_over_single_column(column, expected, backend):
     df = data_reader('tests/transactions_sample.csv',
-                     options='tests/options.yaml')
-    doc = RowCount.profile(df[[column]])
+                     options='tests/options.yaml',
+                     backend=backend)
+    doc = RowCount.attach_backend(backend).profile(df[[column]])
     assert doc == expected

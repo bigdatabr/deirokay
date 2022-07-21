@@ -110,7 +110,8 @@ pandas dataframe that doesn't have the initial problems:
 .. code-block:: python
 
     >>> from deirokay import data_reader
-    >>> data_reader('example.csv', options='options.json')
+    >>> from deirokay.backend import Backend
+    >>> data_reader('example.csv', options='options.json', backend=Backend.PANDAS)
          name   age  is_married
     0    John    55        True
     1  Mariah    44        True
@@ -215,8 +216,11 @@ Finally, to test your dataset against the validation document:
 .. code-block:: python
 
     from deirokay import data_reader
+    from deirokay.backend import Backend
 
-    df = data_reader('example.csv', options='options.json')
+    df = data_reader('example.csv',
+                     options='options.json',
+                     backend=Backend.PANDAS)
     validation_result_document = validate(df,
                                           against='assertions.json',
                                           raise_exception=False)
