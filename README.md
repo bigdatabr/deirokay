@@ -26,13 +26,39 @@ new documents to make sure the validation still holds for new data.
 
 ## Installation
 
-Install Deirokay using pip:
+To start using Deirokay, install its package by following the instructions below.
 
-`pip install Deirokay`
+By default, only core dependencies are installed when supplying the pip
+command:
 
-To include optional dependences for AWS S3, install:
+```bash
+pip install Deirokay
+```
 
-`pip install Deirokay[s3]`
+Depending on your use cases, you need to include extra dependencies.
+Use any of the commands below:
+
+```bash
+pip install Deirokay[s3]  # Optional dependencies for use with AWS S3
+pip install Deirokay[pandas]  # For Pandas backend
+pip install Deirokay[dask]  # For Dask or Dask Distributed backends
+```
+
+You may also install any combination of the extras above by separating
+them with commas:
+
+```bash
+pip install Deirokay[dask,s3]  # Dask + S3 deps
+```
+
+If you wish to contribute for Deirokay development, you need to install
+a more restrict set of packages, in order to guarantee that you are
+always creating and testing code to work with least recent supported
+versions:
+
+```bash
+pip install Deirokay[dev]
+```
 
 ## Documentation
 
