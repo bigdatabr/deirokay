@@ -4,8 +4,11 @@ columns from a given scope.
 """
 import re
 from decimal import Decimal
-from typing import List
+from functools import reduce
+from typing import List, Tuple
 
+import dask  # lazy module
+import dask.dataframe  # lazy module
 import numpy  # lazy module
 import pandas  # lazy module
 
@@ -81,9 +84,15 @@ class ColumnExpression(BaseStatement):
 
     name = 'column_expression'
     expected_parameters = [
-        'expressions', 'at_least_%', 'at_most_%', 'rtol', 'atol'
+        'expressions',
+        'at_least_%',
+        'at_most_%',
+        'rtol',
+        'atol'
     ]
-    supported_backends: List[Backend] = [Backend.PANDAS]
+    supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
+
+    VALID_OPERATORS = '|'.join(['==', '!=', '=~', '>=', '<=', '>', '<'])
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -94,34 +103,10 @@ class ColumnExpression(BaseStatement):
         self.rtol = self.options.get('rtol', 1e-5)
         self.atol = self.options.get('atol', 1e-8)
 
-        if isinstance(self.expressions, str):
+        if not isinstance(self.expressions, list):
             self.expressions = [self.expressions]
 
-        self.valid_expressions = ['==', '!=', '=~', '>=', '<=', '>', '<']
-        for expr in self.expressions:
-            if not any([x in expr for x in self.valid_expressions]):
-                raise SyntaxError('Expression comparison operand not found')
-
-    @report(Backend.PANDAS)
-    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
-        report = {}
-        df = df.copy()
-        df = self._fix_df_dtypes(df)
-        for expr in self.expressions:
-            row_count = self._eval(df, expr)
-            report[expr] = {
-                'valid_rows': int((row_count).sum()),
-                'valid_rows_%': float(
-                    100.0*(row_count).sum()/len(row_count)
-                ),
-                'invalid_rows': int((~row_count).sum()),
-                'invalid_rows_%': float(
-                    100.0*(~row_count).sum()/len(row_count)
-                )
-            }
-        return report
-
-    def _fix_df_dtypes(self, df: 'pandas.DataFrame') -> 'pandas.DataFrame':
+    def _convert_df_dtypes(self, df: 'pandas.DataFrame') -> 'pandas.DataFrame':
         """
         Fixes DataFrame dtypes. If Int64Dtype() or Float64Dtype(),
         converts to traditional int64 and float64 dtypes. If object
@@ -134,73 +119,108 @@ class ColumnExpression(BaseStatement):
         pandas_dtypes_int = [pandas.Int64Dtype(), pandas.Int32Dtype()]
         pandas_dtypes_float = [pandas.Float64Dtype(), pandas.Float32Dtype()]
         pandas_dtypes_decimal = [Decimal]
-        for col in df.columns:
-            if df[[col]].dtypes.isin(pandas_dtypes_int)[0]:
-                df[[col]] = df[[col]].astype(int)
-            elif df[[col]].dtypes.isin(pandas_dtypes_float)[0]:
-                df[[col]] = df[[col]].astype(float)
-            elif df[[col]].dtypes[0] == object:
-                col_dtype = list(
-                    dict.fromkeys(
-                        [type(x) for x in df[col].to_numpy()]
-                    )
-                )
-                if len(col_dtype) > 1:
-                    raise Exception('Mixed types in column')
-                if col_dtype[0] in pandas_dtypes_decimal:
-                    df[[col]] = df[[col]].astype(float)
-        return df
+
+        def _fix_column(column: pandas.Series):
+            if column.dtype in pandas_dtypes_int:
+                column = column.astype(int)
+            elif column.dtype in pandas_dtypes_float:
+                column = column.astype(float)
+            elif column.dtype == object:
+                if len(column.map(type).drop_duplicates()) > 1:
+                    raise Exception('Mixed types')
+                if type(column[0]) in pandas_dtypes_decimal:
+                    column = column.astype(float)
+            return column
+
+        return df.apply(_fix_column)
 
     def _eval(self, df: 'pandas.DataFrame', expr: str) -> 'pandas.Series':
-        if '=~' not in expr:
-            row_count = df.eval(expr)
-        else:
-            row_count = self._isclose_eval(df, expr)
-        return row_count
-
-    def _isclose_eval(self,
-                      df: 'pandas.DataFrame',
-                      expr: str) -> 'pandas.Series':
         """
         Accomplishes the paper of `pandas.eval` when we have the
         `=~` comparison to evaluate. That implementation is done by
         using `numpy.eval`.
         """
-        expr_calculus = re.split('|'.join(self.valid_expressions), expr)
-        expr_comparison = re.findall('|'.join(self.valid_expressions), expr)
-        expr_comparison.append(None)
+        if '=~' not in expr:
+            return df.eval(expr)
 
-        if len(expr_calculus) != len(expr_comparison):
+        expr_terms = re.split(ColumnExpression.VALID_OPERATORS, expr)
+        expr_operators = re.findall(ColumnExpression.VALID_OPERATORS, expr)
+
+        if len(expr_terms) != len(expr_operators) + 1:
             raise SyntaxError(
-                """Invalid expression. Incoherent number of expressions and
-                comparison operands"""
+                'Invalid expression. Incoherent number of expressions and'
+                ' comparison operators'
             )
 
-        eval_bool = pandas.Series(len(df) * [True])
-
-        for i in range(len(expr_calculus) - 1):
-            comparison_to_eval = (
-                expr_calculus[i] + expr_comparison[i] + expr_calculus[i+1]
-            )
-
-            if expr_comparison[i] != '=~':
-                eval_bool = df.eval(comparison_to_eval) & eval_bool
-            else:
-                eval_bool = pandas.Series(
+        def _eval_part(term_1, operator, term_2):
+            if operator == '=~':
+                return pandas.Series(
                     numpy.isclose(
-                        df.eval(expr_calculus[i]),
-                        df.eval(expr_calculus[i+1]),
+                        df.eval(term_1),
+                        df.eval(term_2),
                         atol=self.atol,
                         rtol=self.rtol
                     )
-                ) & eval_bool
-        return eval_bool
+                )
+            return df.eval(term_1 + operator + term_2)
+
+        return reduce(
+            lambda x, y: x & y,
+            (
+                _eval_part(term_1, operator, term_2)
+                for term_1, operator, term_2
+                in zip(expr_terms, expr_operators, expr_terms[1:])
+            )
+        )
+
+    def _generate_report(self,
+                         summary: List[Tuple[int, int]],
+                         nrows: int) -> dict:
+        expressions_report = [
+            {
+                'expression': expr,
+                'valid_rows': valid,
+                'valid_rows_%': 100.0*valid/nrows,
+                'invalid_rows': invalid,
+                'invalid_rows_%': 100.0*invalid/nrows
+            }
+            for expr, (valid, invalid) in zip(self.expressions, summary)
+        ]
+        return {
+            'column_expressions': expressions_report
+        }
+
+    @report(Backend.PANDAS)
+    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
+        df = self._convert_df_dtypes(df)
+
+        results = (
+            self._eval(df, expr)
+            for expr in self.expressions
+        )
+        summary = ((sum(result), sum(~result)) for result in results)
+        return self._generate_report(summary, len(df))
+
+    @report(Backend.DASK)
+    def _report_dask(self, df: 'dask.dataframe.DataFrame') -> dict:
+        df = df.map_partitions(self._convert_df_dtypes,
+                               meta=dict(df.dtypes.iteritems()))
+
+        results = (
+            dask.dataframe.from_delayed(
+                dask.delayed(self._eval)(partition, expr)
+                for partition in df.to_delayed()
+            )
+            for expr in self.expressions
+        )
+        summary = ((sum(result), sum(~result)) for result in results)
+        return self._generate_report(summary, len(df))
 
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
-        for expr in report.keys():
-            if not report[expr].get('valid_rows_%') >= self.at_least_perc:
+        for item in report['column_expressions']:
+            if not item['valid_rows_%'] >= self.at_least_perc:
                 return False
-            if not report[expr].get('valid_rows_%') <= self.at_most_perc:
+            if not item['valid_rows_%'] <= self.at_most_perc:
                 return False
         return True
