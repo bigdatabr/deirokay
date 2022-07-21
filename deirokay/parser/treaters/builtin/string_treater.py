@@ -17,7 +17,13 @@ from .validator import Validator
 
 
 class StringTreater(Validator):
-    """Treater for string variables"""
+    """Treater for string variables
+
+    Parameters
+    ----------
+    treat_null_as : Optional[str], optional
+        Character to replace null values for, by default None
+    """
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.STRING
     supported_primitives = [str]

@@ -17,7 +17,23 @@ from .validator import Validator
 
 
 class BooleanTreater(Validator):
-    """Treater for boolean-like variables"""
+    """Treater for boolean-like variables
+
+    Parameters
+    ----------
+    truthies : List[str], optional
+        List of strings to be considered as True,
+        by default ['true', 'True']
+    falsies : List[str], optional
+        List of strings to be considered as False,
+        by default ['false', 'False']
+    ignore_case : bool, optional
+        Ignore case when evaluating list of values,
+        by default False
+    default_value : Optional[bool], optional
+        Value to replace null values (None, pandas.NA or numpy,NaN).
+        By default None.
+    """
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.BOOLEAN
     supported_primitives = [bool]

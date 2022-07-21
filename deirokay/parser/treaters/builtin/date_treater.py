@@ -16,7 +16,13 @@ from .datetime64_treater import DateTime64Treater
 
 
 class DateTreater(DateTime64Treater):
-    """Treater for date-only variables"""
+    """Treater for date-only variables"
+
+    Parameters
+    ----------
+    format : str, optional
+        Format to parse dates from, by default '%Y-%m-%d'
+    """
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.DATE
     supported_primitives: List[Any] = [datetime.date]

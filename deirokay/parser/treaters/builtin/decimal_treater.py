@@ -19,7 +19,13 @@ from .numeric_treater import NumericTreater
 
 
 class DecimalTreater(FloatTreater):
-    """Treater for decimal variables"""
+    """Treater for decimal variables
+
+    Parameters
+    ----------
+    decimal_places : Optional[int], optional
+        Number of decimal places, by default None
+    """
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.DECIMAL
     supported_primitives: List[Any] = [decimal.Decimal]
@@ -54,7 +60,7 @@ class DecimalTreater(FloatTreater):
         self, series: Iterable
     ) -> 'dask.dataframe.Series':
         series = NumericTreater._treat_dask(self, series)
-        series = self._treat_decimal_sep(series, meta=(series.name, 'object'))
+        series = self._treat_decimal_sep(series)
         series = series.map(
             lambda x: Decimal(x) if x is not None else None,
             meta=(series.name, 'object')

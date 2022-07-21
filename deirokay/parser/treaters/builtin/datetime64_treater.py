@@ -23,7 +23,13 @@ except ModuleNotFoundError:
 
 
 class DateTime64Treater(Validator):
-    """Treater for datetime variables"""
+    """Treater for datetime variables
+
+    Parameters
+    ----------
+    format : str, optional
+        Format to parse dates from, by default '%Y-%m-%d %H:%M:%S'
+    """
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.DATETIME
     supported_primitives = _supported_primitives

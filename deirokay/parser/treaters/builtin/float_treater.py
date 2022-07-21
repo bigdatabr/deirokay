@@ -16,7 +16,13 @@ from .numeric_treater import NumericTreater
 
 
 class FloatTreater(NumericTreater):
-    """Treater for float variables"""
+    """Treater for float variables
+
+    Parameters
+    ----------
+    decimal_sep : Optional[str], optional
+        Character to use as decimal separator, by default None
+    """
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.FLOAT64
     supported_primitives = [float]
@@ -26,9 +32,9 @@ class FloatTreater(NumericTreater):
 
         self.decimal_sep = decimal_sep
 
-    def _treat_decimal_sep(
-        self, series: DeirokayDataSeries, **kwargs
-    ) -> DeirokayDataSeries:
+    def _treat_decimal_sep(self,
+                           series: DeirokayDataSeries
+                           ) -> DeirokayDataSeries:
         if self.decimal_sep is not None and self.decimal_sep != '.':
             try:
                 series = series.str.replace(self.decimal_sep, '.', regex=False)

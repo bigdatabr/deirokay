@@ -14,7 +14,15 @@ from .base_treater import BaseTreater
 
 
 class Validator(BaseTreater):
-    """Base validation class for column data type validation."""
+    """Base validation class for column data type validation.
+
+    Parameters
+    ----------
+    unique : bool, optional
+        Make sure values are unique, by default False
+    nullable : bool, optional
+        Allow values to be null, by default True
+    """
     supported_backends = [Backend.PANDAS, Backend.DASK]
 
     DISPLAY_NULL_INDICES_LIMIT = 30

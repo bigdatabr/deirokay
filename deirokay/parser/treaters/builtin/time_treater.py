@@ -16,7 +16,13 @@ from .datetime64_treater import DateTime64Treater
 
 
 class TimeTreater(DateTime64Treater):
-    """Treater for time-only variables"""
+    """Treater for time-only variables
+
+    Parameters
+    ----------
+    format : str, optional
+        Format to parse times from, by default '%H:%M:%S'
+    """
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.TIME
     supported_primitives: List[Any] = [datetime.time]

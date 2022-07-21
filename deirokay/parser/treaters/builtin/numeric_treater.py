@@ -16,7 +16,13 @@ from .validator import Validator
 
 
 class NumericTreater(Validator):
-    """Base class for numeric treaters"""
+    """Base class for numeric treaters
+
+    Parameters
+    ----------
+    thousand_sep : Optional[str], optional
+        Character to use as thousand separator, by default None
+    """
     supported_backends = [Backend.PANDAS, Backend.DASK]
 
     def __init__(self, thousand_sep: Optional[str] = None, **kwargs):
