@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0](https://github.com/bigdatabr/deirokay/compare/0.8.0...1.0.0) (2022-07-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* ColumnExpression report format
+* Remove `verbose` from Contain statement in favor of
+`report_limit`. Null values are now valid
+* Create `attach_backend` and `get_backend`
+* Create support for multibackend resources + refactor
+
+### Features
+
+* Create `attach_backend` and `get_backend` ([37d6e31](https://github.com/bigdatabr/deirokay/commit/37d6e3175a656b03c08b7e29a7ce8a41488dbdf2))
+* Create support for multibackend resources + refactor ([8500721](https://github.com/bigdatabr/deirokay/commit/85007214979611672baba398cfc05146067b9dae))
+* Dask backend for NotNull stmt ([b3fb691](https://github.com/bigdatabr/deirokay/commit/b3fb6915e2f60c790bdcfaed5fd8eedd92a9b63c))
+* Dask backend for RowCount stmt ([a320201](https://github.com/bigdatabr/deirokay/commit/a320201ef4d396e86a22b0c76b6d73bf51bb0143))
+* Dask backend for Unique stmt ([e3cdfd6](https://github.com/bigdatabr/deirokay/commit/e3cdfd6fe258fbb6f83a34178f58da5f8fb64f45))
+* Implement Dask serialize in all treaters ([e824d78](https://github.com/bigdatabr/deirokay/commit/e824d78053071beadd7b0e8bc42b10ca7595e7e7))
+* Improve ColumnExpression and implement Dask ([a02e247](https://github.com/bigdatabr/deirokay/commit/a02e2477aa6fc50b1fd2becb20598070b5a2732c))
+* Improve Contain stmt and implement Dask ([effa169](https://github.com/bigdatabr/deirokay/commit/effa1691baed3d52c6f644e3046e6a3f6919c4aa))
+* Standardize data readers ([a42e9d3](https://github.com/bigdatabr/deirokay/commit/a42e9d38754a0d9a53c02a2b91b181249912acb4))
+
+
+### Bug Fixes
+
+* Boolean treater ([22b39b5](https://github.com/bigdatabr/deirokay/commit/22b39b529768e305d180081c3efd7d08825ec562))
+* DataTreater `treat` support Iterables + force ([ae84cad](https://github.com/bigdatabr/deirokay/commit/ae84cad56b1f093b0e98c5d56f332f64f8a5039d))
+* fix tests for Dask ([40cd1af](https://github.com/bigdatabr/deirokay/commit/40cd1af8cc42f0d07cdc35293a3c805aaf34dbea))
+* FutureWarning consistent across repo ([60d5722](https://github.com/bigdatabr/deirokay/commit/60d5722796b71c6ada14094c2322c4c5a92f2e87))
+* Missing lazy module usage in typing ([0413433](https://github.com/bigdatabr/deirokay/commit/0413433fb109b69de93255ae39b0cbdc9e1ad78a))
+* Remove BaseStatement from statements map ([d7e844c](https://github.com/bigdatabr/deirokay/commit/d7e844ccb4e24a9dc11889203a36b6085d27da02))
+* Remove Python3.8-only features ([0bb8dca](https://github.com/bigdatabr/deirokay/commit/0bb8dca0000bc45cad7cc2ebe7b9397b42734e6d))
+* Use lru_cache without limits instead of cache ([33f0a14](https://github.com/bigdatabr/deirokay/commit/33f0a1444245e3ab2ba6618db36371ce2e3a02f0))
+* Validator behavior for Dask backend ([9379f63](https://github.com/bigdatabr/deirokay/commit/9379f63afccc481ab41e5ac8277cdcfa48580eab))
+
 ## [0.8.0](https://github.com/bigdatabr/deirokay/compare/0.7.2...0.8.0) (2022-06-28)
 
 
