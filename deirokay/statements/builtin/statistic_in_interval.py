@@ -127,13 +127,6 @@ class StatisticInInterval(BaseStatement):
         self.atol = self.options.get('atol', 0.0)
         self.rtol = self.options.get('rtol', 1e-09)
 
-    def _calculate_statistic(self, column, statistic):
-        value = getattr(column, statistic)()
-        if statistic == 'mode':
-            return [float(v) for v in value]
-        else:
-            return float(value)
-
     def _generate_report(self, values: List) -> dict:
         for item in values:
             if item['statistic'] == 'mode':
