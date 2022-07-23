@@ -10,7 +10,7 @@ if not TYPE_CHECKING:
     lazy_import.lazy_module('numpy')
     lazy_import.lazy_module('pandas')
 
-
+from .__version__ import __version__  # noqa: F401
 from .parser import data_reader
 from .profiler import profile
 from .validator import validate
