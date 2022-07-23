@@ -51,6 +51,15 @@ them with commas:
 pip install Deirokay[dask,s3]  # Dask + S3 deps
 ```
 
+To check if Deirokay is properly installed and to know its version,
+enter the following command in the Python prompt:
+
+```
+>>> import deirokay
+>>> deirokay.__version__
+'X.Y.Z'
+```
+
 If you wish to contribute for Deirokay development, you need to install
 a more restrict set of packages, in order to guarantee that you are
 always creating and testing code to work with least recent supported
