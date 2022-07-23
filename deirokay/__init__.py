@@ -14,6 +14,8 @@ if not TYPE_CHECKING:
 from .parser import data_reader
 from .profiler import profile
 from .validator import validate
+from .__version__ import __version__  # noqa: F401
+
 
 __all__ = (
     'data_reader',
