@@ -1,3 +1,4 @@
+import json
 import pytest
 
 from deirokay import data_reader, validate
@@ -199,3 +200,50 @@ def test_data_validation_with_levels(backend):
     }
 
     validate(df, against=assertions)
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        (
+            {"level-1a": ["a", "b"]},
+            {"level-1a": ["a", "b"]},
+        ),
+        (
+            {"level-1b": ["a", "b", "c"]},
+            {"level-1b": ["a", "..."]},
+        ),
+        (
+            {
+                "level-2": {"level-2a": ["a", "b"]},
+            },
+            {
+                "level-2": {"level-2a": ["a", "b"]},
+            },
+        ),
+        (
+            {
+                "level-2": {"level-2b": ["a", "b", "c"]},
+            },
+            {
+                "level-2": {"level-2b": ["a", "..."]},
+            },
+        ),
+        (
+            {"sublist": [["a", "b"], ["a", "b", "c"]]},
+            {"sublist": [["a", "b"], ["a", "..."]]},
+        ),
+    ],
+)
+def test_sane_json_print(monkeypatch, capsys, data, expected):
+    from deirokay.validator import _sane_json_print
+    import deirokay.validator
+
+    monkeypatch.setattr(deirokay.validator, "_TRUNCATE_OUTPUT_LIMIT", 2)
+
+    _sane_json_print(data)
+
+    captured = capsys.readouterr()
+    assert json.dumps(expected, indent=4) in captured.out
+    if data != expected:
+        assert "was truncated" in captured.out

@@ -4,6 +4,7 @@ Set of functions related to Deirokay validation.
 
 import json
 import warnings
+from collections import deque
 from copy import deepcopy
 from datetime import datetime
 from os.path import splitext
@@ -180,7 +181,7 @@ def raise_validation(validation_result_document: dict,
                     if highest_level is None or severity > highest_level:
                         highest_level = severity
                 print(f'Statement failed for scope {scope}:')
-                print(json.dumps(stmt, indent=4))
+                _sane_json_print(stmt)
 
     if highest_level is not None:
         print(f'Severity level threshold was {exception_level}.')
@@ -188,6 +189,47 @@ def raise_validation(validation_result_document: dict,
             highest_level,
             f'Validation failed with severity level {highest_level}.'
         )
+
+
+_TRUNCATE_OUTPUT_LIMIT = 64
+
+
+def _sane_json_print(data: dict) -> None:
+    """Print a dictionary to the stdout truncating the size of inner lists.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary object to be printed.
+    """
+    data = deepcopy(data)
+
+    was_truncated = False
+    nodes_to_visit = deque([(data, None, None)])
+
+    def _process_iteratively():
+        nonlocal was_truncated
+
+        while nodes_to_visit:
+            node, parent, index_key = nodes_to_visit.popleft()
+
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    if isinstance(value, (list, dict)):
+                        nodes_to_visit.append((value, node, key))
+            elif isinstance(node, list):
+                if len(node) > _TRUNCATE_OUTPUT_LIMIT:
+                    parent[index_key] = node[: _TRUNCATE_OUTPUT_LIMIT - 1] + ["..."]
+                    was_truncated = True
+                for index, value in enumerate(node):
+                    if isinstance(value, (list, dict)):
+                        nodes_to_visit.append((value, node, index))
+
+    _process_iteratively()
+    print(json.dumps(data, indent=4))
+
+    if was_truncated:
+        print("OBS: The output above was truncated to limit its size.")
 
 
 def _save_validation_document(document: dict,
