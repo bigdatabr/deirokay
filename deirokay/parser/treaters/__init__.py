@@ -35,12 +35,12 @@ def get_dtype_treater(dtype: Any) -> Type[BaseTreater]:
             return PRIMITIVE_2_TREATER[dtype]
 
     except KeyError as e:
-        raise NotImplementedError(f"Handler for '{dtype}' hasn't been"
-                                  " implemented yet") from e
+        raise NotImplementedError(
+            f"Handler for '{dtype}' hasn't been" " implemented yet"
+        ) from e
 
 
-def get_treater_instance(option: DeirokayOption,
-                         backend: Backend) -> BaseTreater:
+def get_treater_instance(option: DeirokayOption, backend: Backend) -> BaseTreater:
     """Create a treater instance from a Deirokay-style option.
 
     Example
@@ -54,7 +54,7 @@ def get_treater_instance(option: DeirokayOption,
         }
     """
     option = option.copy()
-    dtype = option.pop('dtype')
+    dtype = option.pop("dtype")
 
     cls = get_dtype_treater(dtype)
     return cls.attach_backend(backend)(**option)

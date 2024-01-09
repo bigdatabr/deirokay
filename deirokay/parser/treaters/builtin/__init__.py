@@ -15,7 +15,4 @@ from .string_treater import StringTreater  # noqa: F401
 from .time_treater import TimeTreater  # noqa: F401
 from .validator import Validator  # noqa: F401
 
-__all__ = tuple(
-    cls.__name__
-    for cls in recursive_subclass_generator(BaseTreater)
-)
+__all__ = tuple(cls.__name__ for cls in recursive_subclass_generator(BaseTreater))

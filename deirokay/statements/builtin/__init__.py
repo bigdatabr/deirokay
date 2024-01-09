@@ -11,7 +11,4 @@ from .row_count import RowCount  # noqa: F401
 from .statistic_in_interval import StatisticInInterval  # noqa F401
 from .unique import Unique  # noqa: F401
 
-__all__ = tuple(
-    cls.__name__
-    for cls in recursive_subclass_generator(BaseStatement)
-)
+__all__ = tuple(cls.__name__ for cls in recursive_subclass_generator(BaseStatement))

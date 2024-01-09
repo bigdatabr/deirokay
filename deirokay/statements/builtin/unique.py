@@ -42,14 +42,14 @@ class Unique(BaseStatement):
         }
     """
 
-    name = 'unique'
-    expected_parameters = ['at_least_%']
+    name = "unique"
+    expected_parameters = ["at_least_%"]
     supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.at_least_perc = self.options.get('at_least_%', 100.0)
+        self.at_least_perc = self.options.get("at_least_%", 100.0)
 
     @staticmethod
     def _unique_rows(df):
@@ -61,47 +61,47 @@ class Unique(BaseStatement):
     def _report_common(self, df):
         unique_rows = Unique._unique_rows(df)
         return {
-            'unique_rows': unique_rows,
-            'unique_rows_%': 100.0*unique_rows/len(df),
+            "unique_rows": unique_rows,
+            "unique_rows_%": 100.0 * unique_rows / len(df),
         }
 
     @report(Backend.PANDAS)
-    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
+    def _report_pandas(self, df: "pandas.DataFrame") -> dict:
         return self._report_common(df)
 
     @report(Backend.DASK)
-    def _report_dask(self, df: 'dask.dataframe.DataFrame') -> dict:
+    def _report_dask(self, df: "dask.dataframe.DataFrame") -> dict:
         return self._report_common(df)
 
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
-        return report.get('unique_rows_%') >= self.at_least_perc
+        return report.get("unique_rows_%") >= self.at_least_perc
 
     @staticmethod
     def _profile_common(df):
         statement = {
-            'type': 'unique',
+            "type": "unique",
         }  # type: DeirokayStatement
 
         unique_rows = Unique._unique_rows(df)
-        at_least_perc = 100.0*unique_rows/len(df)
+        at_least_perc = 100.0 * unique_rows / len(df)
 
         if at_least_perc == 0.0:
             raise NotImplementedError(
-                'Statement is useless when all rows are not unique.'
+                "Statement is useless when all rows are not unique."
             )
 
         if at_least_perc != 100.0:
-            statement['at_least_%'] = at_least_perc
+            statement["at_least_%"] = at_least_perc
 
         return statement
 
     @profile(Backend.PANDAS)
     @staticmethod
-    def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:
+    def _profile_pandas(df: "pandas.DataFrame") -> DeirokayStatement:
         return Unique._profile_common(df)
 
     @profile(Backend.DASK)
     @staticmethod
-    def _profile_dask(df: 'dask.dataframe.DataFrame') -> DeirokayStatement:
+    def _profile_dask(df: "dask.dataframe.DataFrame") -> DeirokayStatement:
         return Unique._profile_common(df)

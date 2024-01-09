@@ -86,71 +86,87 @@ class StatisticInInterval(BaseStatement):
 
     """
 
-    name = 'statistic_in_interval'
+    name = "statistic_in_interval"
     expected_parameters = [
-        'statistic',
-        '<', '<=', '>', '>=', '==', '!=', '=~', '!~',
-        'combination_logic',
-        'atol', 'rtol'
+        "statistic",
+        "<",
+        "<=",
+        ">",
+        ">=",
+        "==",
+        "!=",
+        "=~",
+        "!~",
+        "combination_logic",
+        "atol",
+        "rtol",
     ]
     supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
 
-    ALLOWED_STATISTICS = ['min', 'max', 'mean', 'std', 'var', 'count',
-                          'nunique', 'sum', 'median', 'mode']
+    ALLOWED_STATISTICS = [
+        "min",
+        "max",
+        "mean",
+        "std",
+        "var",
+        "count",
+        "nunique",
+        "sum",
+        "median",
+        "mode",
+    ]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.statistics = self.options['statistic']
+        self.statistics = self.options["statistic"]
         if not isinstance(self.statistics, list):
             self.statistics = [self.statistics]
-        assert all(statistic in StatisticInInterval.ALLOWED_STATISTICS
-                   for statistic in self.statistics), (
+        assert all(
+            statistic in StatisticInInterval.ALLOWED_STATISTICS
+            for statistic in self.statistics
+        ), (
             f"Invalid statistic found."
             f" Allowed values are: {StatisticInInterval.ALLOWED_STATISTICS}"
         )
-        self.combination_logic = (
-            self.options.get('combination_logic', 'and').lower()
-        )
-        assert self.combination_logic in ('and', 'or'), (
+        self.combination_logic = self.options.get("combination_logic", "and").lower()
+        assert self.combination_logic in ("and", "or"), (
             f"Invalid combination logic '{self.combination_logic}'."
             f" Allowed values are: 'and', 'or'."
         )
-        self.less_than = self.options.get('<')
-        self.less_or_equal_to = self.options.get('<=')
-        self.equal_to = self.options.get('==')
-        self.not_equal_to = self.options.get('!=')
-        self.close_to = self.options.get('=~')
-        self.not_close_to = self.options.get('!~')
-        self.greater_or_equal_to = self.options.get('>=')
-        self.greater_than = self.options.get('>')
-        self.atol = self.options.get('atol', 0.0)
-        self.rtol = self.options.get('rtol', 1e-09)
+        self.less_than = self.options.get("<")
+        self.less_or_equal_to = self.options.get("<=")
+        self.equal_to = self.options.get("==")
+        self.not_equal_to = self.options.get("!=")
+        self.close_to = self.options.get("=~")
+        self.not_close_to = self.options.get("!~")
+        self.greater_or_equal_to = self.options.get(">=")
+        self.greater_than = self.options.get(">")
+        self.atol = self.options.get("atol", 0.0)
+        self.rtol = self.options.get("rtol", 1e-09)
 
     def _generate_report(self, values: List) -> dict:
         for item in values:
-            if item['statistic'] == 'mode':
-                item['value'] = [float(v) for v in item['value']]
+            if item["statistic"] == "mode":
+                item["value"] = [float(v) for v in item["value"]]
             else:
-                item['value'] = float(item['value'])
+                item["value"] = float(item["value"])
 
         if len(values) == 1:
-            report_values = values[0]['value']
+            report_values = values[0]["value"]
         else:
             report_values = values
 
-        report = {
-            'value': report_values
-        }
+        report = {"value": report_values}
         return report
 
     @report(Backend.PANDAS)
-    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
+    def _report_pandas(self, df: "pandas.DataFrame") -> dict:
         values = [
             {
-                'column': col,
-                'statistic': statistic,
-                'value': getattr(df[col], statistic)()
+                "column": col,
+                "statistic": statistic,
+                "value": getattr(df[col], statistic)(),
             }
             for col in df.columns
             for statistic in self.statistics
@@ -158,28 +174,28 @@ class StatisticInInterval(BaseStatement):
         return self._generate_report(values)
 
     @report(Backend.DASK)
-    def _report_dask(self, df: 'dask.dataframe.DataFrame') -> dict:
+    def _report_dask(self, df: "dask.dataframe.DataFrame") -> dict:
         values = [
             {
-                'column': col,
-                'statistic': statistic,
-                'value': getattr(df[col], statistic)()
+                "column": col,
+                "statistic": statistic,
+                "value": getattr(df[col], statistic)(),
             }
             for col in df.columns
             for statistic in self.statistics
         ]
-        values, = dask.compute(values)
+        (values,) = dask.compute(values)
         return self._generate_report(values)
 
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
         try:
-            values = [item['value'] for item in report['value']]
+            values = [item["value"] for item in report["value"]]
         except (KeyError, TypeError):
-            values = [report['value']]
+            values = [report["value"]]
         values = list(iterrec(values))
 
-        is_and = (self.combination_logic == 'and')
+        is_and = self.combination_logic == "and"
         is_close = partial(math.isclose, abs_tol=self.atol, rel_tol=self.rtol)
 
         if self.less_than is not None:
@@ -228,7 +244,7 @@ class StatisticInInterval(BaseStatement):
                     return False
 
         if self.not_close_to is not None:
-            res = all(not is_close(value, self.not_close_to) for value in values)  # noqa: E501
+            res = all(not is_close(value, self.not_close_to) for value in values)
             if not is_and:
                 if res:
                     return True
@@ -258,9 +274,9 @@ class StatisticInInterval(BaseStatement):
 
     @profile(Backend.PANDAS)
     @staticmethod
-    def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:
+    def _profile_pandas(df: "pandas.DataFrame") -> DeirokayStatement:
         if len(df.columns) > 1:
-            raise NotImplementedError('Refusing to profile multiple columns')
+            raise NotImplementedError("Refusing to profile multiple columns")
 
         col = df.columns[0]
 
@@ -269,22 +285,22 @@ class StatisticInInterval(BaseStatement):
             max_value = df[col].max()
 
             if min_value is numpy.NaN or max_value is numpy.NaN:
-                raise NotImplementedError('Cant deal with NaN')
+                raise NotImplementedError("Cant deal with NaN")
 
             return {
-                'type': 'statistic_in_interval',
-                'statistic': ['min', 'max'],
-                '>=': float(min_value),
-                '<=': float(max_value)
+                "type": "statistic_in_interval",
+                "statistic": ["min", "max"],
+                ">=": float(min_value),
+                "<=": float(max_value),
             }
         except Exception as e:
-            raise NotImplementedError('Wrong dtype for this statement') from e
+            raise NotImplementedError("Wrong dtype for this statement") from e
 
     @profile(Backend.DASK)
     @staticmethod
-    def _profile_dask(df: 'dask.dataframe.DataFrame') -> DeirokayStatement:
+    def _profile_dask(df: "dask.dataframe.DataFrame") -> DeirokayStatement:
         if len(df.columns) > 1:
-            raise NotImplementedError('Refusing to profile multiple columns')
+            raise NotImplementedError("Refusing to profile multiple columns")
 
         col = df.columns[0]
 
@@ -292,13 +308,13 @@ class StatisticInInterval(BaseStatement):
             min_value, max_value = dask.compute(df[col].min(), df[col].max())
 
             if min_value is numpy.NaN or max_value is numpy.NaN:
-                raise NotImplementedError('Cant deal with NaN')
+                raise NotImplementedError("Cant deal with NaN")
 
             return {
-                'type': 'statistic_in_interval',
-                'statistic': ['min', 'max'],
-                '>=': float(min_value),
-                '<=': float(max_value)
+                "type": "statistic_in_interval",
+                "statistic": ["min", "max"],
+                ">=": float(min_value),
+                "<=": float(max_value),
             }
         except Exception as e:
-            raise NotImplementedError('Wrong dtype for this statement') from e
+            raise NotImplementedError("Wrong dtype for this statement") from e

@@ -76,7 +76,7 @@ class RowCount(BaseStatement):
           distinct: True
           min: >
             {{ 0.95 * (
-              series("transactions", 7).branch_name.row_count.distinct_rows.mean()  # noqa E501
+              series("transactions", 7).branch_name.row_count.distinct_rows.mean()
               | default(19, true))
               | float
             ) }}
@@ -103,7 +103,7 @@ class RowCount(BaseStatement):
       which can be properly serialized in JSON or YAML format when the
       validation logs are generated.
 
-    For this example to work, you will need to declare in your 
+    For this example to work, you will need to declare in your
     `deirokay.validate` call the `save_to` parameters, so that the
     validation logs can be saved and later used to provide historical
     analysis.
@@ -116,40 +116,40 @@ class RowCount(BaseStatement):
 
     """
 
-    name = 'row_count'
-    expected_parameters = ['min', 'max', 'distinct']
+    name = "row_count"
+    expected_parameters = ["min", "max", "distinct"]
     supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.min = self.options.get('min', None)
-        self.max = self.options.get('max', None)
-        self.distinct = self.options.get('distinct', False)
+        self.min = self.options.get("min", None)
+        self.max = self.options.get("max", None)
+        self.distinct = self.options.get("distinct", False)
 
     def _report_common(self, df):
         row_count = len(df)
         distinct_count = len(df.drop_duplicates())
 
         return {
-            'rows': row_count,
-            'distinct_rows': distinct_count,
+            "rows": row_count,
+            "distinct_rows": distinct_count,
         }
 
     @report(Backend.PANDAS)
-    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
+    def _report_pandas(self, df: "pandas.DataFrame") -> dict:
         return self._report_common(df)
 
     @report(Backend.DASK)
-    def _report_dask(self, df: 'dask.dataframe.DataFrame') -> dict:
+    def _report_dask(self, df: "dask.dataframe.DataFrame") -> dict:
         return self._report_common(df)
 
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
         if self.distinct:
-            count = report['distinct_rows']
+            count = report["distinct_rows"]
         else:
-            count = report['rows']
+            count = report["rows"]
 
         if self.min is not None:
             if not count >= self.min:
@@ -165,27 +165,23 @@ class RowCount(BaseStatement):
 
         if len(df.columns) > 1:
             count = len(df)
-            statement = {
-                'type': 'row_count',
-                'min': count,
-                'max': count
-            }
+            statement = {"type": "row_count", "min": count, "max": count}
         else:
             count = len(df.drop_duplicates())
             statement = {
-                'type': 'row_count',
-                'distinct': True,
-                'min': count,
-                'max': count
+                "type": "row_count",
+                "distinct": True,
+                "min": count,
+                "max": count,
             }
         return statement
 
     @profile(Backend.PANDAS)
     @staticmethod
-    def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:
+    def _profile_pandas(df: "pandas.DataFrame") -> DeirokayStatement:
         return RowCount._profile_common(df)
 
     @profile(Backend.DASK)
     @staticmethod
-    def _profile_dask(df: 'dask.dataframe.DataFrame') -> DeirokayStatement:
+    def _profile_dask(df: "dask.dataframe.DataFrame") -> DeirokayStatement:
         return RowCount._profile_common(df)

@@ -3,7 +3,7 @@ from typing import Generator, Iterable, TypeVar, Union
 
 from jinja2.nativetypes import Environment
 
-C = TypeVar('C', bound=type)
+C = TypeVar("C", bound=type)
 
 
 def recursive_subclass_generator(cls: C) -> Generator[C, None, None]:
@@ -25,8 +25,7 @@ def recursive_subclass_generator(cls: C) -> Generator[C, None, None]:
         yield from recursive_subclass_generator(subclass)
 
 
-def check_columns_in_df_columns(columns: Iterable,
-                                df_columns: Iterable) -> None:
+def check_columns_in_df_columns(columns: Iterable, df_columns: Iterable) -> None:
     """Raise an exception if any of the elements from `columns` is not
     present in `df_columns`.
 
@@ -48,14 +47,16 @@ def check_columns_in_df_columns(columns: Iterable,
             match = get_close_matches(col, df_columns, n=1, cutoff=0)[0]
             miss[col] = match
     if miss:
-        raise KeyError(f'Columns {list(miss.keys())} not found in your data.'
-                       f' Did you mean {list(miss.values())}?')
+        raise KeyError(
+            f"Columns {list(miss.keys())} not found in your data."
+            f" Did you mean {list(miss.values())}?"
+        )
 
 
 def render_list(env: Environment, list_: list, template: dict):
     """Render Jinja templates in list recursively."""
     for index, value in enumerate(list_):
-        if isinstance(value, str) and '{{' in value:
+        if isinstance(value, str) and "{{" in value:
             rendered = env.from_string(value).render(**template)
             list_[index] = rendered
         elif isinstance(value, dict):
@@ -70,7 +71,7 @@ def render_dict(env: Environment, dict_: dict, template: dict):
     It will render only strings starting with `{{` to prevent
     unattended renderings."""
     for key, value in dict_.items():
-        if isinstance(value, str) and '{{' in value:
+        if isinstance(value, str) and "{{" in value:
             rendered = env.from_string(value).render(**template)
             dict_[key] = rendered
         elif isinstance(value, dict):
@@ -79,7 +80,7 @@ def render_dict(env: Environment, dict_: dict, template: dict):
             render_list(env, value, template)
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def noneor(*operands: T) -> Union[T, None]:

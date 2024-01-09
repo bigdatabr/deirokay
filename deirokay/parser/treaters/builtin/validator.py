@@ -23,19 +23,18 @@ class Validator(BaseTreater):
     nullable : bool, optional
         Allow values to be null, by default True
     """
+
     supported_backends = [Backend.PANDAS, Backend.DASK]
 
     DISPLAY_NULL_INDICES_LIMIT = 30
     DISPLAY_DUPL_INDICES_LIMIT = 10
 
-    def __init__(self, *,
-                 unique: bool = False,
-                 nullable: bool = True):
+    def __init__(self, *, unique: bool = False, nullable: bool = True):
         self.unique = unique
         self.nullable = nullable
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> "pandas.Series":
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 
@@ -56,9 +55,9 @@ class Validator(BaseTreater):
 
         if not self.nullable and any(series.isnull()):
             null_indices = list(series[series.isnull()].index)
-            null_indices_limit = null_indices[:min(
-                len(null_indices), self.DISPLAY_NULL_INDICES_LIMIT
-            )]
+            null_indices_limit = null_indices[
+                : min(len(null_indices), self.DISPLAY_NULL_INDICES_LIMIT)
+            ]
             raise ValueError(
                 f"The '{series.name}' column has {len(null_indices)} null"
                 " values, but it shouldn't.\n"
@@ -67,10 +66,10 @@ class Validator(BaseTreater):
             )
 
         if self.unique and not series.is_unique:
-            duplicated = list(series[series.duplicated(keep='first')])
-            duplicated_limit = duplicated[:min(
-                len(duplicated), self.DISPLAY_DUPL_INDICES_LIMIT
-            )]
+            duplicated = list(series[series.duplicated(keep="first")])
+            duplicated_limit = duplicated[
+                : min(len(duplicated), self.DISPLAY_DUPL_INDICES_LIMIT)
+            ]
             raise ValueError(
                 f"The '{series.name}' column values are not unique, as"
                 " requested.\n"
@@ -82,9 +81,7 @@ class Validator(BaseTreater):
         return series
 
     @treat(Backend.DASK)
-    def _treat_dask(
-        self, series: Iterable
-    ) -> 'dask.dataframe.Series':
+    def _treat_dask(self, series: Iterable) -> "dask.dataframe.Series":
         """Treat a raw Series to match data expectations for parsing
         and formatting.
 
@@ -105,9 +102,9 @@ class Validator(BaseTreater):
 
         if not self.nullable and any(series.isnull()):
             null_indices = series[series.isnull()].index
-            null_indices_display_limit = list(null_indices[:min(
-                len(null_indices), self.DISPLAY_NULL_INDICES_LIMIT
-            )])
+            null_indices_display_limit = list(
+                null_indices[: min(len(null_indices), self.DISPLAY_NULL_INDICES_LIMIT)]
+            )
             raise ValueError(
                 f"The '{series.name}' column has {len(null_indices)} null"
                 " values, but it shouldn't.\n"
@@ -115,12 +112,14 @@ class Validator(BaseTreater):
                 f"{null_indices_display_limit}..."
             )
 
-        duplicated_bool = (series.value_counts() > 1)
+        duplicated_bool = series.value_counts() > 1
         if self.unique and any(duplicated_bool):
             duplicated_values = duplicated_bool[duplicated_bool].index
-            duplicated_display_limit = list(duplicated_values[:min(
-                len(duplicated_values), self.DISPLAY_DUPL_INDICES_LIMIT
-            )])
+            duplicated_display_limit = list(
+                duplicated_values[
+                    : min(len(duplicated_values), self.DISPLAY_DUPL_INDICES_LIMIT)
+                ]
+            )
             raise ValueError(
                 f"The '{series.name}' column values are not unique, as"
                 " requested.\n"

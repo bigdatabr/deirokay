@@ -16,7 +16,7 @@ from datetime import datetime
 #
 sys.path.insert(0, os.path.abspath('../../'))
 
-from deirokay.__version__ import __version__  # noqa E501
+from deirokay.__version__ import __version__
 
 # -- Project information -----------------------------------------------------
 
