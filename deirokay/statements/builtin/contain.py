@@ -227,39 +227,36 @@ class Contain(BaseStatement):
           - {dtype: integer}
 
     """
-    name = 'contain'
+
+    name = "contain"
     expected_parameters = [
-        'rule',
-        'values',
-        'multicolumn',
-        'parser',
-        'parsers',
-        'min_occurrences',
-        'max_occurrences',
-        'occurrences_per_value',
-        'report_limit',
+        "rule",
+        "values",
+        "multicolumn",
+        "parser",
+        "parsers",
+        "min_occurrences",
+        "max_occurrences",
+        "occurrences_per_value",
+        "report_limit",
     ]
     supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
 
-    DEFAULT_MIN_OCCURRENCES = {
-        'all': (1, 0),
-        'only': (0, 0),
-        'all_and_only': (1, 0)
-    }
+    DEFAULT_MIN_OCCURRENCES = {"all": (1, 0), "only": (0, 0), "all_and_only": (1, 0)}
     DEFAULT_MAX_OCCURRENCES = {
-        'all': (numpy.inf, numpy.inf),
-        'only': (numpy.inf, 0),
-        'all_and_only': (numpy.inf, 0)
+        "all": (numpy.inf, numpy.inf),
+        "only": (numpy.inf, 0),
+        "all_and_only": (numpy.inf, 0),
     }
     DEFAULT_REPORT_LIMIT = 32
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.rule = self.options['rule']
-        assert self.rule in ('all', 'only', 'all_and_only')
-        self.multicolumn = self.options.get('multicolumn', False)
-        _parsers = self.options.get('parser') or self.options['parsers']
+        self.rule = self.options["rule"]
+        assert self.rule in ("all", "only", "all_and_only")
+        self.multicolumn = self.options.get("multicolumn", False)
+        _parsers = self.options.get("parser") or self.options["parsers"]
         if self.multicolumn:
             self.parsers = _parsers
         else:
@@ -269,29 +266,23 @@ class Contain(BaseStatement):
             for parser in self.parsers
         ]
 
-        self.min_occurrences = self.options.get('min_occurrences', None)
-        self.max_occurrences = self.options.get('max_occurrences', None)
-        self.occurrences_per_value = self.options.get(
-            'occurrences_per_value', []
-        )
-        self.report_limit = self.options.get('report_limit', NODEFAULT)
+        self.min_occurrences = self.options.get("min_occurrences", None)
+        self.max_occurrences = self.options.get("max_occurrences", None)
+        self.occurrences_per_value = self.options.get("occurrences_per_value", [])
+        self.report_limit = self.options.get("report_limit", NODEFAULT)
 
         self._set_default_minmax_occurrences()
 
     def _set_default_minmax_occurrences(self) -> None:
-        final_min = noneor(self.min_occurrences,
-                           Contain.DEFAULT_MIN_OCCURRENCES[self.rule][0])
-        final_max = noneor(self.max_occurrences,
-                           Contain.DEFAULT_MAX_OCCURRENCES[self.rule][0])
-        if (
-            self.max_occurrences is not None and
-            self.max_occurrences < final_min
-        ):
+        final_min = noneor(
+            self.min_occurrences, Contain.DEFAULT_MIN_OCCURRENCES[self.rule][0]
+        )
+        final_max = noneor(
+            self.max_occurrences, Contain.DEFAULT_MAX_OCCURRENCES[self.rule][0]
+        )
+        if self.max_occurrences is not None and self.max_occurrences < final_min:
             final_min = self.max_occurrences
-        if (
-            self.min_occurrences is not None and
-            self.min_occurrences > final_max
-        ):
+        if self.min_occurrences is not None and self.min_occurrences > final_max:
             final_max = self.min_occurrences
         assert final_min >= 0
         assert final_max >= 0
@@ -300,103 +291,105 @@ class Contain(BaseStatement):
 
     def _generate_analysis(self, value_counts):
         if self.multicolumn:
+
             def _unpack_row(row, *args):
                 return (*row, *args)
+
         else:
+
             def _unpack_row(row, *args):
                 return (row, *args)
 
         listed_values = [
-            _unpack_row(
-                row,
-                self.min_occurrences,
-                self.max_occurrences
-            )
-            for row in self.options['values']
+            _unpack_row(row, self.min_occurrences, self.max_occurrences)
+            for row in self.options["values"]
         ]
         occurences_per_value = [
             _unpack_row(
                 row,
-                noneor(item.get('min_occurrences'), self.min_occurrences),
-                noneor(item.get('max_occurrences'), self.max_occurrences),
+                noneor(item.get("min_occurrences"), self.min_occurrences),
+                noneor(item.get("max_occurrences"), self.max_occurrences),
             )
             for item in self.occurrences_per_value
-            for row in item['values']
+            for row in item["values"]
         ]
 
         occurrence_limits = pandas.DataFrame(
             occurences_per_value + listed_values,
-            columns=value_counts.index.names + ['min', 'max']
+            columns=value_counts.index.names + ["min", "max"],
         )
         options = {
-            col: parser
-            for col, parser in zip(value_counts.index.names, self.parsers)
+            col: parser for col, parser in zip(value_counts.index.names, self.parsers)
         }
         data_treater(occurrence_limits, options, backend=Backend.PANDAS)
 
         occurrence_limits.drop_duplicates(
-            subset=value_counts.index.names,
-            keep='first',
-            inplace=True
+            subset=value_counts.index.names, keep="first", inplace=True
         )
         occurrence_limits.set_index(value_counts.index.names, inplace=True)
 
-        analysis = value_counts.to_frame().reset_index().merge(
-            occurrence_limits.reset_index(), how='outer'
+        analysis = (
+            value_counts.to_frame()
+            .reset_index()
+            .merge(occurrence_limits.reset_index(), how="outer")
         )
-        analysis['count'].fillna(0, inplace=True)
-        analysis['min'].fillna(Contain.DEFAULT_MIN_OCCURRENCES[self.rule][1],
-                               inplace=True)
-        analysis['max'].fillna(Contain.DEFAULT_MAX_OCCURRENCES[self.rule][1],
-                               inplace=True)
-        analysis['result'] = (
-            analysis['count'].ge(analysis['min'])
-            &
-            analysis['count'].le(analysis['max'])
+        analysis["count"].fillna(0, inplace=True)
+        analysis["min"].fillna(
+            Contain.DEFAULT_MIN_OCCURRENCES[self.rule][1], inplace=True
         )
+        analysis["max"].fillna(
+            Contain.DEFAULT_MAX_OCCURRENCES[self.rule][1], inplace=True
+        )
+        analysis["result"] = analysis["count"].ge(analysis["min"]) & analysis[
+            "count"
+        ].le(analysis["max"])
         return analysis
 
     def _generate_report(self, analysis):
         columns = [analysis[col] for col in analysis.columns[:-4]]
         serialized = (
-            treater.serialize(column)
-            for treater, column in zip(self.treaters, columns)
+            treater.serialize(column) for treater, column in zip(self.treaters, columns)
         )
-        rows = zip(*(s['values'] for s in serialized))
-        values_report = sorted([
-            {
-                'value': value_row,
-                'count': analysis_row.count,
-                'result': analysis_row.result,
-            }
-            for value_row, analysis_row in zip(rows, analysis.itertuples())
-        ], key=lambda x: x['result'])
+        rows = zip(*(s["values"] for s in serialized))
+        values_report = sorted(
+            [
+                {
+                    "value": value_row,
+                    "count": analysis_row.count,
+                    "result": analysis_row.result,
+                }
+                for value_row, analysis_row in zip(rows, analysis.itertuples())
+            ],
+            key=lambda x: x["result"],
+        )
 
         if (
-            self.report_limit is NODEFAULT and
-            len(values_report) > Contain.DEFAULT_REPORT_LIMIT
+            self.report_limit is NODEFAULT
+            and len(values_report) > Contain.DEFAULT_REPORT_LIMIT
         ):
             self.report_limit = Contain.DEFAULT_REPORT_LIMIT
             warnings.warn(
                 "The 'contain' statement's report size was automatically"
-                f' truncated to {Contain.DEFAULT_REPORT_LIMIT} items to'
-                '  prevent unexpectedly long logs.\n'
-                'If you wish to set a different'
-                ' size limit or even not set a limit at all (None),'
-                ' please declare the `report_limit` parameter explicitely.',
-                Warning
+                f" truncated to {Contain.DEFAULT_REPORT_LIMIT} items to"
+                "  prevent unexpectedly long logs.\n"
+                "If you wish to set a different"
+                " size limit or even not set a limit at all (None),"
+                " please declare the `report_limit` parameter explicitely.",
+                Warning,
             )
 
         return {
-            'values': (
-                values_report if self.report_limit is NODEFAULT else
-                values_report if self.report_limit is None else
-                values_report[:self.report_limit]
+            "values": (
+                values_report
+                if self.report_limit is NODEFAULT
+                else values_report
+                if self.report_limit is None
+                else values_report[: self.report_limit]
             )
         }
 
     @report(Backend.PANDAS)
-    def _report_pandas(self, df: 'pandas.DataFrame') -> dict:
+    def _report_pandas(self, df: "pandas.DataFrame") -> dict:
         # Concat all columns
         _cols = df.columns.tolist()
 
@@ -404,15 +397,12 @@ class Contain(BaseStatement):
             # Columns are assumed to be of same Dtype
             df = pandas.concat([df[col] for col in _cols]).to_frame()
 
-        value_counts = (
-            df.groupby(_cols, dropna=False)[_cols[0]].size()
-            .rename('count')
-        )
+        value_counts = df.groupby(_cols, dropna=False)[_cols[0]].size().rename("count")
         analysis = self._generate_analysis(value_counts)
         return self._generate_report(analysis)
 
     @report(Backend.DASK)
-    def _report_dask(self, df: 'dask.dataframe.DataFrame') -> dict:
+    def _report_dask(self, df: "dask.dataframe.DataFrame") -> dict:
         # Concat all columns
         _cols = df.columns.tolist()
 
@@ -420,26 +410,19 @@ class Contain(BaseStatement):
             # Columns are assumed to be of same Dtype
             df = dask.dataframe.concat([df[col] for col in _cols]).to_frame()
 
-        value_counts = (
-            df.groupby(_cols, dropna=False)[_cols[0]].size()
-            .rename('count')
-        )
+        value_counts = df.groupby(_cols, dropna=False)[_cols[0]].size().rename("count")
         analysis = self._generate_analysis(value_counts.compute())
         return self._generate_report(analysis)
 
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
-        return all(
-            item['result'] for item in report['values']
-        )
+        return all(item["result"] for item in report["values"])
 
     @profile(Backend.PANDAS)
     @staticmethod
-    def _profile_pandas(df: 'pandas.DataFrame') -> DeirokayStatement:
+    def _profile_pandas(df: "pandas.DataFrame") -> DeirokayStatement:
         if any(dtype != df.dtypes for dtype in df.dtypes):
-            raise NotImplementedError(
-                "Refusing to mix up different types of columns"
-            )
+            raise NotImplementedError("Refusing to mix up different types of columns")
 
         series = pandas.concat(df[col] for col in df.columns)
 
@@ -451,8 +434,8 @@ class Contain(BaseStatement):
         min_occurrences = int(value_frequency.min())
 
         statement_template = {
-            'type': 'contain',
-            'rule': 'all'
+            "type": "contain",
+            "rule": "all",
         }  # type: DeirokayStatement
         # Get most common type to infer treater
         try:
@@ -464,20 +447,18 @@ class Contain(BaseStatement):
         except TypeError:
             raise NotImplementedError("Can't handle mixed types")
         # Sort allowing `None` values, which will appear last
-        statement_template['values'].sort(key=lambda x: (x is None, x))
+        statement_template["values"].sort(key=lambda x: (x is None, x))
 
         if min_occurrences != 1:
-            statement_template['min_occurrences'] = min_occurrences
+            statement_template["min_occurrences"] = min_occurrences
 
         return statement_template
 
     @profile(Backend.DASK)
     @staticmethod
-    def _profile_dask(df: 'dask.dataframe.DataFrame') -> DeirokayStatement:
+    def _profile_dask(df: "dask.dataframe.DataFrame") -> DeirokayStatement:
         if any(dtype != df.dtypes for dtype in df.dtypes):
-            raise NotImplementedError(
-                "Refusing to mix up different types of columns"
-            )
+            raise NotImplementedError("Refusing to mix up different types of columns")
 
         series = dask.dataframe.concat([df[col] for col in df.columns])
 
@@ -489,8 +470,8 @@ class Contain(BaseStatement):
         min_occurrences = int(value_frequency.min().compute())
 
         statement_template = {
-            'type': 'contain',
-            'rule': 'all'
+            "type": "contain",
+            "rule": "all",
         }  # type: DeirokayStatement
         # Get most common type to infer treater
         try:
@@ -502,9 +483,9 @@ class Contain(BaseStatement):
         except TypeError:
             raise NotImplementedError("Can't handle mixed types")
         # Sort allowing `None` values, which will appear last
-        statement_template['values'].sort(key=lambda x: (x is None, x))
+        statement_template["values"].sort(key=lambda x: (x is None, x))
 
         if min_occurrences != 1:
-            statement_template['min_occurrences'] = min_occurrences
+            statement_template["min_occurrences"] = min_occurrences
 
         return statement_template

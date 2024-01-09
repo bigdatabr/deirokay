@@ -24,6 +24,7 @@ class StringTreater(Validator):
     treat_null_as : Optional[str], optional
         Character to replace null values for, by default None
     """
+
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.STRING
     supported_primitives = [str]
@@ -34,7 +35,7 @@ class StringTreater(Validator):
         self.treat_null_as = treat_null_as
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> "pandas.Series":
         series = super()._treat_pandas(series)
 
         if self.treat_null_as is not None:
@@ -43,9 +44,7 @@ class StringTreater(Validator):
         return series
 
     @treat(Backend.DASK)
-    def _treat_dask(
-        self, series: Iterable
-    ) -> 'dask.dataframe.Series':
+    def _treat_dask(self, series: Iterable) -> "dask.dataframe.Series":
         series = super()._treat_dask(series)
 
         if self.treat_null_as is not None:
@@ -59,20 +58,18 @@ class StringTreater(Validator):
             if item is None or item is pandas.NA or item is numpy.NaN:
                 return None
             return str(item)
+
         return {
-            'values': [_convert(item) for item in series],
-            'parser': {
-                'dtype': StringTreater.supported_dtype.value
-            }
+            "values": [_convert(item) for item in series],
+            "parser": {"dtype": StringTreater.supported_dtype.value},
         }
 
     @serialize(Backend.PANDAS)
     @staticmethod
-    def _serialize_pandas(series: 'pandas.Series') -> DeirokaySerializedSeries:
+    def _serialize_pandas(series: "pandas.Series") -> DeirokaySerializedSeries:
         return StringTreater._serialize_common(series)
 
     @serialize(Backend.DASK)
     @staticmethod
-    def _serialize_dask(series: 'dask.dataframe.Series'
-                        ) -> DeirokaySerializedSeries:
+    def _serialize_dask(series: "dask.dataframe.Series") -> DeirokaySerializedSeries:
         return StringTreater._serialize_common(series)

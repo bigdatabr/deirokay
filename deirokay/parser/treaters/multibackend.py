@@ -20,7 +20,7 @@ def treat(backend: Backend, *, force: bool = False) -> GeneralDecorator:
         Force overwrite target method when it already exists.
         Defaults to False.
     """
-    return register_backend_method('treat', backend, force=force)
+    return register_backend_method("treat", backend, force=force)
 
 
 def serialize(backend: Backend, *, force: bool = False) -> GeneralDecorator:
@@ -40,4 +40,4 @@ def serialize(backend: Backend, *, force: bool = False) -> GeneralDecorator:
         Force overwrite target method when it already exists.
         Defaults to False.
     """
-    return register_backend_method('serialize', backend, force=force)
+    return register_backend_method("serialize", backend, force=force)

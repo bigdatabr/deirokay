@@ -9,16 +9,15 @@ from ._typing import AnyCallable, DeirokayDataSource
 from .enums import Backend
 
 MODULE_2_BACKEND = {
-    'pandas': Backend.PANDAS,
-    'dask.dataframe': Backend.DASK,
+    "pandas": Backend.PANDAS,
+    "dask.dataframe": Backend.DASK,
 }
 assert sorted(Backend) == sorted(MODULE_2_BACKEND.values())
 
 BACKEND_2_MODULE = {v: k for k, v in MODULE_2_BACKEND.items()}
 
 
-_AnyMultiBackendClass = TypeVar('_AnyMultiBackendClass',
-                                bound='MultiBackendMixin')
+_AnyMultiBackendClass = TypeVar("_AnyMultiBackendClass", bound="MultiBackendMixin")
 
 
 class MultiBackendMixin:
@@ -29,6 +28,7 @@ class MultiBackendMixin:
     of its subclasses can be marked to be active when a particular
     backend is active.
     """
+
     supported_backends: List[Backend] = []
     """List[Backend]: Backends supported by this resource."""
     _current_backend: Optional[Backend] = None
@@ -37,10 +37,9 @@ class MultiBackendMixin:
     _backend_methods: Dict[Backend, Dict[str, AnyCallable]] = {}
 
     @classmethod
-    def register_backend_method(cls,
-                                alias_for: str,
-                                func: AnyCallable,
-                                backend: Backend) -> None:
+    def register_backend_method(
+        cls, alias_for: str, func: AnyCallable, backend: Backend
+    ) -> None:
         """Proxy for `register_backend_method` to register an existing
         function as a backend-specific method.
 
@@ -55,7 +54,7 @@ class MultiBackendMixin:
             Backend for the method.
         """
         backend_method = register_backend_method(alias_for, backend)(func)
-        method_name = f'_registered_{alias_for}_{backend.value}'
+        method_name = f"_registered_{alias_for}_{backend.value}"
         setattr(cls, method_name, backend_method)
         # When the decorator is not called from inside a class scope,
         # the __set_name__ hook should be invoked manually.
@@ -64,9 +63,9 @@ class MultiBackendMixin:
 
     @classmethod
     @functools.lru_cache(maxsize=None)
-    def attach_backend(cls: Type['MultiBackendMixin'],
-                       backend: Backend
-                       ) -> Type['_AnyMultiBackendClass']:
+    def attach_backend(
+        cls: Type["MultiBackendMixin"], backend: Backend
+    ) -> Type["_AnyMultiBackendClass"]:
         """Generate a subclass that concretizes multibackend backend
         methods into their intended name. The methods marked with the
         given `backend` will compose the returned class.
@@ -87,36 +86,34 @@ class MultiBackendMixin:
         if (
             __comp_version__ < (2,)
             and cls.supported_backends == []
-            and 'supported_backends' not in vars(cls)
+            and "supported_backends" not in vars(cls)
         ):
             warnings.warn(
-                'To preserve backward compatibility, the'
-                f' `supported_backends` attribute from `{cls.__name__}`'
-                ' is assumed to be `[Backend.PANDAS]` when not declared.'
-                ' In future, this behavior will change and an exception'
-                ' will be raised whenever a multibackend class does not'
-                ' specify this attribute explicitely.\n'
-                'To prevent this error in future and suppress this'
-                ' warning in the current version, please set the'
-                ' `supported_backends` class attribute explicitely.',
-                FutureWarning
+                "To preserve backward compatibility, the"
+                f" `supported_backends` attribute from `{cls.__name__}`"
+                " is assumed to be `[Backend.PANDAS]` when not declared."
+                " In future, this behavior will change and an exception"
+                " will be raised whenever a multibackend class does not"
+                " specify this attribute explicitely.\n"
+                "To prevent this error in future and suppress this"
+                " warning in the current version, please set the"
+                " `supported_backends` class attribute explicitely.",
+                FutureWarning,
             )
             cls.supported_backends = [Backend.PANDAS]
 
         if backend not in cls.supported_backends:
             raise UnsupportedBackend(
                 f"The `{cls.__name__}` class does not support the '{backend}'"
-                f' backend, only the following ones: {cls.supported_backends}.'
-                f' If you are using a custom class, be sure to provide a'
-                f' `supported_backends` attribute containing {backend!s}.'
+                f" backend, only the following ones: {cls.supported_backends}."
+                f" If you are using a custom class, be sure to provide a"
+                f" `supported_backends` attribute containing {backend!s}."
             )
 
-        execution_name = f'{cls.__name__}-{backend.value.capitalize()}Backend'
+        execution_name = f"{cls.__name__}-{backend.value.capitalize()}Backend"
         execution_attrs = dict(vars(cls))
         execution_subclass = type(
-            execution_name,
-            (cls,),
-            execution_attrs
+            execution_name, (cls,), execution_attrs
         )  # type: Type[_AnyMultiBackendClass]
 
         _merged_backend_methods = {}
@@ -131,12 +128,12 @@ class MultiBackendMixin:
         for alias_for, (method, force) in _merged_backend_methods.items():
             if not force and alias_for in vars(execution_subclass):
                 raise InvalidBackend(
-                    f'You cannot declare the alias method `{method.__name__}`'
-                    f' in the class `{cls}` when the original method'
-                    f' `{alias_for}` already exists or has already been'
-                    ' replaced by another alias.'
-                    f' Either remove `{alias_for}` or make sure only'
-                    f' one alias of `{alias_for}` exists for the'
+                    f"You cannot declare the alias method `{method.__name__}`"
+                    f" in the class `{cls}` when the original method"
+                    f" `{alias_for}` already exists or has already been"
+                    " replaced by another alias."
+                    f" Either remove `{alias_for}` or make sure only"
+                    f" one alias of `{alias_for}` exists for the"
                     f" '{backend.value}' backend to continue.\n"
                     "Alternatively, you may set the flag `force=True`"
                     " when calling"
@@ -170,7 +167,7 @@ class MultiBackendMixin:
             Backend not set or not a valid execution class.
         """
         if cls._current_backend is None:
-            raise InvalidBackend('Backend not set for current execution')
+            raise InvalidBackend("Backend not set for current execution")
         return cls._current_backend
 
 
@@ -178,10 +175,7 @@ DecoratorClass = Union[Callable, Type]
 
 
 def register_backend_method(
-    alias_for: str,
-    backend: Backend,
-    *,
-    force: bool = False
+    alias_for: str, backend: Backend, *, force: bool = False
 ) -> DecoratorClass:
     """Modify a method to make it an alternative (alias) for another
     method (`alias_for`) when the specified backend is active.
@@ -219,11 +213,11 @@ def register_backend_method(
         Force overwrite target method when it already exists.
         Defaults to False.
     """
-    assert isinstance(backend, Backend), (
-        'Make sure this decorator declares a `backend` argument'
-    )
+    assert isinstance(
+        backend, Backend
+    ), "Make sure this decorator declares a `backend` argument"
 
-    class _decorator():
+    class _decorator:
         def __init__(self, decorated_method: AnyCallable) -> None:
             self.decorated_method = decorated_method
 
@@ -231,18 +225,18 @@ def register_backend_method(
             setattr(owner, method_name, self.decorated_method)
             if not issubclass(owner, MultiBackendMixin):
                 raise InvalidBackend(
-                    f'Make sure the `{owner.__name__}` class subclasses'
-                    f' `{MultiBackendMixin.__name__}` before using'
-                    f' `{register_backend_method.__name__}`'
+                    f"Make sure the `{owner.__name__}` class subclasses"
+                    f" `{MultiBackendMixin.__name__}` before using"
+                    f" `{register_backend_method.__name__}`"
                 )
             if backend not in owner.supported_backends:
                 raise UnsupportedBackend(
-                    f'The `{owner.__name__}` class does not seem to support'
+                    f"The `{owner.__name__}` class does not seem to support"
                     f" the '{backend.value}' backend used in `{method_name}`."
-                    ' Make sure to explicitely declare a `supported_backends`'
+                    " Make sure to explicitely declare a `supported_backends`"
                     f" attribute containing the '{backend.value}' backend."
                 )
-            if '_backend_methods' not in vars(owner):
+            if "_backend_methods" not in vars(owner):
                 # We must reinitialize _backend_methods in all subclasses to
                 # prevent all of them sharing the same
                 # `MultiBackendMixin._backend_methods` attribute
@@ -263,8 +257,8 @@ def _detect_backend_from_type(object_type: type) -> Backend:
         if object_type.__module__.startswith(_module):
             return MODULE_2_BACKEND[_module]
     raise UnsupportedBackend(
-        f'Unknown backend for {object_type}.'
-        f' Supported backends: {set(i.value for i in Backend)}.'
+        f"Unknown backend for {object_type}."
+        f" Supported backends: {set(i.value for i in Backend)}."
     )
 
 

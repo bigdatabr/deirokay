@@ -13,6 +13,7 @@ from ..multibackend import treat as treat_
 
 class BaseTreater(MultiBackendMixin, ABC):
     """Base class for all data treaters."""
+
     supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
     supported_dtype: Optional[DTypes] = None
     """Optional[DTypes]: DType treated by this treater."""
@@ -37,13 +38,13 @@ class BaseTreater(MultiBackendMixin, ABC):
         raise NotImplementedError
 
     @treat_(Backend.PANDAS, force=True)
-    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
+    def _treat_pandas(self, series: Iterable) -> "pandas.Series":
         if isinstance(series, pandas.Series):
             return series
         return pandas.Series(series)
 
     @treat_(Backend.DASK, force=True)
-    def _treat_dask(self, series: Iterable) -> 'dask.dataframe.Series':
+    def _treat_dask(self, series: Iterable) -> "dask.dataframe.Series":
         if isinstance(series, dask.dataframe.Series):
             return series
 

@@ -6,8 +6,11 @@ from copy import deepcopy
 from typing import Optional, Union
 
 from deirokay.__version__ import __comp_version__
-from deirokay._typing import (DeirokayColumnOptions, DeirokayDataSource,
-                              DeirokayOptionsDocument)
+from deirokay._typing import (
+    DeirokayColumnOptions,
+    DeirokayDataSource,
+    DeirokayOptionsDocument,
+)
 from deirokay._utils import check_columns_in_df_columns
 from deirokay.backend import detect_backend
 from deirokay.enums import Backend
@@ -18,10 +21,12 @@ from .reader import reader_factory
 from .treaters import get_treater_instance
 
 
-def data_reader(data: Union[str, DeirokayDataSource],
-                options: Union[str, DeirokayOptionsDocument],
-                backend: Optional[Backend] = None,
-                **kwargs) -> DeirokayDataSource:
+def data_reader(
+    data: Union[str, DeirokayDataSource],
+    options: Union[str, DeirokayOptionsDocument],
+    backend: Optional[Backend] = None,
+    **kwargs,
+) -> DeirokayDataSource:
     """Create a new tabular data from a file or an object and apply
     Deirokay treatments to correctly parse it and pre-validate its
     content.
@@ -47,26 +52,26 @@ def data_reader(data: Union[str, DeirokayDataSource],
     else:
         options_dict = deepcopy(options)
     options_dict.update(kwargs)
-    columns = options_dict.pop('columns')
+    columns = options_dict.pop("columns")
 
     if isinstance(data, str) and backend is None:
         if __comp_version__ < (2,):
             warnings.warn(
-                'To preserve backward compatibility, the `backend` attribute'
-                ' is assumed to be `Backend.PANDAS` when reading data from a'
-                ' file or SQL query.\n'
-                'In future, this behavior will change and an exception will'
-                ' be raised whenever the backend cannot be inferred from the'
-                ' `data` attribute. To prevent this error in future and'
-                ' suppress this warning in the current version,'
-                ' set the `backend` attribute explicitely in `data_reader()`.',
-                FutureWarning
+                "To preserve backward compatibility, the `backend` attribute"
+                " is assumed to be `Backend.PANDAS` when reading data from a"
+                " file or SQL query.\n"
+                "In future, this behavior will change and an exception will"
+                " be raised whenever the backend cannot be inferred from the"
+                " `data` attribute. To prevent this error in future and"
+                " suppress this warning in the current version,"
+                " set the `backend` attribute explicitely in `data_reader()`.",
+                FutureWarning,
             )
             backend = Backend.PANDAS
         elif __comp_version__ >= (2,):
             raise InvalidBackend(
-                'You should provide a `backend` attribute when it cannot be'
-                ' inferred from `data`.'
+                "You should provide a `backend` attribute when it cannot be"
+                " inferred from `data`."
             )
     backend = backend or detect_backend(data)
 
@@ -78,9 +83,9 @@ def data_reader(data: Union[str, DeirokayDataSource],
     return df
 
 
-def data_treater(df: DeirokayDataSource,
-                 options: DeirokayColumnOptions,
-                 backend: Backend) -> None:
+def data_treater(
+    df: DeirokayDataSource, options: DeirokayColumnOptions, backend: Backend
+) -> None:
     """Receive options dict and call the proper treater class for each
     Deirokay data type.
 

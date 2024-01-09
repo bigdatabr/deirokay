@@ -28,7 +28,7 @@ except ImportError as e:
     boto3_import_error = e
 
 
-BUCKET_KEY_REGEX = re.compile(r's3:\/\/([\w\-]+)\/([\w\-\/.]*)')
+BUCKET_KEY_REGEX = re.compile(r"s3:\/\/([\w\-]+)\/([\w\-\/.]*)")
 
 
 def split_s3_path(s3_path: str) -> tuple:
@@ -71,8 +71,8 @@ def _import_file_as_python_module(path_to_file: str) -> ModuleType:
     module_path, extension = os.path.splitext(path_to_file)
     module_name = os.path.basename(module_path)
 
-    if extension not in ('.py', '.o'):
-        raise ValueError('You should pass a valid Python file')
+    if extension not in (".py", ".o"):
+        raise ValueError("You should pass a valid Python file")
 
     module_dir = os.path.dirname(path_to_file)
     sys.path.insert(0, module_dir)
@@ -82,7 +82,7 @@ def _import_file_as_python_module(path_to_file: str) -> ModuleType:
     return module
 
 
-class FileSystem():
+class FileSystem:
     """Abstract file system operations over folders and files in
     any place, such as local or in S3 buckets.
 
@@ -95,9 +95,13 @@ class FileSystem():
     def __init__(self, path: str):
         self.path = path
 
-    def ls(self, recursive: bool = False, files_only: bool = False,
-           reverse: bool = False, limit: Optional[int] = None
-           ) -> Sequence['FileSystem']:
+    def ls(
+        self,
+        recursive: bool = False,
+        files_only: bool = False,
+        reverse: bool = False,
+        limit: Optional[int] = None,
+    ) -> Sequence["FileSystem"]:
         """List files in a prefix or folder.
 
         Parameters
@@ -121,21 +125,21 @@ class FileSystem():
             Python dictionary with the file content.
         """
         extension = splitext(self.path)[1].lower()
-        if extension == '.json':
+        if extension == ".json":
             return self.read_json(*args, **kwargs)
-        elif extension in ('.yaml', '.yml'):
+        elif extension in (".yaml", ".yml"):
             return self.read_yaml(*args, **kwargs)
-        raise NotImplementedError(f'No parser for file type: {extension}')
+        raise NotImplementedError(f"No parser for file type: {extension}")
 
     def write_dict(self, *args, **kwargs) -> None:
         """Serialize and write a Python `dict` to either YAML or JSON
         file."""
         extension = splitext(self.path)[1].lower()
-        if extension == '.json':
+        if extension == ".json":
             return self.write_json(*args, **kwargs)
-        elif extension in ('.yaml', '.yml'):
+        elif extension in (".yaml", ".yml"):
             return self.write_yaml(*args, **kwargs)
-        raise NotImplementedError(f'No serializer for file type: {extension}')
+        raise NotImplementedError(f"No serializer for file type: {extension}")
 
     def read_yaml(self) -> dict:
         """Read and parse a YAML file as a Python `dict`.
@@ -145,7 +149,7 @@ class FileSystem():
         dict
             Python dictionary with the file content.
         """
-        with self.open('r') as fp:
+        with self.open("r") as fp:
             return yaml.safe_load(fp)
 
     def write_yaml(self, doc: dict, **kwargs) -> None:
@@ -157,7 +161,7 @@ class FileSystem():
             The Python `dict`.
 
         """
-        with self.open('w') as fp:
+        with self.open("w") as fp:
             yaml.dump(doc, fp, sort_keys=False, **kwargs)
 
     def read_json(self) -> dict:
@@ -168,7 +172,7 @@ class FileSystem():
         dict
             Python dictionary with the file content.
         """
-        with self.open('r') as fp:
+        with self.open("r") as fp:
             return json.load(fp)
 
     def write_json(self, doc: dict, **kwargs) -> None:
@@ -179,7 +183,7 @@ class FileSystem():
         doc : dict
             The Python `dict`.
         """
-        with self.open('w') as fp:
+        with self.open("w") as fp:
             json.dump(doc, fp, **kwargs)
 
     def isdir(self) -> bool:
@@ -212,16 +216,16 @@ class FileSystem():
         """Import file as a Python module."""
         raise NotImplementedError
 
-    def open(self, mode: Literal['r', 'w'], *args, **kwargs) -> IO:
+    def open(self, mode: Literal["r", "w"], *args, **kwargs) -> IO:
         """Open file."""
         raise NotImplementedError
 
     def read(self, *args, **kwargs) -> str:
         """Read a file as text."""
-        with self.open(*args, mode='r', **kwargs) as fp:
+        with self.open(*args, mode="r", **kwargs) as fp:
             return fp.read()
 
-    def __truediv__(self, rest: str) -> 'FileSystem':
+    def __truediv__(self, rest: str) -> "FileSystem":
         """Create another FileSystem object by '/'-joining a FileSystem
         object with a string.
 
@@ -245,7 +249,7 @@ class FileSystem():
             return cls(os.path.join(self.path, rest))
         raise TypeError()
 
-    def __lt__(self, other: 'FileSystem') -> bool:
+    def __lt__(self, other: "FileSystem") -> bool:
         assert isinstance(self, type(other))
         return self.path.__lt__(other.path)
 
@@ -257,18 +261,22 @@ class LocalFileSystem(FileSystem):
     """FileSystem wrapper for local files and folders."""
 
     # docstr-coverage:inherited
-    def ls(self, recursive: bool = False, files_only: bool = False,
-           reverse: bool = False, limit: Optional[int] = None
-           ) -> Sequence['LocalFileSystem']:
+    def ls(
+        self,
+        recursive: bool = False,
+        files_only: bool = False,
+        reverse: bool = False,
+        limit: Optional[int] = None,
+    ) -> Sequence["LocalFileSystem"]:
         if recursive is False:
             raise NotImplementedError
         if files_only is False:
             raise NotImplementedError
 
         def _recursive_list():
-            for parent, _, files in sorted(os.walk(self.path),
-                                           key=lambda parent, *_: parent,
-                                           reverse=reverse):
+            for parent, _, files in sorted(
+                os.walk(self.path), key=lambda parent, *_: parent, reverse=reverse
+            ):
                 for file in sorted(files, reverse=reverse):
                     yield os.path.join(parent, file)
 
@@ -290,7 +298,7 @@ class LocalFileSystem(FileSystem):
         return Path(self.path).mkdir(*args, **kwargs)
 
     # docstr-coverage:inherited
-    def open(self, mode: Literal['r', 'w'], *args, **kwargs) -> IO:
+    def open(self, mode: Literal["r", "w"], *args, **kwargs) -> IO:
         return open(self.path, mode, *args, **kwargs)
 
 
@@ -299,19 +307,23 @@ class S3FileSystem(FileSystem):
 
     LIST_OBJECTS_MAX_KEYS = 1000
 
-    def __init__(self, path: Optional[str] = None,
-                 bucket: Optional[str] = None,
-                 prefix_or_key: Optional[str] = None,
-                 client: Optional['boto3.client'] = None):
-
+    def __init__(
+        self,
+        path: Optional[str] = None,
+        bucket: Optional[str] = None,
+        prefix_or_key: Optional[str] = None,
+        client: Optional["boto3.client"] = None,
+    ):
         if boto3 is None:
-            raise ImportError('S3-backend requires `boto3` module to be'
-                              f' installed ({boto3_import_error})')
+            raise ImportError(
+                "S3-backend requires `boto3` module to be"
+                f" installed ({boto3_import_error})"
+            )
 
         if bool(path) == bool(bucket) or bool(path) == bool(prefix_or_key):
             raise ValueError(
-                'Either `path` or `(bucket, prefix_or_key)` should be'
-                ' passed (but not both).'
+                "Either `path` or `(bucket, prefix_or_key)` should be"
+                " passed (but not both)."
             )
 
         if bucket and prefix_or_key:
@@ -322,14 +334,18 @@ class S3FileSystem(FileSystem):
             final_path = path
 
         super().__init__(final_path)
-        self.client = client or boto3.client('s3')
+        self.client = client or boto3.client("s3")
         self.bucket = final_bucket
         self.prefix_or_key = final_prefix_or_key
 
     # docstr-coverage:inherited
-    def ls(self, recursive: bool = False, files_only: bool = False,
-           reverse: bool = False, limit: Optional[int] = None
-           ) -> Sequence['S3FileSystem']:
+    def ls(
+        self,
+        recursive: bool = False,
+        files_only: bool = False,
+        reverse: bool = False,
+        limit: Optional[int] = None,
+    ) -> Sequence["S3FileSystem"]:
         if recursive is False:
             raise NotImplementedError
         if files_only is False:
@@ -338,40 +354,38 @@ class S3FileSystem(FileSystem):
         # To handle requests containing over 1000 items, we need to
         # paginate through the results.
         max_keys = self.LIST_OBJECTS_MAX_KEYS
-        page_iterable = self.client.get_paginator('list_objects_v2').paginate(
+        page_iterable = self.client.get_paginator("list_objects_v2").paginate(
             Bucket=self.bucket,
             Prefix=self.prefix_or_key,
-            PaginationConfig={'PageSize': max_keys}
+            PaginationConfig={"PageSize": max_keys},
         )
         chained_items: Iterable
         if not reverse:
             chained_items = (
-                item['Key']
+                item["Key"]
                 for page in page_iterable
-                for item in page.get('Contents', [])
+                for item in page.get("Contents", [])
             )
         else:
             # Use deque with maxlen to exhaust the paginator and keep
             # only the last pages (those necessary to satisfy the
             # limit).
             pages_to_keep = (
-                None if limit is None else (limit+max_keys-2)//max_keys+1
+                None if limit is None else (limit + max_keys - 2) // max_keys + 1
             )
             last_pages = deque(iter(page_iterable), maxlen=pages_to_keep)
             # Worst case scenario: the last page contains only one
             # item. Hence, from 2 to 1001, we need at least 2 pages,
             # and so on. Thus, the expression `(limit+998)//1000 + 1`
             chained_items = (
-                item['Key']
+                item["Key"]
                 for page in reversed(last_pages)
-                for item in reversed(page.get('Contents', []))
+                for item in reversed(page.get("Contents", []))
             )
 
         chained_items = itertools.islice(chained_items, limit)
         return [
-            S3FileSystem(bucket=self.bucket,
-                         prefix_or_key=key,
-                         client=self.client)
+            S3FileSystem(bucket=self.bucket, prefix_or_key=key, client=self.client)
             for key in chained_items
         ]
 
@@ -379,28 +393,27 @@ class S3FileSystem(FileSystem):
     def import_as_python_module(self) -> ModuleType:
         _, extension = os.path.splitext(self.path)
         with NamedTemporaryFile(suffix=extension) as tmp_fp:
-            self.client.download_file(self.bucket,
-                                      self.prefix_or_key,
-                                      tmp_fp.name)
+            self.client.download_file(self.bucket, self.prefix_or_key, tmp_fp.name)
             module = _import_file_as_python_module(tmp_fp.name)
             return module
 
     # docstr-coverage:inherited
-    def open(self, mode: Literal['r', 'w'], *args, **kwargs) -> IO:
-        if mode == 'r':
-            body = self.client.get_object(Bucket=self.bucket,
-                                          Key=self.prefix_or_key)['Body']
+    def open(self, mode: Literal["r", "w"], *args, **kwargs) -> IO:
+        if mode == "r":
+            body = self.client.get_object(Bucket=self.bucket, Key=self.prefix_or_key)[
+                "Body"
+            ]
             return contextlib.closing(body)  # type: ignore
-        elif mode == 'w':
+        elif mode == "w":
+
             def _writable() -> Generator[IO, None, None]:
                 with NamedTemporaryFile(mode, *args, **kwargs) as tmp_fp:
                     yield tmp_fp
                     tmp_fp.flush()
                     self.client.upload_file(
-                        tmp_fp.name,
-                        self.bucket,
-                        self.prefix_or_key
+                        tmp_fp.name, self.bucket, self.prefix_or_key
                     )
+
             return contextlib.contextmanager(_writable)()  # type: ignore
         raise NotImplementedError(f"Mode '{mode}' not supported.")
 
@@ -418,7 +431,7 @@ def fs_factory(path: str) -> FileSystem:
     FileSystem
         Proper FileSystem object for the path provided.
     """
-    if path.startswith('s3://'):
+    if path.startswith("s3://"):
         return S3FileSystem(path)
     else:
         return LocalFileSystem(path)

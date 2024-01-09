@@ -23,7 +23,7 @@ def report(backend: Backend, *, force: bool = False) -> GeneralDecorator:
         Force overwrite target method when it already exists.
         Defaults to False.
     """
-    return register_backend_method('report', backend, force=force)
+    return register_backend_method("report", backend, force=force)
 
 
 def profile(backend: Backend, *, force: bool = False) -> GeneralDecorator:
@@ -43,4 +43,4 @@ def profile(backend: Backend, *, force: bool = False) -> GeneralDecorator:
         Force overwrite target method when it already exists.
         Defaults to False.
     """
-    return register_backend_method('profile', backend, force=force)
+    return register_backend_method("profile", backend, force=force)

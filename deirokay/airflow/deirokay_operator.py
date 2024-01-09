@@ -7,8 +7,11 @@ from airflow.exceptions import AirflowSkipException
 from airflow.models.baseoperator import BaseOperator
 
 import deirokay
-from deirokay._typing import (DeirokayDataSource, DeirokayOptionsDocument,
-                              DeirokayValidationDocument)
+from deirokay._typing import (
+    DeirokayDataSource,
+    DeirokayOptionsDocument,
+    DeirokayValidationDocument,
+)
 from deirokay.enums import Backend, SeverityLevel
 from deirokay.exceptions import ValidationError
 from deirokay.validator import raise_validation
@@ -61,16 +64,16 @@ class DeirokayOperator(BaseOperator):
     """
 
     template_fields = [
-        'data',
-        'options',
-        'against',
-        'template',
-        'save_to',
-        'reader_kwargs',
-        'validator_kwargs'
+        "data",
+        "options",
+        "against",
+        "template",
+        "save_to",
+        "reader_kwargs",
+        "validator_kwargs",
     ]
-    template_fields_renderers = {'options': 'json', 'against': 'json'}
-    ui_color = '#59f75e'
+    template_fields_renderers = {"options": "json", "against": "json"}
+    ui_color = "#59f75e"
 
     def __init__(
         self,
@@ -91,17 +94,17 @@ class DeirokayOperator(BaseOperator):
     ):
         super().__init__(**kwargs)
 
-        assert bool(data) is not bool(path_to_file), (
-            'Declare either `data` or `path_to_file`, but not both.'
-        )
+        assert bool(data) is not bool(
+            path_to_file
+        ), "Declare either `data` or `path_to_file`, but not both."
         if path_to_file:
             warnings.warn(
-                'The argument `path_to_file` is deprecated and will be'
-                ' removed in next major release. Use `data` instead.',
-                DeprecationWarning
+                "The argument `path_to_file` is deprecated and will be"
+                " removed in next major release. Use `data` instead.",
+                DeprecationWarning,
             )
-        assert options, 'You should provide an `options` attribute.'
-        assert against, 'You should provide an `against` attribute.'
+        assert options, "You should provide an `options` attribute."
+        assert against, "You should provide an `against` attribute."
         self.data = data or path_to_file
         self.options = options
         self.against = against
@@ -115,12 +118,9 @@ class DeirokayOperator(BaseOperator):
 
     # docstr-coverage:inherited
     def execute(self, context: dict):
-        current_date = datetime.strptime(context['ts_nodash'], '%Y%m%dT%H%M%S')
+        current_date = datetime.strptime(context["ts_nodash"], "%Y%m%dT%H%M%S")
         df = deirokay.data_reader(
-            self.data,
-            options=self.options,
-            backend=self.backend,
-            **self.reader_kwargs
+            self.data, options=self.options, backend=self.backend, **self.reader_kwargs
         )
 
         validation_document = deirokay.validate(
@@ -135,13 +135,7 @@ class DeirokayOperator(BaseOperator):
         try:
             raise_validation(validation_document, SeverityLevel.MINIMAL)
         except ValidationError as e:
-            if (
-                self.hard_fail_level is not None and
-                e.level >= self.hard_fail_level
-            ):
+            if self.hard_fail_level is not None and e.level >= self.hard_fail_level:
                 raise e
-            if (
-                self.soft_fail_level is not None and
-                e.level >= self.soft_fail_level
-            ):
+            if self.soft_fail_level is not None and e.level >= self.soft_fail_level:
                 raise AirflowSkipException from e

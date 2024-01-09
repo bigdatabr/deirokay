@@ -15,16 +15,21 @@ from .pandas_reader import read as read_pandas
 class DataReader(MultiBackendMixin):
     """Helper class to load data from a data source in function of the
     backend."""
+
     supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
     read: DeirokayReadCallable
 
 
-DataReader.register_backend_method('read',
-                                   staticmethod(read_dask),  # type: ignore  # Staticmethod is Callable # noqa: E501
-                                   Backend.DASK)
-DataReader.register_backend_method('read',
-                                   staticmethod(read_pandas),  # type: ignore  # Staticmethod is Callable # noqa: E501
-                                   Backend.PANDAS)
+DataReader.register_backend_method(
+    "read",
+    staticmethod(read_dask),  # type: ignore  # Staticmethod is Callable
+    Backend.DASK,
+)
+DataReader.register_backend_method(
+    "read",
+    staticmethod(read_pandas),  # type: ignore  # Staticmethod is Callable
+    Backend.PANDAS,
+)
 
 
 def reader_factory(backend: Backend) -> Type[DataReader]:
@@ -43,6 +48,4 @@ def reader_factory(backend: Backend) -> Type[DataReader]:
     return DataReader.attach_backend(backend)
 
 
-__all__ = (
-    'reader_factory',
-)
+__all__ = ("reader_factory",)

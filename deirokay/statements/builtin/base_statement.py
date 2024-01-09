@@ -4,8 +4,7 @@ The base statement that all other statements inherit from.
 from abc import ABC, abstractmethod
 from typing import List
 
-from deirokay._typing import (DeirokayDataSource, DeirokayOption,
-                              DeirokayStatement)
+from deirokay._typing import DeirokayDataSource, DeirokayOption, DeirokayStatement
 from deirokay.backend import MultiBackendMixin
 
 
@@ -18,17 +17,17 @@ class BaseStatement(MultiBackendMixin, ABC):
         Statement parameters provided by user.
     """
 
-    name: str = 'base_statement'
+    name: str = "base_statement"
     """str: Statement name when referred in Validation Documents
     (only valid for Deirokay built-in statements)."""
-    expected_parameters: List[str] = ['type', 'severity', 'location']
+    expected_parameters: List[str] = ["type", "severity", "location"]
     """List[str]: Parameters expected for this statement."""
 
     def __init_subclass__(cls) -> None:
         """Validate subclassed statement."""
-        assert cls.name != BaseStatement.name, (
-            'You should specify a `name` attribute for your statement class.'
-        )
+        assert (
+            cls.name != BaseStatement.name
+        ), "You should specify a `name` attribute for your statement class."
 
     def __init__(self, options: DeirokayOption) -> None:
         self._validate_options(options)
@@ -39,15 +38,16 @@ class BaseStatement(MultiBackendMixin, ABC):
         """Make sure all provided statement parameters are expected
         by statement classes"""
         unexpected_parameters = [
-            option for option in options
-            if option not in (cls.expected_parameters +
-                              BaseStatement.expected_parameters)
+            option
+            for option in options
+            if option
+            not in (cls.expected_parameters + BaseStatement.expected_parameters)
         ]
         if unexpected_parameters:
             raise ValueError(
-                f'Invalid parameters passed to {cls.__name__} statement: '
-                f'{unexpected_parameters}\n'
-                f'The valid parameters are: {cls.expected_parameters}'
+                f"Invalid parameters passed to {cls.__name__} statement: "
+                f"{unexpected_parameters}\n"
+                f"The valid parameters are: {cls.expected_parameters}"
             )
 
     def __call__(self, df: DeirokayDataSource) -> dict:
@@ -55,10 +55,7 @@ class BaseStatement(MultiBackendMixin, ABC):
         internal_report = self.report(df)
         result = self.result(internal_report)
 
-        final_report = {
-            'detail': internal_report,
-            'result': result
-        }
+        final_report = {"detail": internal_report, "result": result}
         return final_report
 
     def report(self, df: DeirokayDataSource) -> dict:

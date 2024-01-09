@@ -16,18 +16,17 @@ from .numeric_treater import NumericTreater
 
 class IntegerTreater(NumericTreater):
     """Treater for integer variables"""
+
     supported_backends = [Backend.PANDAS, Backend.DASK]
     supported_dtype = DTypes.INT64
 
     @treat(Backend.PANDAS)
-    def _treat_pandas(self, series: Iterable) -> 'pandas.Series':
-        return super()._treat_pandas(series).astype(float).astype('Int64')
+    def _treat_pandas(self, series: Iterable) -> "pandas.Series":
+        return super()._treat_pandas(series).astype(float).astype("Int64")
 
     @treat(Backend.DASK)
-    def _treat_dask(
-        self, series: Iterable
-    ) -> 'dask.dataframe.Series':
-        return super()._treat_dask(series).astype(float).astype('Int64')
+    def _treat_dask(self, series: Iterable) -> "dask.dataframe.Series":
+        return super()._treat_dask(series).astype(float).astype("Int64")
 
     @staticmethod
     def _serialize_common(series):
@@ -35,23 +34,18 @@ class IntegerTreater(NumericTreater):
             if item is pandas.NA:
                 return None
             return int(item)
+
         return {
-            'values': [_convert(item) for item in series],
-            'parser': {
-                'dtype': IntegerTreater.supported_dtype.value
-            }
+            "values": [_convert(item) for item in series],
+            "parser": {"dtype": IntegerTreater.supported_dtype.value},
         }
 
     @serialize(Backend.PANDAS)
     @staticmethod
-    def _serialize_pandas(
-        series: 'pandas.Series'
-    ) -> DeirokaySerializedSeries:
+    def _serialize_pandas(series: "pandas.Series") -> DeirokaySerializedSeries:
         return IntegerTreater._serialize_common(series)
 
     @serialize(Backend.DASK)
     @staticmethod
-    def _serialize_dask(
-        series: 'dask.dataframe.Series'
-    ) -> DeirokaySerializedSeries:
+    def _serialize_dask(series: "dask.dataframe.Series") -> DeirokaySerializedSeries:
         return IntegerTreater._serialize_common(series)

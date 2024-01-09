@@ -6,10 +6,12 @@ import pandas  # lazy module
 from deirokay.fs import fs_factory
 
 
-def read(data: Union[str, 'pandas.DataFrame'],
-         columns: List[str],
-         sql: bool = False,
-         **kwargs) -> 'pandas.DataFrame':
+def read(
+    data: Union[str, "pandas.DataFrame"],
+    columns: List[str],
+    sql: bool = False,
+    **kwargs,
+) -> "pandas.DataFrame":
     """Infer the file type by its extension and call the proper
     `pandas` method to parse it.
 
@@ -37,28 +39,30 @@ def read(data: Union[str, 'pandas.DataFrame'],
         return data[columns].copy()
 
     if not isinstance(data, str):
-        raise TypeError(f'Unexpected type for `data` ({data.__class__})')
+        raise TypeError(f"Unexpected type for `data` ({data.__class__})")
 
     if sql:
         read_ = pandas.read_sql
 
     else:
-        file_extension = splitext(data)[1].lstrip('.').lower()
+        file_extension = splitext(data)[1].lstrip(".").lower()
 
-        if file_extension == 'sql':
+        if file_extension == "sql":
             query = fs_factory(data).read()
             return read(query, columns, sql=True, **kwargs)
 
-        if file_extension in ('xls', 'xlsx'):
-            file_extension = 'excel'
+        if file_extension in ("xls", "xlsx"):
+            file_extension = "excel"
 
-        if file_extension == 'csv':
-            default_kwargs.update({
-                'dtype': str,
-                'skipinitialspace': True,
-            })
+        if file_extension == "csv":
+            default_kwargs.update(
+                {
+                    "dtype": str,
+                    "skipinitialspace": True,
+                }
+            )
 
-        read_ = getattr(pandas, f'read_{file_extension}', None)
+        read_ = getattr(pandas, f"read_{file_extension}", None)
         if read_ is None:
             raise TypeError(f'File type "{file_extension}" not supported')
 
@@ -68,13 +72,13 @@ def read(data: Union[str, 'pandas.DataFrame'],
     try:
         return read_(data, columns=columns, **default_kwargs)
     except TypeError as e:
-        if 'columns' not in str(e):
+        if "columns" not in str(e):
             raise e
     # try `usecols` argument
     try:
         return read_(data, usecols=columns, **default_kwargs)
     except TypeError as e:
-        if 'usecols' not in str(e):
+        if "usecols" not in str(e):
             raise e
     # give up, read everything, filter columns later
     return read_(data, **default_kwargs)[columns]

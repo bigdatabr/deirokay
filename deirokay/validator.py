@@ -4,6 +4,7 @@ Set of functions related to Deirokay validation.
 
 import json
 import warnings
+from collections import deque
 from copy import deepcopy
 from datetime import datetime
 from os.path import splitext
@@ -21,19 +22,23 @@ from deirokay.fs import FileSystem, LocalFileSystem, fs_factory
 from deirokay.history_template import get_series
 from deirokay.statements.loader import statement_factory
 
-from ._typing import (DeirokayDataSource, DeirokayValidationDocument,
-                      DeirokayValidationResultDocument)
+from ._typing import (
+    DeirokayDataSource,
+    DeirokayValidationDocument,
+    DeirokayValidationResultDocument,
+)
 
 
 def validate(
-    df: DeirokayDataSource, *,
+    df: DeirokayDataSource,
+    *,
     against: Union[str, DeirokayValidationDocument],
     save_to: Optional[str] = None,
     save_format: str = None,
     current_date: Optional[datetime] = None,
     raise_exception: bool = True,
     exception_level: SeverityLevel = SeverityLevel.CRITICAL,
-    template: Optional[dict] = None
+    template: Optional[dict] = None,
 ) -> DeirokayValidationResultDocument:
     """Validate a Deirokay DataFrame against a well-defined Validation
     Document.
@@ -102,46 +107,52 @@ def validate(
     if save_to:
         save_to_fs = fs_factory(save_to)
         if isinstance(save_to_fs, LocalFileSystem) and not save_to_fs.isdir():
-            raise ValueError('The `save_to` parameter must be an existing'
-                             ' directory or an S3 path.')
+            raise ValueError(
+                "The `save_to` parameter must be an existing"
+                " directory or an S3 path."
+            )
 
     if isinstance(against, str):
-        save_format = save_format or splitext(against)[1].lstrip('.')
+        save_format = save_format or splitext(against)[1].lstrip(".")
         validation_document = fs_factory(against).read_dict()
     else:
-        save_format = save_format or 'yaml'
+        save_format = save_format or "yaml"
         validation_document = deepcopy(against)
-    assert save_format.lower() in ('json', 'yaml', 'yml'), (
-        f'Not a valid format {save_format}'
-    )
+    assert save_format.lower() in (
+        "json",
+        "yaml",
+        "yml",
+    ), f"Not a valid format {save_format}"
 
     # Render templates
     template = dict(
-        series=lambda x, y: get_series(x, y, read_from=save_to_fs),
-        **(template or {})
+        series=lambda x, y: get_series(x, y, read_from=save_to_fs), **(template or {})
     )
-    render_dict(NativeEnvironment(loader=BaseLoader(), undefined=strict),
-                dict_=validation_document,
-                template=template)
+    render_dict(
+        NativeEnvironment(loader=BaseLoader(), undefined=strict),
+        dict_=validation_document,
+        template=template,
+    )
 
-    for item in validation_document['items']:
-        scope = item['scope']
+    for item in validation_document["items"]:
+        scope = item["scope"]
         scope = [scope] if not isinstance(scope, list) else scope
         check_columns_in_df_columns(scope, df.columns)
 
         df_scope = df[scope]
 
-        for stmt in item.get('statements'):
+        for stmt in item.get("statements"):
             report = statement_factory(stmt, backend)(df_scope)
-            if report['result'] is True:
-                report['result'] = 'pass'
+            if report["result"] is True:
+                report["result"] = "pass"
             else:
-                report['result'] = 'fail'
-            stmt['report'] = report
+                report["result"] = "fail"
+            stmt["report"] = report
 
     if save_to:
-        _save_validation_document(validation_document, save_to_fs,
-                                  save_format, current_date)
+        _save_validation_document(
+            validation_document, save_to_fs, save_format, current_date
+        )
 
     if raise_exception:
         raise_validation(validation_document, exception_level)
@@ -149,8 +160,9 @@ def validate(
     return validation_document
 
 
-def raise_validation(validation_result_document: dict,
-                     exception_level: SeverityLevel) -> None:
+def raise_validation(
+    validation_result_document: dict, exception_level: SeverityLevel
+) -> None:
     """Check for a validation result `dict` and raise a
     `ValidationError` exception whenever a statement whose severity
     level is greater or equal to `exception_level` fails.
@@ -169,46 +181,89 @@ def raise_validation(validation_result_document: dict,
         greater or equal to `exception_level`.
     """
     highest_level = None
-    for item in validation_result_document['items']:
-        scope = item['scope']
-        for stmt in item['statements']:
-            severity = stmt.get('severity', SeverityLevel.CRITICAL)
-            result = stmt['report']['result']
+    for item in validation_result_document["items"]:
+        scope = item["scope"]
+        for stmt in item["statements"]:
+            severity = stmt.get("severity", SeverityLevel.CRITICAL)
+            result = stmt["report"]["result"]
 
-            if result == 'fail':
+            if result == "fail":
                 if severity >= exception_level:
                     if highest_level is None or severity > highest_level:
                         highest_level = severity
-                print(f'Statement failed for scope {scope}:')
-                print(json.dumps(stmt, indent=4))
+                print(f"Statement failed for scope {scope}:")
+                _sane_json_print(stmt)
 
     if highest_level is not None:
-        print(f'Severity level threshold was {exception_level}.')
+        print(f"Severity level threshold was {exception_level}.")
         raise ValidationError(
-            highest_level,
-            f'Validation failed with severity level {highest_level}.'
+            highest_level, f"Validation failed with severity level {highest_level}."
         )
 
 
-def _save_validation_document(document: dict,
-                              save_to: FileSystem,
-                              save_format: Optional[str] = None,
-                              current_date: Optional[datetime] = None) -> None:
+_TRUNCATE_OUTPUT_LIMIT = 64
+
+
+def _sane_json_print(data: dict) -> None:
+    """Print a dictionary to the stdout truncating the size of inner lists.
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary object to be printed.
+    """
+    data = deepcopy(data)
+
+    was_truncated = False
+    nodes_to_visit = deque([(data, None, None)])
+
+    def _process_iteratively():
+        nonlocal was_truncated
+
+        while nodes_to_visit:
+            node, parent, index_key = nodes_to_visit.popleft()
+
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    if isinstance(value, (list, dict)):
+                        nodes_to_visit.append((value, node, key))
+            elif isinstance(node, list):
+                if len(node) > _TRUNCATE_OUTPUT_LIMIT:
+                    parent[index_key] = node[: _TRUNCATE_OUTPUT_LIMIT - 1] + ["..."]
+                    was_truncated = True
+                for index, value in enumerate(node):
+                    if isinstance(value, (list, dict)):
+                        nodes_to_visit.append((value, node, index))
+
+    _process_iteratively()
+    print(json.dumps(data, indent=4))
+
+    if was_truncated:
+        print("OBS: The output above was truncated to limit its size.")
+
+
+def _save_validation_document(
+    document: dict,
+    save_to: FileSystem,
+    save_format: Optional[str] = None,
+    current_date: Optional[datetime] = None,
+) -> None:
     if current_date is None:
         warnings.warn(
-            'Document is being saved using the current date returned by the'
-            ' `datetime.utcnow()` method. Instead, prefer to explicitly pass a'
-            ' `current_date` argument to `validate`.', Warning
+            "Document is being saved using the current date returned by the"
+            " `datetime.utcnow()` method. Instead, prefer to explicitly pass a"
+            " `current_date` argument to `validate`.",
+            Warning,
         )
         current_date = datetime.utcnow()
-    current_date = current_date.strftime('%Y%m%dT%H%M%S')  # type: ignore
+    current_date = current_date.strftime("%Y%m%dT%H%M%S")  # type: ignore
 
-    document_name = document['name']
+    document_name = document["name"]
     folder_path = save_to / document_name
     if isinstance(folder_path, LocalFileSystem):
         folder_path.mkdir(parents=True, exist_ok=True)
 
-    file_path = folder_path / f'{current_date}.{save_format}'
+    file_path = folder_path / f"{current_date}.{save_format}"
 
     print(f'Saving validation document to "{file_path!s}".')
     file_path.write_dict(document, indent=2)

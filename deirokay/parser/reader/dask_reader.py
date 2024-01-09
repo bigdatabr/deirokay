@@ -4,10 +4,12 @@ from typing import Any, Dict, List, Union
 import dask.dataframe  # lazy module
 
 
-def read(data: Union[str, 'dask.dataframe.DataFrame'],
-         columns: List[str],
-         sql: bool = False,
-         **kwargs) -> 'dask.dataframe.DataFrame':
+def read(
+    data: Union[str, "dask.dataframe.DataFrame"],
+    columns: List[str],
+    sql: bool = False,
+    **kwargs,
+) -> "dask.dataframe.DataFrame":
     """Infer the file type by its extension and call the proper
     `dask.dataframe` method to parse it.
 
@@ -34,21 +36,23 @@ def read(data: Union[str, 'dask.dataframe.DataFrame'],
         return data[columns].copy()
 
     if not isinstance(data, str):
-        raise TypeError(f'Unexpected type for `data` ({data.__class__})')
+        raise TypeError(f"Unexpected type for `data` ({data.__class__})")
 
     if sql:
         read_ = dask.dataframe.read_sql
 
     else:
-        file_extension = splitext(data)[1].lstrip('.').lower()
+        file_extension = splitext(data)[1].lstrip(".").lower()
 
-        if file_extension == 'csv':
-            default_kwargs.update({
-                'dtype': str,
-                'skipinitialspace': True,
-            })
+        if file_extension == "csv":
+            default_kwargs.update(
+                {
+                    "dtype": str,
+                    "skipinitialspace": True,
+                }
+            )
 
-        read_ = getattr(dask.dataframe, f'read_{file_extension}', None)
+        read_ = getattr(dask.dataframe, f"read_{file_extension}", None)
         if read_ is None:
             raise TypeError(f'File type "{file_extension}" not supported')
 
@@ -58,13 +62,13 @@ def read(data: Union[str, 'dask.dataframe.DataFrame'],
     try:
         read_data = read_(data, columns=columns, **default_kwargs)
     except TypeError as e:
-        if 'columns' not in str(e):
+        if "columns" not in str(e):
             raise e
     # try `usecols` argument
     try:
         read_data = read_(data, usecols=columns, **default_kwargs)
     except TypeError as e:
-        if 'usecols' not in str(e):
+        if "usecols" not in str(e):
             raise e
     # give up, read everything, filter columns later
     read_data = read_(data, **default_kwargs)[columns]

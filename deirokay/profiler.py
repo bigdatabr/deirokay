@@ -11,15 +11,19 @@ from deirokay.enums import Backend
 from deirokay.exceptions import UnsupportedBackend
 
 from .__version__ import __version__
-from ._typing import (DeirokayDataSource, DeirokayStatement,
-                      DeirokayValidationDocument, DeirokayValidationItem)
+from ._typing import (
+    DeirokayDataSource,
+    DeirokayStatement,
+    DeirokayValidationDocument,
+    DeirokayValidationItem,
+)
 from .fs import fs_factory
 from .statements import STATEMENTS_MAP
 
 
-def _generate_statements(df_scope: DeirokayDataSource,
-                         backend: Backend) -> List[DeirokayStatement]:
-
+def _generate_statements(
+    df_scope: DeirokayDataSource, backend: Backend
+) -> List[DeirokayStatement]:
     statements: List[DeirokayStatement] = []
 
     for stmt_cls in STATEMENTS_MAP.values():
@@ -34,17 +38,18 @@ def _generate_statements(df_scope: DeirokayDataSource,
         except Exception as e:
             columns = list(df_scope.columns)
             warnings.warn(
-                f'Unexpected error when profiling scope {columns}'
-                f' using {stmt_cls.__name__} statement: {e}\n\n'
-                'Please, consider reporting this issue to the '
-                'developers.',
-                RuntimeWarning
+                f"Unexpected error when profiling scope {columns}"
+                f" using {stmt_cls.__name__} statement: {e}\n\n"
+                "Please, consider reporting this issue to the "
+                "developers.",
+                RuntimeWarning,
             )
     return statements
 
 
-def _generate_items(df: DeirokayDataSource,
-                    backend: Backend) -> List[DeirokayValidationItem]:
+def _generate_items(
+    df: DeirokayDataSource, backend: Backend
+) -> List[DeirokayValidationItem]:
     items: List[DeirokayValidationItem] = []
 
     df_columns = list(df.columns)
@@ -53,19 +58,19 @@ def _generate_items(df: DeirokayDataSource,
     for scope in scope__table_stmt:
         df_scope = df[scope] if isinstance(scope, list) else df[[scope]]
         item = {
-            'scope': scope,
-            'statements': _generate_statements(df_scope, backend)
+            "scope": scope,
+            "statements": _generate_statements(df_scope, backend),
         }  # type: DeirokayValidationItem
 
-        if item['statements']:
+        if item["statements"]:
             items.append(item)
 
     return items
 
 
-def profile(df: DeirokayDataSource,
-            document_name: str,
-            save_to: Optional[str] = None) -> DeirokayValidationDocument:
+def profile(
+    df: DeirokayDataSource, document_name: str, save_to: Optional[str] = None
+) -> DeirokayValidationDocument:
     """Generate a validation document from a given template DataFrame
     using profiling methods for builtin Deirokay statements.
     By default, statement objects are generated for the entire template
@@ -96,9 +101,9 @@ def profile(df: DeirokayDataSource,
     """
     backend = detect_backend(df)
     validation_document = {
-        'name': document_name,
-        'description': f'Auto generated using Deirokay {__version__}',
-        'items': _generate_items(df, backend)
+        "name": document_name,
+        "description": f"Auto generated using Deirokay {__version__}",
+        "items": _generate_items(df, backend),
     }  # type: DeirokayValidationDocument
 
     if save_to:
