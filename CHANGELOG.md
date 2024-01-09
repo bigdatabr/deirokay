@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0](https://github.com/bigdatabr/deirokay/compare/1.0.1...1.1.0) (2024-01-09)
+
+
+### Features
+
+* StatisticInInterval statement ([#32](https://github.com/bigdatabr/deirokay/issues/32)) ([86b018d](https://github.com/bigdatabr/deirokay/commit/86b018d482effb4aa5a068ecfffbbeddaad4feab))
+
+
+### Bug Fixes
+
+* Limit output size to stdout ([a41f31f](https://github.com/bigdatabr/deirokay/commit/a41f31fdc260988da3647e98f24dafb8cf34788a))
+
 ### [1.0.1](https://github.com/bigdatabr/deirokay/compare/1.0.0...1.0.1) (2022-10-21)
 
 
