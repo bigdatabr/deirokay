@@ -35,3 +35,12 @@ versions:
 .. code-block:: bash
 
     pip install Deirokay[dev]
+
+To check if Deirokay is properly installed and to know its version,
+enter the following command in the Python prompt:
+
+.. code-block:: python
+
+    >>> import deirokay
+    >>> deirokay.__version__
+    'X.Y.Z'

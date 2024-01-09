@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.0.1](https://github.com/bigdatabr/deirokay/compare/1.0.0...1.0.1) (2022-10-21)
+
+
+### Bug Fixes
+
+* Add libpq-dev as required package ([0d508f8](https://github.com/bigdatabr/deirokay/commit/0d508f85d43f8fc247a89f120bdd87e812e4cfd2))
+
 ## [1.0.0](https://github.com/bigdatabr/deirokay/compare/0.8.0...1.0.0) (2022-07-21)
 
 
