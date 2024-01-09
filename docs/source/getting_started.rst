@@ -215,7 +215,7 @@ Finally, to test your dataset against the validation document:
 
 .. code-block:: python
 
-    from deirokay import data_reader
+    from deirokay import data_reader, validate
     from deirokay.backend import Backend
 
     df = data_reader('example.csv',
