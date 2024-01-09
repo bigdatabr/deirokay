@@ -2,7 +2,6 @@ import os
 import sys
 from datetime import datetime
 
-
 sys.path.insert(0, os.path.abspath("../../"))
 
 from deirokay.__version__ import __version__  # noqa: E402

@@ -1,4 +1,5 @@
 import json
+
 import pytest
 
 from deirokay import data_reader, validate
@@ -215,8 +216,8 @@ def test_data_validation_with_levels(backend):
     ],
 )
 def test_sane_json_print(monkeypatch, capsys, data, expected):
-    from deirokay.validator import _sane_json_print
     import deirokay.validator
+    from deirokay.validator import _sane_json_print
 
     monkeypatch.setattr(deirokay.validator, "_TRUNCATE_OUTPUT_LIMIT", 2)
 
