@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.1.1](https://github.com/bigdatabr/deirokay/compare/1.1.0...1.1.1) (2024-03-14)
+
+
+### Bug Fixes
+
+* **statement:** "Contain" report ([8fd0987](https://github.com/bigdatabr/deirokay/commit/8fd098788d8c8cd577ca8b94df10ea39f1e0e284))
+
 ## [1.1.0](https://github.com/bigdatabr/deirokay/compare/1.0.1...1.1.0) (2024-01-09)
 
 
