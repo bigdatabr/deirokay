@@ -351,6 +351,7 @@ class Contain(BaseStatement):
             treater.serialize(column) for treater, column in zip(self.treaters, columns)
         )
         rows = zip(*(s["values"] for s in serialized))
+        rows = (list(row) for row in rows)
         values_report = sorted(
             [
                 {
