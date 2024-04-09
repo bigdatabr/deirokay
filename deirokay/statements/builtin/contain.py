@@ -430,7 +430,7 @@ class Contain(BaseStatement):
 
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
-        return report["values"][0]["result"] == True
+        return report["values"][0]["result"] is True
 
     @profile(Backend.PANDAS)
     @staticmethod
