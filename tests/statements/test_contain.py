@@ -258,6 +258,7 @@ def test_null_values(scope, rule, result, values, backend):
         ][0]["report"]["result"]
     ) == result
 
+
 @pytest.mark.parametrize("backend", list(Backend))
 @pytest.mark.parametrize(
     "scope, rule, result, allowed_perc_error, values",
@@ -298,6 +299,7 @@ def test_allowed_perc_error(scope, rule, result, allowed_perc_error, values, bac
             "statements"
         ][0]["report"]["result"]
     ) == result
+
 
 @pytest.mark.parametrize("backend", list(Backend))
 def test_allowed_perc_error_and_min(backend):

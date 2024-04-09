@@ -321,13 +321,12 @@ class Contain(BaseStatement):
         analysis["min"].fillna(0, inplace=True)
         analysis["max"].fillna(numpy.inf, inplace=True)
         analysis["in_values"].fillna(False, inplace=True)
-        analysis["occurrences_result"] = analysis["count"].ge(analysis["min"]) & analysis[
-            "count"
-        ].le(analysis["max"])
+        analysis["occurrences_result"] = analysis["count"].ge(
+            analysis["min"]
+        ) & analysis["count"].le(analysis["max"])
         return analysis
 
     def _generate_report(self, analysis):
-        
         values_report = self._create_occurrences_result(analysis)
         values_report += self._create_in_values_result(analysis)
         values_report = sorted(values_report, key=lambda x: x["result"])
@@ -375,26 +374,29 @@ class Contain(BaseStatement):
         return values_report
 
     def _create_in_values_result(self, analysis):
-
         if self.rule == "only":
             values_in_df = analysis[(analysis["count"] > 0)]
             perc_in_values = float(values_in_df["in_values"].mean() * 100)
-            return [{
-                "rule": self.rule,
-                "perc_in_values": perc_in_values,
-                "allowed_perc_error": self.allowed_perc_error,
-                "result": perc_in_values >= 100 - self.allowed_perc_error
-            }]
+            return [
+                {
+                    "rule": self.rule,
+                    "perc_in_values": perc_in_values,
+                    "allowed_perc_error": self.allowed_perc_error,
+                    "result": perc_in_values >= 100 - self.allowed_perc_error,
+                }
+            ]
         elif self.rule == "all":
             in_values = analysis[(analysis["in_values"]) & (analysis["max"] > 0)]
             if len(in_values):
                 perc_in_df = float((in_values["count"] > 0).mean()) * 100
-                return [{
-                    "rule": self.rule,
-                    "perc_in_df": perc_in_df,
-                    "allowed_perc_error": self.allowed_perc_error,
-                    "result": perc_in_df >= 100 - self.allowed_perc_error
-                }]
+                return [
+                    {
+                        "rule": self.rule,
+                        "perc_in_df": perc_in_df,
+                        "allowed_perc_error": self.allowed_perc_error,
+                        "result": perc_in_df >= 100 - self.allowed_perc_error,
+                    }
+                ]
             else:
                 return []
         else:
