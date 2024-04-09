@@ -48,6 +48,11 @@ class Contain(BaseStatement):
       rules, 0 for `only`.
     * `max_occurrences`: a global maximum number of occurrences for
       each of the `values`. Default: `inf` (unbounded).
+    * `allowed_perc_error`: The allowed percentage error when using the rule
+      `only` and `all`. For example, if you define an `only` rule with the
+      values `["a", "b", "c"], but value "d" was also in the df, with a 25%
+      error allowed, the validation will pass, that is, at most 25% of the
+      unique values on the df weren't on the `values` list.
     * `occurrences_per_value`: a list of dictionaries overriding the
       global boundaries. Each dictionary may have the following keys:
 
@@ -87,7 +92,7 @@ class Contain(BaseStatement):
     are sure that they will be always present.
 
     The `min_occurrences` and `max_occurrences` parameters are applied
-    applied to all the `values` declared, and only these. It means you
+    to all the `values` declared, and only these. It means you
     cannot (yet) specify boundaries for values you did't declare.
 
     Null values are considered valid for the purpose of the statement
@@ -124,8 +129,8 @@ class Contain(BaseStatement):
         }
 
     * You have a table of servers containg a column `role` which may
-      contain the values `master` and `slave`.
-      You want to be sure that there is always one and only one master
+      contain the values `controller` and `worker`.
+      You want to be sure that there is always one and only one controller
       server in the data.
 
     .. code-block:: json
@@ -136,7 +141,7 @@ class Contain(BaseStatement):
                 {
                     "type": "contain",
                     "rule": "all",
-                    "values": ["master"],
+                    "values": ["controller"],
                     "parser": {"dtype": "string"},
                     "min_occurrences": 1,
                     "max_occurrences": 1
@@ -145,7 +150,7 @@ class Contain(BaseStatement):
         }
 
     You may also extend the previous example by making some adjustments
-    to ensure that there is no other value than `master` and `role`
+    to ensure that there is no other value than `controller` and `worker`
     in the data. Make notice that although the `rule` below is changed
     to `only`, the statement above is still contemplated by the
     `occurrences_per_value` parameter in the following validation item:
@@ -158,11 +163,11 @@ class Contain(BaseStatement):
                 {
                     "type": "contain",
                     "rule": "only",
-                    "values": ["master", "slave"],
+                    "values": ["controller", "worker"],
                     "parser": {"dtype": "string"},
                     "occurrences_per_value": [
                         {
-                            "values": ["master"],
+                            "values": ["controller"],
                             "min_occurrences": 1,
                             "max_occurrences": 1
                         }
@@ -237,17 +242,12 @@ class Contain(BaseStatement):
         "parsers",
         "min_occurrences",
         "max_occurrences",
+        "allowed_perc_error",
         "occurrences_per_value",
         "report_limit",
     ]
     supported_backends: List[Backend] = [Backend.PANDAS, Backend.DASK]
 
-    DEFAULT_MIN_OCCURRENCES = {"all": (1, 0), "only": (0, 0), "all_and_only": (1, 0)}
-    DEFAULT_MAX_OCCURRENCES = {
-        "all": (numpy.inf, numpy.inf),
-        "only": (numpy.inf, 0),
-        "all_and_only": (numpy.inf, 0),
-    }
     DEFAULT_REPORT_LIMIT = 32
 
     def __init__(self, *args, **kwargs) -> None:
@@ -266,28 +266,11 @@ class Contain(BaseStatement):
             for parser in self.parsers
         ]
 
-        self.min_occurrences = self.options.get("min_occurrences", None)
-        self.max_occurrences = self.options.get("max_occurrences", None)
+        self.min_occurrences = self.options.get("min_occurrences", 0)
+        self.max_occurrences = self.options.get("max_occurrences", numpy.inf)
         self.occurrences_per_value = self.options.get("occurrences_per_value", [])
+        self.allowed_perc_error = self.options.get("allowed_perc_error", 0)
         self.report_limit = self.options.get("report_limit", NODEFAULT)
-
-        self._set_default_minmax_occurrences()
-
-    def _set_default_minmax_occurrences(self) -> None:
-        final_min = noneor(
-            self.min_occurrences, Contain.DEFAULT_MIN_OCCURRENCES[self.rule][0]
-        )
-        final_max = noneor(
-            self.max_occurrences, Contain.DEFAULT_MAX_OCCURRENCES[self.rule][0]
-        )
-        if self.max_occurrences is not None and self.max_occurrences < final_min:
-            final_min = self.max_occurrences
-        if self.min_occurrences is not None and self.min_occurrences > final_max:
-            final_max = self.min_occurrences
-        assert final_min >= 0
-        assert final_max >= 0
-        self.min_occurrences = final_min
-        self.max_occurrences = final_max
 
     def _generate_analysis(self, value_counts):
         if self.multicolumn:
@@ -326,6 +309,7 @@ class Contain(BaseStatement):
         occurrence_limits.drop_duplicates(
             subset=value_counts.index.names, keep="first", inplace=True
         )
+        occurrence_limits["in_values"] = True
         occurrence_limits.set_index(value_counts.index.names, inplace=True)
 
         analysis = (
@@ -334,35 +318,19 @@ class Contain(BaseStatement):
             .merge(occurrence_limits.reset_index(), how="outer")
         )
         analysis["count"].fillna(0, inplace=True)
-        analysis["min"].fillna(
-            Contain.DEFAULT_MIN_OCCURRENCES[self.rule][1], inplace=True
-        )
-        analysis["max"].fillna(
-            Contain.DEFAULT_MAX_OCCURRENCES[self.rule][1], inplace=True
-        )
-        analysis["result"] = analysis["count"].ge(analysis["min"]) & analysis[
+        analysis["min"].fillna(0, inplace=True)
+        analysis["max"].fillna(numpy.inf, inplace=True)
+        analysis["in_values"].fillna(False, inplace=True)
+        analysis["occurrences_result"] = analysis["count"].ge(analysis["min"]) & analysis[
             "count"
         ].le(analysis["max"])
         return analysis
 
     def _generate_report(self, analysis):
-        columns = [analysis[col] for col in analysis.columns[:-4]]
-        serialized = (
-            treater.serialize(column) for treater, column in zip(self.treaters, columns)
-        )
-        rows = zip(*(s["values"] for s in serialized))
-        rows = (list(row) for row in rows)
-        values_report = sorted(
-            [
-                {
-                    "value": value_row,
-                    "count": analysis_row.count,
-                    "result": analysis_row.result,
-                }
-                for value_row, analysis_row in zip(rows, analysis.itertuples())
-            ],
-            key=lambda x: x["result"],
-        )
+        
+        values_report = self._create_occurrences_result(analysis)
+        values_report += self._create_in_values_result(analysis)
+        values_report = sorted(values_report, key=lambda x: x["result"])
 
         if (
             self.report_limit is NODEFAULT
@@ -388,6 +356,49 @@ class Contain(BaseStatement):
                 else values_report[: self.report_limit]
             )
         }
+
+    def _create_occurrences_result(self, analysis):
+        columns = [analysis[col] for col in analysis.columns[:-4]]
+        serialized = (
+            treater.serialize(column) for treater, column in zip(self.treaters, columns)
+        )
+        rows = zip(*(s["values"] for s in serialized))
+        rows = (list(row) for row in rows)
+        values_report = [
+            {
+                "value": value_row,
+                "count": analysis_row.count,
+                "result": analysis_row.occurrences_result,
+            }
+            for value_row, analysis_row in zip(rows, analysis.itertuples())
+        ]
+        return values_report
+
+    def _create_in_values_result(self, analysis):
+
+        if self.rule == "only":
+            values_in_df = analysis[(analysis["count"] > 0)]
+            perc_in_values = float(values_in_df["in_values"].mean() * 100)
+            return [{
+                "rule": self.rule,
+                "perc_in_values": perc_in_values,
+                "allowed_perc_error": self.allowed_perc_error,
+                "result": perc_in_values >= 100 - self.allowed_perc_error
+            }]
+        elif self.rule == "all":
+            in_values = analysis[(analysis["in_values"]) & (analysis["max"] > 0)]
+            if len(in_values):
+                perc_in_df = float((in_values["count"] > 0).mean()) * 100
+                return [{
+                    "rule": self.rule,
+                    "perc_in_df": perc_in_df,
+                    "allowed_perc_error": self.allowed_perc_error,
+                    "result": perc_in_df >= 100 - self.allowed_perc_error
+                }]
+            else:
+                return []
+        else:
+            return []
 
     @report(Backend.PANDAS)
     def _report_pandas(self, df: "pandas.DataFrame") -> dict:
@@ -417,7 +428,7 @@ class Contain(BaseStatement):
 
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
-        return all(item["result"] for item in report["values"])
+        return report["values"][0]["result"] == True
 
     @profile(Backend.PANDAS)
     @staticmethod

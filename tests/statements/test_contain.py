@@ -257,3 +257,75 @@ def test_null_values(scope, rule, result, values, backend):
             "statements"
         ][0]["report"]["result"]
     ) == result
+
+@pytest.mark.parametrize("backend", list(Backend))
+@pytest.mark.parametrize(
+    "scope, rule, result, allowed_perc_error, values",
+    [
+        ("test_rule_1", "only", "pass", 20, ["RJ", "ES", "SC", "AC", None]),
+        ("test_rule_1", "only", "fail", 10, ["RJ", "ES", "SC", "AC", None]),
+        ("test_rule_2", "only", "fail", 30, ["RJ", "ES"]),
+        ("test_rule_2", "only", "pass", 34, ["RJ", "ES"]),
+        ("test_rule_2", "all", "fail", 20, ["RJ", "ES", "SC", "MG"]),
+        ("test_rule_2", "all", "pass", 25, ["RJ", "ES", "SC", "MG"]),
+    ],
+)
+def test_allowed_perc_error(scope, rule, result, allowed_perc_error, values, backend):
+    df = data_reader(
+        "tests/statements/test_contain.csv",
+        options="tests/statements/test_contain_options.yaml",
+        backend=backend,
+    )
+    assertions = {
+        "name": "test_rule_1",
+        "items": [
+            {
+                "scope": scope,
+                "statements": [
+                    {
+                        "type": "contain",
+                        "rule": rule,
+                        "values": values,
+                        "parser": {"dtype": "string"},
+                        "allowed_perc_error": allowed_perc_error,
+                    }
+                ],
+            }
+        ],
+    }
+    assert (
+        validate(df, against=assertions, raise_exception=False)["items"][0][
+            "statements"
+        ][0]["report"]["result"]
+    ) == result
+
+@pytest.mark.parametrize("backend", list(Backend))
+def test_allowed_perc_error_and_min(backend):
+    df = data_reader(
+        "tests/statements/test_contain.csv",
+        options="tests/statements/test_contain_options.yaml",
+        backend=backend,
+    )
+    assertions = {
+        "name": "test_rule_1",
+        "items": [
+            {
+                "scope": "test_maxmin",
+                "statements": [
+                    {
+                        "type": "contain",
+                        "rule": "all",
+                        "values": ["RJ", "SP", "ES", "MG"],
+                        "parser": {"dtype": "string"},
+                        "min_occurrences": 1,
+                        "allowed_perc_error": 100,
+                    }
+                ],
+            }
+        ],
+    }
+    assert (
+        validate(df, against=assertions, raise_exception=False)["items"][0][
+            "statements"
+        ][0]["report"]["result"]
+    ) == "fail"
