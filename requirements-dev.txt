@@ -10,12 +10,12 @@ dask[dataframe]==2022.1.1
 # Libraries for testing
 apache-airflow==2.0.0
 boto3
-moto
-pyarrow
+moto>=4.0.0,<5
+pyarrow>=10.0.0,<15
 pytest
 pytest-cov
 pytest-postgresql  # requires postgresql
 psycopg[binary]  # for `pytest-postgresql`
 psycopg2[binary]  # for `pandas.read_sql` from connection string
 s3fs
-SQLAlchemy
+SQLAlchemy==1.4.52
