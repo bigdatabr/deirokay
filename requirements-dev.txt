@@ -11,7 +11,7 @@ dask[dataframe]==2022.1.1
 apache-airflow==2.0.0
 boto3
 moto>=4.0.0,<5
-pyarrow
+pyarrow==14.0.2
 pytest
 pytest-cov
 pytest-postgresql  # requires postgresql
