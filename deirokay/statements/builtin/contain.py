@@ -354,7 +354,7 @@ class Contain(BaseStatement):
                 if self.report_limit is None
                 else values_report[: self.report_limit]
             ),
-            "rule_report": rule_report
+            "rule_report": rule_report,
         }
 
     def _create_values_report(self, analysis):
@@ -387,32 +387,32 @@ class Contain(BaseStatement):
         if self.rule == "only":
             result = perc_in_values >= 100 - self.allowed_perc_error
             return {
-                    "rule": self.rule,
-                    "perc_in_values": perc_in_values,
-                    "allowed_perc_error": self.allowed_perc_error,
-                    "result": result,
-                }
+                "rule": self.rule,
+                "perc_in_values": perc_in_values,
+                "allowed_perc_error": self.allowed_perc_error,
+                "result": result,
+            }
         elif self.rule == "all":
             in_values = analysis[(analysis["in_values"]) & (analysis["max"] > 0)]
             if len(in_values):
                 result = perc_values_in_df >= 100 - self.allowed_perc_error
                 return {
-                        "rule": self.rule,
-                        "perc_values_in_df": perc_values_in_df,
-                        "allowed_perc_error": self.allowed_perc_error,
-                        "result": result,
-                    }
+                    "rule": self.rule,
+                    "perc_values_in_df": perc_values_in_df,
+                    "allowed_perc_error": self.allowed_perc_error,
+                    "result": result,
+                }
             else:
                 return {
                     "rule": self.rule,
-                    "result": True  # All the values have check of not contain 
+                    "result": True,  # All the values have check of not contain
                 }
         elif self.rule == "all_and_only":
             return {
                 "rule": self.rule,
                 "perc_in_values": perc_in_values,
                 "perc_values_in_df": perc_values_in_df,
-                "result": perc_in_values == 100 and perc_values_in_df == 100
+                "result": perc_in_values == 100 and perc_values_in_df == 100,
             }
 
     @report(Backend.PANDAS)
