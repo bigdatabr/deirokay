@@ -327,9 +327,9 @@ class Contain(BaseStatement):
         return analysis
 
     def _generate_report(self, analysis):
-        values_report = self._create_occurrences_result(analysis)
-        values_report += self._create_in_values_result(analysis)
+        values_report = self._create_values_report(analysis)
         values_report = sorted(values_report, key=lambda x: x["result"])
+        rule_report = self._create_rule_report(analysis)
 
         if (
             self.report_limit is NODEFAULT
@@ -353,10 +353,11 @@ class Contain(BaseStatement):
                 else values_report
                 if self.report_limit is None
                 else values_report[: self.report_limit]
-            )
+            ),
+            "rule_report": rule_report
         }
 
-    def _create_occurrences_result(self, analysis):
+    def _create_values_report(self, analysis):
         columns = [analysis[col] for col in analysis.columns[:-4]]
         serialized = (
             treater.serialize(column) for treater, column in zip(self.treaters, columns)
@@ -373,34 +374,46 @@ class Contain(BaseStatement):
         ]
         return values_report
 
-    def _create_in_values_result(self, analysis):
+    def _create_rule_report(self, analysis):
+        values_in_df = analysis[(analysis["count"] > 0)]
+        perc_in_values = float(values_in_df["in_values"].mean() * 100)
+
+        in_values = analysis[(analysis["in_values"]) & (analysis["max"] > 0)]
+        if len(in_values):
+            perc_values_in_df = float((in_values["count"] > 0).mean()) * 100
+        else:
+            perc_values_in_df = 0
+
         if self.rule == "only":
-            values_in_df = analysis[(analysis["count"] > 0)]
-            perc_in_values = float(values_in_df["in_values"].mean() * 100)
-            return [
-                {
+            result = perc_in_values >= 100 - self.allowed_perc_error
+            return {
                     "rule": self.rule,
                     "perc_in_values": perc_in_values,
                     "allowed_perc_error": self.allowed_perc_error,
-                    "result": perc_in_values >= 100 - self.allowed_perc_error,
+                    "result": result,
                 }
-            ]
         elif self.rule == "all":
             in_values = analysis[(analysis["in_values"]) & (analysis["max"] > 0)]
             if len(in_values):
-                perc_in_df = float((in_values["count"] > 0).mean()) * 100
-                return [
-                    {
+                result = perc_values_in_df >= 100 - self.allowed_perc_error
+                return {
                         "rule": self.rule,
-                        "perc_in_df": perc_in_df,
+                        "perc_values_in_df": perc_values_in_df,
                         "allowed_perc_error": self.allowed_perc_error,
-                        "result": perc_in_df >= 100 - self.allowed_perc_error,
+                        "result": result,
                     }
-                ]
             else:
-                return []
-        else:
-            return []
+                return {
+                    "rule": self.rule,
+                    "result": True  # All the values have check of not contain 
+                }
+        elif self.rule == "all_and_only":
+            return {
+                "rule": self.rule,
+                "perc_in_values": perc_in_values,
+                "perc_values_in_df": perc_values_in_df,
+                "result": perc_in_values == 100 and perc_values_in_df == 100
+            }
 
     @report(Backend.PANDAS)
     def _report_pandas(self, df: "pandas.DataFrame") -> dict:
@@ -430,7 +443,9 @@ class Contain(BaseStatement):
 
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
-        return report["values"][0]["result"] is True
+        values_result = all(item["result"] for item in report["values"])
+        rule_result = report["rule_report"]["result"] is True
+        return values_result and rule_result
 
     @profile(Backend.PANDAS)
     @staticmethod
