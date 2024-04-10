@@ -444,7 +444,7 @@ class Contain(BaseStatement):
     # docstr-coverage:inherited
     def result(self, report: dict) -> bool:
         values_result = all(item["result"] for item in report["values"])
-        rule_result = report["rule_report"]["result"] is True
+        rule_result = report["rule_report"]["result"]
         return values_result and rule_result
 
     @profile(Backend.PANDAS)
