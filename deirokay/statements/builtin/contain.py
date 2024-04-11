@@ -255,6 +255,11 @@ class Contain(BaseStatement):
 
         self.rule = self.options["rule"]
         assert self.rule in ("all", "only", "all_and_only")
+        self.tolerance_perc = self.options.get("tolerance_%", 0)
+        if self.tolerance_perc > 0 and self.rule == "all_and_only":
+            raise ValueError(
+                "It's not possible to set a tolerance_perc with the rule 'all_and_only'"
+            )
         self.multicolumn = self.options.get("multicolumn", False)
         _parsers = self.options.get("parser") or self.options["parsers"]
         if self.multicolumn:
@@ -269,7 +274,6 @@ class Contain(BaseStatement):
         self.min_occurrences = self.options.get("min_occurrences", 0)
         self.max_occurrences = self.options.get("max_occurrences", numpy.inf)
         self.occurrences_per_value = self.options.get("occurrences_per_value", [])
-        self.tolerance_perc = self.options.get("tolerance_%", 0)
         self.report_limit = self.options.get("report_limit", NODEFAULT)
 
     def _generate_analysis(self, value_counts):

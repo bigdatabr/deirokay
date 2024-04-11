@@ -331,3 +331,31 @@ def test_allowed_perc_error_and_min(backend):
             "statements"
         ][0]["report"]["result"]
     ) == "fail"
+
+
+@pytest.mark.parametrize("backend", list(Backend))
+def test_value_error_for_tolerance(backend):
+    df = data_reader(
+        "tests/statements/test_contain.csv",
+        options="tests/statements/test_contain_options.yaml",
+        backend=backend,
+    )
+    assertions = {
+        "name": "test_rule_1",
+        "items": [
+            {
+                "scope": "test_maxmin",
+                "statements": [
+                    {
+                        "type": "contain",
+                        "rule": "all_and_only",
+                        "values": ["RJ", "SP", "ES", "MG"],
+                        "parser": {"dtype": "string"},
+                        "tolerance_%": 1,
+                    }
+                ],
+            }
+        ],
+    }
+    with pytest.raises(ValueError):
+        validate(df, against=assertions, raise_exception=False)
