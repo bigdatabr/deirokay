@@ -261,7 +261,7 @@ def test_null_values(scope, rule, result, values, backend):
 
 @pytest.mark.parametrize("backend", list(Backend))
 @pytest.mark.parametrize(
-    "scope, rule, result, allowed_perc_error, values",
+    "scope, rule, result, tolerance_perc, values",
     [
         ("test_rule_1", "only", "pass", 20, ["RJ", "ES", "SC", "AC", None]),
         ("test_rule_1", "only", "fail", 10, ["RJ", "ES", "SC", "AC", None]),
@@ -271,7 +271,7 @@ def test_null_values(scope, rule, result, values, backend):
         ("test_rule_2", "all", "pass", 25, ["RJ", "ES", "SC", "MG"]),
     ],
 )
-def test_allowed_perc_error(scope, rule, result, allowed_perc_error, values, backend):
+def test_allowed_perc_error(scope, rule, result, tolerance_perc, values, backend):
     df = data_reader(
         "tests/statements/test_contain.csv",
         options="tests/statements/test_contain_options.yaml",
@@ -288,7 +288,7 @@ def test_allowed_perc_error(scope, rule, result, allowed_perc_error, values, bac
                         "rule": rule,
                         "values": values,
                         "parser": {"dtype": "string"},
-                        "allowed_perc_error": allowed_perc_error,
+                        "tolerance_%": tolerance_perc,
                     }
                 ],
             }
@@ -320,7 +320,7 @@ def test_allowed_perc_error_and_min(backend):
                         "values": ["RJ", "SP", "ES", "MG"],
                         "parser": {"dtype": "string"},
                         "min_occurrences": 1,
-                        "allowed_perc_error": 100,
+                        "tolerance_%": 100,
                     }
                 ],
             }

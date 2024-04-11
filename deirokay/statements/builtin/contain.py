@@ -48,10 +48,10 @@ class Contain(BaseStatement):
       rules, 0 for `only`.
     * `max_occurrences`: a global maximum number of occurrences for
       each of the `values`. Default: `inf` (unbounded).
-    * `allowed_perc_error`: The allowed percentage error when using the rule
+    * `tolerance_%`: The allowed percentage tolerance when using the rule
       `only` and `all`. For example, if you define an `only` rule with the
       values `["a", "b", "c"], but value "d" was also in the df, with a 25%
-      error allowed, the validation will pass, that is, at most 25% of the
+      toleranace, the validation will pass, that is, at most 25% of the
       unique values on the df weren't on the `values` list.
     * `occurrences_per_value`: a list of dictionaries overriding the
       global boundaries. Each dictionary may have the following keys:
@@ -242,7 +242,7 @@ class Contain(BaseStatement):
         "parsers",
         "min_occurrences",
         "max_occurrences",
-        "allowed_perc_error",
+        "tolerance_%",
         "occurrences_per_value",
         "report_limit",
     ]
@@ -269,7 +269,7 @@ class Contain(BaseStatement):
         self.min_occurrences = self.options.get("min_occurrences", 0)
         self.max_occurrences = self.options.get("max_occurrences", numpy.inf)
         self.occurrences_per_value = self.options.get("occurrences_per_value", [])
-        self.allowed_perc_error = self.options.get("allowed_perc_error", 0)
+        self.tolerance_perc = self.options.get("tolerance_%", 0)
         self.report_limit = self.options.get("report_limit", NODEFAULT)
 
     def _generate_analysis(self, value_counts):
@@ -385,21 +385,21 @@ class Contain(BaseStatement):
             perc_values_in_df = 0
 
         if self.rule == "only":
-            result = perc_in_values >= 100 - self.allowed_perc_error
+            result = perc_in_values >= 100 - self.tolerance_perc
             return {
                 "rule": self.rule,
                 "perc_in_values": perc_in_values,
-                "allowed_perc_error": self.allowed_perc_error,
+                "tolerance_%": self.tolerance_perc,
                 "result": result,
             }
         elif self.rule == "all":
             in_values = analysis[(analysis["in_values"]) & (analysis["max"] > 0)]
             if len(in_values):
-                result = perc_values_in_df >= 100 - self.allowed_perc_error
+                result = perc_values_in_df >= 100 - self.tolerance_perc
                 return {
                     "rule": self.rule,
                     "perc_values_in_df": perc_values_in_df,
-                    "allowed_perc_error": self.allowed_perc_error,
+                    "tolerance_%": self.tolerance_perc,
                     "result": result,
                 }
             else:
