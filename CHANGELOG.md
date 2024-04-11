@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0](https://github.com/bigdatabr/deirokay/compare/1.1.1...1.2.0) (2024-04-11)
+
+
+### Features
+
+* Add "tolerance_%" parameter in Contain statement ([#61](https://github.com/bigdatabr/deirokay/issues/61)) ([d557f4b](https://github.com/bigdatabr/deirokay/commit/d557f4bfdd84b2083f62fe0fc8c1cd6093b4a564))
+
 ### [1.1.1](https://github.com/bigdatabr/deirokay/compare/1.1.0...1.1.1) (2024-03-14)
 
 
